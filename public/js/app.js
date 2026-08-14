@@ -137,39 +137,95 @@ function getColorByType(type) {
     return 'var(--bus)';
 }
 
+// Randeaza vehicule pe harta
+function renderVehiclesOnMap(dataList) {
+    vehiclesLayer.clearLayers();
+
+    dataList.forEach(v => {
+        // Aplică filtrele
+        if (!filters[v.type]) return;
+
+        const color = getColorByType(v.type);
+
+        // Creare iconita custom cu HTML
+        const icon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div class="vehicle-marker" style="background-color: ${color}">${v.line}</div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        const marker = L.marker([v.lat, v.lng], { icon: icon });
+
+        // Popup simplu
+        marker.bindPopup(`<b>Linia ${v.line}</b><br>Tip: ${v.type}<br>Viteza: ${v.speed} km/h`);
+
+        vehiclesLayer.addLayer(marker);
+    });
+}
+
 // Incarcare vehicule
 async function loadVehicles() {
     try {
+        // Incepem prin a cere backend-ului nostru (pentru cheie si fallback)
         const response = await fetch('/api/vehicles.php');
         const result = await response.json();
 
-        if (result.status === 'success') {
-            vehiclesLayer.clearLayers();
+        // Daca backend-ul returneaza date REALE, le folosim
+        if (result.status === 'success' && result.data_source !== 'mock_data') {
+            renderVehiclesOnMap(result.data);
+            return;
+        }
 
-            result.data.forEach(v => {
-                // Aplică filtrele
-                if (!filters[v.type]) return;
+        // Incercam preluarea din Frontend direct
+        // Chiar daca nu avem cheie (API open conform TPBI), trimitem requestul
+        if (result.try_frontend_fetch) {
+            try {
+                let headers = {
+                    'Accept': 'application/json'
+                };
+                if (result.tpbi_api_key) {
+                    headers['Authorization'] = 'Bearer ' + result.tpbi_api_key;
+                }
 
-                const color = getColorByType(v.type);
-
-                // Creare iconita custom cu HTML
-                const icon = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div class="vehicle-marker" style="background-color: ${color}">${v.line}</div>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
+                const mobiResponse = await fetch('https://mo-bi.ro/api/v1/vehicles', {
+                    headers: headers
                 });
 
-                const marker = L.marker([v.lat, v.lng], { icon: icon });
+                if (mobiResponse.ok) {
+                    const realData = await mobiResponse.json();
+                    if (realData.data) {
+                        const parsedVehicles = realData.data.map(v => {
+                            let type = 'BUS';
+                            if (v.route_type == 0) type = 'TRAM';
+                            else if (v.route_type == 11) type = 'TROLLEYBUS';
 
-                // Popup simplu
-                marker.bindPopup(`<b>Linia ${v.line}</b><br>Tip: ${v.type}<br>Viteza: ${v.speed} km/h`);
-
-                vehiclesLayer.addLayer(marker);
-            });
+                            return {
+                                id: v.vehicle_id,
+                                line: v.route_short_name || '?',
+                                type: type,
+                                lat: v.latitude,
+                                lng: v.longitude,
+                                heading: v.bearing,
+                                speed: v.speed
+                            };
+                        });
+                        renderVehiclesOnMap(parsedVehicles);
+                        return; // Oprim aici daca a mers frontend fetch
+                    }
+                }
+            } catch (frontendErr) {
+                console.warn('Frontend direct fetch failed (CORS/Cloudflare):', frontendErr);
+            }
         }
+
+        // Fallback: folosim datele trimise de backend (mock_data) daca tot restul a picat
+        if (result.status === 'success') {
+            renderVehiclesOnMap(result.data);
+        }
+
     } catch (error) {
-        console.error('Eroare la incarcare vehicule:', error);
+        console.error('Eroare la incarcare vehicule (Complet):', error);
     }
 }
 

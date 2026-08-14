@@ -62,7 +62,8 @@ if (!empty($apiKey)) {
     }
 }
 
-// 2. Fallback (Date simulate) - daca API-ul da gres (Cloudflare, etc) sau cheia nu e pusa inca
+// 2. Fallback (Date simulate) - daca backend API-ul da gres (Cloudflare)
+// Am lasat si in PHP acest fallback pentru cazul in care nici JS-ul nu reuseste prin CORS
 if (empty($vehicles)) {
     $status = 'mock_data';
     $baseLat = 44.4323; // Centrul Bucurestiului
@@ -90,8 +91,10 @@ if (empty($vehicles)) {
 }
 
 echo json_encode([
-    'status' => 'success', // Ramane success pt ca UI-ul sa randeze punctele
+    'status' => 'success',
     'data_source' => $status,
+    'tpbi_api_key' => $apiKey, // Trimitem cheia catre JS
+    'try_frontend_fetch' => true, // Flag pentru a spune frontend-ului sa incerce mo-bi.ro chiar si fara cheie
     'timestamp' => time(),
     'data' => $vehicles
 ]);

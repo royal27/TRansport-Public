@@ -91,7 +91,8 @@ $current_date = date('d.m.Y');
         <p style="color: #555; margin-bottom: 20px; text-align: left;">
             Harta generală a rețelei de metrou din București (Metrorex).
         </p>
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Bucharest_Metro_network_map.svg/1024px-Bucharest_Metro_network_map.svg.png" alt="Metrorex Map" class="metro-map-img">
+        <!-- Harta oficială Metrorex / Harta generică actualizată -->
+        <img src="https://urbanagendaeu.eu/sites/default/files/2019-12/Bucharest%20Metro.png" alt="Metrorex Map" class="metro-map-img" onerror="this.src='https://moovitapp.com/index/ro/transport_public-Bucuresti-2950'">
     </div>
 
     <footer class="front-footer">
