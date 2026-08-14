@@ -24,13 +24,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Numele bazei de date poate conține doar litere, cifre și underscore.";
     } else {
         try {
-            $dsn = "mysql:host=$db_host";
-            $pdo = new PDO($dsn, $db_user, $db_pass);
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            // Incercam intai conexiunea directa cu baza de date (pentru cPanel/Shared Hosting)
+            try {
+                $dsn = "mysql:host=$db_host;dbname=$db_name;charset=utf8mb4";
+                $pdo = new PDO($dsn, $db_user, $db_pass);
+            } catch (PDOException $e) {
+                // Daca esueaza, incercam fara dbname si incercam sa o cream noi (pentru localhost)
+                $dsn = "mysql:host=$db_host";
+                $pdo = new PDO($dsn, $db_user, $db_pass);
+                $pdo->exec("CREATE DATABASE IF NOT EXISTS `$db_name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                $pdo->exec("USE `$db_name`");
+            }
 
-            // Creare baza de date - sigur acum deoarece am validat cu regex numele (fara SQL Injection)
-            $pdo->exec("CREATE DATABASE IF NOT EXISTS `$db_name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-            $pdo->exec("USE `$db_name`");
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             // Creare tabele
             $pdo->exec("
@@ -71,7 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = "Instalare realizată cu succes! Din motive de securitate, te rugăm să ștergi fișierul install.php.";
 
         } catch (PDOException $e) {
-            $error = "Eroare conexiune bază de date: " . $e->getMessage();
+            $errorMsg = $e->getMessage();
+            if (strpos($errorMsg, '1045') !== false) {
+                $error = "Eroare autentificare (1045): Utilizatorul sau parola pentru baza de date sunt greșite, SAU utilizatorul nu a fost asociat cu baza de date în cPanel (Check 'Add User to Database').";
+            } else {
+                $error = "Eroare conexiune bază de date: " . $errorMsg;
+            }
         }
     }
 }
