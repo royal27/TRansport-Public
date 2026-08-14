@@ -88,22 +88,37 @@ $current_date = date('d.m.Y');
     </header>
 
     <div class="page-content">
-        <h1 class="page-title"><i class="fas fa-list"></i> <?= getTranslation('schedules_title', $lang) ?></h1>
+        <h1 class="page-title"><i class="fas fa-list"></i> <?= getTranslation('schedules_title', $lang) ?> (Live STB)</h1>
+
+        <div id="dynamic-schedules" style="text-align:center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--primary)"></i>
+            <p style="margin-top:15px; color:#555;"><?= getTranslation('loading', $lang) ?></p>
+        </div>
+
+        <div id="schedules-content" style="display:none;">
+            <!-- Categoria Tramvaie -->
+            <div class="category-header"><i class="fas fa-train-tram" style="color:var(--tram)"></i> TRAMVAIE</div>
+            <div class="line-pill-grid" id="grid-tram"></div>
+
+            <!-- Categoria Troleibuze -->
+            <div class="category-header"><i class="fas fa-bus-simple" style="color:var(--trolley)"></i> TROLEIBUZE</div>
+            <div class="line-pill-grid" id="grid-trolley"></div>
+
+            <!-- Categoria Autobuze -->
+            <div class="category-header"><i class="fas fa-bus" style="color:var(--bus)"></i> AUTOBUZE & LINII DE NOAPTE</div>
+            <div class="line-pill-grid" id="grid-bus"></div>
+        </div>
 
         <?php if(count($schedules) > 0): ?>
-            <div class="schedule-grid">
+            <h2 style="margin-top: 50px; color:#333; font-size:18px;">Notificări / Linii personalizate adăugate în Admin</h2>
+            <div class="schedule-grid" style="margin-top: 15px;">
                 <?php foreach($schedules as $s): ?>
                     <div class="schedule-card">
-                        <h3><i class="fas fa-route"></i> <?= htmlspecialchars($s['line_name']) ?></h3>
+                        <h3><i class="fas fa-bullhorn"></i> <?= htmlspecialchars($s['line_name']) ?></h3>
                         <p><?= htmlspecialchars($s['schedule_details']) ?></p>
                     </div>
                 <?php endforeach; ?>
             </div>
-        <?php else: ?>
-            <p style="text-align: center; color: #7f8c8d; padding: 40px; background: white; border-radius: 8px;">
-                <i class="fas fa-info-circle fa-2x"></i><br><br>
-                Nu există orare adăugate momentan. (Adaugă din Admin)
-            </p>
         <?php endif; ?>
     </div>
 
@@ -111,5 +126,39 @@ $current_date = date('d.m.Y');
         <?= getTranslation('footer_text', $lang) ?>
     </footer>
 
+    <script>
+    document.addEventListener("DOMContentLoaded", async function() {
+        try {
+            const res = await fetch('/api/proxy_routes.php');
+            const result = await res.json();
+
+            if (result && result.data) {
+                const gridTram = document.getElementById('grid-tram');
+                const gridTrolley = document.getElementById('grid-trolley');
+                const gridBus = document.getElementById('grid-bus');
+
+                // Sortam alfabetic/numeric
+                result.data.sort((a, b) => a.route_short_name.localeCompare(b.route_short_name, undefined, {numeric: true}));
+
+                result.data.forEach(r => {
+                    const pill = `<a href="index.php?lang=<?= $lang ?>&search=${r.route_short_name}" class="line-pill" title="${r.route_long_name}">${r.route_short_name}</a>`;
+
+                    if (r.route_type == 0) {
+                        gridTram.innerHTML += pill;
+                    } else if (r.route_type == 11) {
+                        gridTrolley.innerHTML += pill;
+                    } else {
+                        gridBus.innerHTML += pill;
+                    }
+                });
+
+                document.getElementById('dynamic-schedules').style.display = 'none';
+                document.getElementById('schedules-content').style.display = 'block';
+            }
+        } catch (e) {
+            document.getElementById('dynamic-schedules').innerHTML = '<p style="color:red;">Eroare la încărcarea liniilor STB.</p>';
+        }
+    });
+    </script>
 </body>
 </html>

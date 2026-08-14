@@ -28,16 +28,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     } elseif ($_POST['action'] == 'upload_logo') {
         if (isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] == 0) {
 
-            // Check true mime type with finfo
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime = finfo_file($finfo, $_FILES['logo_file']['tmp_name']);
-            finfo_close($finfo);
+            // Verificare tip MIME suportata pe orice server (inclusiv shared hosting)
+            $image_info = getimagesize($_FILES['logo_file']['tmp_name']);
+            $mime = $image_info !== false ? $image_info['mime'] : '';
 
             $allowed_mimes = ['image/jpeg', 'image/png', 'image/gif'];
             $file_ext = strtolower(pathinfo($_FILES['logo_file']['name'], PATHINFO_EXTENSION));
             $allowed_exts = ['jpg', 'jpeg', 'png', 'gif'];
 
-            if (in_array($mime, $allowed_mimes) && in_array($file_ext, $allowed_exts)) {
+            if ($image_info !== false && in_array($mime, $allowed_mimes) && in_array($file_ext, $allowed_exts)) {
                 $new_filename = 'logo_' . time() . '.' . $file_ext;
 
                 $upload_dir = '../public/uploads/';

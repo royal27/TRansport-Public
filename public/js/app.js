@@ -54,11 +54,15 @@ if (btnBackLine) {
     });
 }
 
-// Logică de căutare linie
-async function searchLine(line) {
-    if (!line) return;
+// Layer pt shape traseu pe harta
+let currentRoutePolyline = null;
 
-    // Hide other panels
+// Logică de căutare linie reală
+async function searchLine(lineSearchQuery) {
+    if (!lineSearchQuery) return;
+    lineSearchQuery = lineSearchQuery.toString().toLowerCase();
+
+    // Ascunde celelalte
     welcomeInfo.classList.add('hidden');
     stationInfo.classList.add('hidden');
     lineInfo.classList.remove('hidden');
@@ -66,55 +70,114 @@ async function searchLine(line) {
     const timelineList = document.getElementById('timeline-list');
     timelineList.innerHTML = `<div class="loading">${i18n.loading || 'Se încarcă...'}</div>`;
 
+    // Stergem linia desenata anterior
+    if (currentRoutePolyline) {
+        map.removeLayer(currentRoutePolyline);
+        currentRoutePolyline = null;
+    }
+
     try {
-        const response = await fetch(`/api/lines.php?q=${line}`);
-        const result = await response.json();
+        // Căutăm linia în proxy (mo-bi.ro)
+        const routesResponse = await fetch('/api/proxy_routes.php');
+        const routesResult = await routesResponse.json();
 
-        if (result.status === 'success') {
-            // Update Header
-            document.getElementById('line-info-badge').innerHTML = `<i class="${result.icon}"></i> <span>${result.line}</span>`;
-
-            // Culoare badge în funcție de tip
-            const badge = document.getElementById('line-info-badge');
-            if (result.type === 'TRAM') badge.style.borderColor = 'var(--tram)';
-            else if (result.type === 'TROLLEYBUS') badge.style.borderColor = 'var(--trolley)';
-            else badge.style.borderColor = 'var(--bus)';
-
-            document.getElementById('line-direction-text').innerHTML = result.direction;
-
-            // Build timeline
-            let html = '';
-            result.stations.forEach((station, index) => {
-                let activeClass = station.has_arrivals ? 'active' : '';
-
-                let arrivalsHtml = '';
-                if (station.has_arrivals) {
-                    arrivalsHtml = `
-                        <div class="timeline-arrivals">
-                            <div class="next-arrival-title">${i18n.next_arrivals || 'Următoarele sosiri'}</div>
-                            <div class="next-arrival-time">${station.next_arrival} <span>${i18n.min || 'min'}</span></div>
-                            <div class="other-arrivals">${i18n.other_arrivals || 'Alte sosiri programate: '}${station.other_arrivals}</div>
-                        </div>
-                    `;
-                }
-
-                html += `
-                    <div class="timeline-item ${activeClass}">
-                        <div class="timeline-marker"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-station">${station.name}</div>
-                            ${arrivalsHtml}
-                        </div>
-                    </div>
-                `;
-            });
-
-            timelineList.innerHTML = html;
-        } else {
-            timelineList.innerHTML = '<div class="loading" style="color:red">Nu s-a găsit linia.</div>';
+        let foundRoute = null;
+        if (routesResult.data) {
+            foundRoute = routesResult.data.find(r => r.route_short_name.toLowerCase() === lineSearchQuery);
         }
+
+        if (!foundRoute) {
+            // Incercam fallback vechi pe mock lines.php
+            const fbResponse = await fetch(`/api/lines.php?q=${lineSearchQuery}`);
+            const fbResult = await fbResponse.json();
+            if (fbResult.status === 'success') {
+                renderTimelineUI(fbResult, null);
+                return;
+            }
+            timelineList.innerHTML = '<div class="loading" style="color:red">Nu s-a găsit linia.</div>';
+            return;
+        }
+
+        // Aducem detaliile si shape-ul
+        const shapeResponse = await fetch(`/api/proxy_routes.php?id=${foundRoute.route_id}`);
+        const shapeResult = await shapeResponse.json();
+
+        const routeData = shapeResult.data || foundRoute;
+
+        let routeType = 'BUS';
+        let iconStr = 'fas fa-bus';
+        if (routeData.route_type == 0) { routeType = 'TRAM'; iconStr = 'fas fa-train-tram'; }
+        else if (routeData.route_type == 11) { routeType = 'TROLLEYBUS'; iconStr = 'fas fa-bus-simple'; }
+
+        const formattedResult = {
+            status: 'success',
+            line: routeData.route_short_name,
+            type: routeType,
+            icon: iconStr,
+            direction: routeData.route_long_name || routeData.route_short_name,
+            // Construim statiile simulate (deoarece API-ul de shape ne da linia geometrica, nu lista ierarhica usoara fara alt API call)
+            // Vom folosi un mock structurat doar pt a arata timeline-ul vizual
+            stations: [
+                { name: "Terminal Start", has_arrivals: true, next_arrival: 2, other_arrivals: "14:20, 14:35" },
+                { name: "Stația 2", has_arrivals: false },
+                { name: "Stația 3", has_arrivals: false },
+                { name: "Terminal Final", has_arrivals: false }
+            ]
+        };
+
+        renderTimelineUI(formattedResult, routeData.shape);
+
+
     } catch (error) {
-        timelineList.innerHTML = '<div class="loading" style="color:red">Eroare la căutare.</div>';
+        timelineList.innerHTML = '<div class="loading" style="color:red">Eroare conexiune server API.</div>';
+    }
+}
+
+function renderTimelineUI(result, shapeCoordinates) {
+    const timelineList = document.getElementById('timeline-list');
+    document.getElementById('line-info-badge').innerHTML = `<i class="${result.icon}"></i> <span>${result.line}</span>`;
+
+    // Culoare badge
+    const badge = document.getElementById('line-info-badge');
+    let color = 'var(--bus)';
+    if (result.type === 'TRAM') { badge.style.borderColor = 'var(--tram)'; color = 'var(--tram)'; }
+    else if (result.type === 'TROLLEYBUS') { badge.style.borderColor = 'var(--trolley)'; color = 'var(--trolley)'; }
+    else badge.style.borderColor = 'var(--bus)';
+
+    document.getElementById('line-direction-text').innerHTML = result.direction;
+
+    // Build timeline
+    let html = '';
+    result.stations.forEach((station) => {
+        let activeClass = station.has_arrivals ? 'active' : '';
+        let arrivalsHtml = '';
+        if (station.has_arrivals) {
+            arrivalsHtml = `
+                <div class="timeline-arrivals">
+                    <div class="next-arrival-title">${i18n.next_arrivals || 'Următoarele sosiri'}</div>
+                    <div class="next-arrival-time">${station.next_arrival} <span>${i18n.min || 'min'}</span></div>
+                    <div class="other-arrivals">${i18n.other_arrivals || 'Alte sosiri programate: '}${station.other_arrivals}</div>
+                </div>
+            `;
+        }
+
+        html += `
+            <div class="timeline-item ${activeClass}">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <div class="timeline-station">${station.name}</div>
+                    ${arrivalsHtml}
+                </div>
+            </div>
+        `;
+    });
+    timelineList.innerHTML = html;
+
+    // Desenam traseul pe harta
+    if (shapeCoordinates && shapeCoordinates.length > 0) {
+        const latlngs = shapeCoordinates.map(p => [p.lat, p.lng]);
+        currentRoutePolyline = L.polyline(latlngs, {color: color, weight: 5, opacity: 0.7}).addTo(map);
+        map.fitBounds(currentRoutePolyline.getBounds());
     }
 }
 
@@ -310,9 +373,20 @@ async function fetchStationArrivals(stationId, stationName) {
     }
 }
 
-// Init
-loadStations();
-loadVehicles();
+// Init si check params (dinspre schedules)
+const urlParams = new URLSearchParams(window.location.search);
+const searchParam = urlParams.get('search');
+if (searchParam && lineSearchInput) {
+    lineSearchInput.value = searchParam;
+    searchLine(searchParam);
+} else {
+    loadStations();
+    loadVehicles();
+}
 
-// Polling pt vehicule la fiecare 5 secunde
-setInterval(loadVehicles, 5000);
+// Polling pt vehicule la fiecare 10 secunde (doar cand nu avem linie selectata pt timeline)
+setInterval(() => {
+    if (welcomeInfo.classList.contains('hidden') === false || stationInfo.classList.contains('hidden') === false) {
+        loadVehicles();
+    }
+}, 10000);
