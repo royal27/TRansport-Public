@@ -102,7 +102,7 @@ async function fetchStationArrivals(stationId, stationName) {
     welcomeInfo.classList.add('hidden');
     stationInfo.classList.remove('hidden');
     stationNameEl.textContent = stationName;
-    arrivalsListEl.innerHTML = '<div class="loading">Se încarcă...</div>';
+    arrivalsListEl.innerHTML = `<div class="loading">${i18n.loading}</div>`;
 
     try {
         const response = await fetch(`/api/stations.php?id=${stationId}`);
@@ -110,7 +110,7 @@ async function fetchStationArrivals(stationId, stationName) {
 
         if (result.status === 'success') {
             if (result.arrivals.length === 0) {
-                arrivalsListEl.innerHTML = '<div class="loading">Nu există vehicule programate în curând.</div>';
+                arrivalsListEl.innerHTML = `<div class="loading">${i18n.no_vehicles}</div>`;
                 return;
             }
 
@@ -128,10 +128,10 @@ async function fetchStationArrivals(stationId, stationName) {
                             ${a.line}
                         </div>
                         <div class="arrival-details">
-                            <div class="route-type">${iconMap[a.type] || ''} Sosire estimată</div>
+                            <div class="route-type">${iconMap[a.type] || ''} ${i18n.estimated_arrival}</div>
                         </div>
                         <div class="arrival-time">
-                            ${a.minutes} <span>min</span>
+                            ${a.minutes} <span>${i18n.min}</span>
                         </div>
                     </div>
                 `;
@@ -141,7 +141,7 @@ async function fetchStationArrivals(stationId, stationName) {
         }
     } catch (error) {
         console.error('Eroare la preluare sosiri:', error);
-        arrivalsListEl.innerHTML = '<div class="loading" style="color:red">Eroare la încărcare date.</div>';
+        arrivalsListEl.innerHTML = `<div class="loading" style="color:red">${i18n.loading} (Error)</div>`;
     }
 }
 
