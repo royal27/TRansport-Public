@@ -216,6 +216,174 @@ body {
     cursor: pointer;
 }
 
+/* Search Box */
+.search-box {
+    display: flex;
+    margin-bottom: 20px;
+    width: 100%;
+}
+.search-box input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-right: none;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+.search-box button {
+    padding: 12px 15px;
+    background: var(--primary);
+    border: none;
+    color: white;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+/* Line Info UI */
+#line-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    overflow: hidden;
+}
+
+.line-header-top {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    border-bottom: 1px solid var(--border);
+}
+
+.line-badge {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--tram);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-weight: bold;
+    font-size: 14px;
+    margin-right: 10px;
+}
+.line-badge i { margin-right: 5px; }
+
+.agency-name { color: #555; font-weight: 500; }
+.btn-icon.right { margin-left: auto; margin-right: 0; }
+
+.line-direction {
+    background: #2c3e50;
+    color: white;
+    padding: 15px;
+    position: relative;
+}
+#line-direction-text {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+.switch-dir {
+    color: #3498db;
+    font-size: 13px;
+    text-decoration: none;
+}
+.btn-icon.right-white {
+    position: absolute;
+    right: 15px;
+    top: 20px;
+    color: white;
+}
+
+.line-info-banner {
+    background: #e9f2fb;
+    color: #2c3e50;
+    padding: 12px 15px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+}
+
+.timeline-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px 0;
+}
+
+.timeline-item {
+    display: flex;
+    position: relative;
+    padding: 15px 20px;
+    min-height: 40px;
+}
+
+/* Vertical Line */
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: black;
+}
+/* No line going up on the first item */
+.timeline-item:first-child::before {
+    top: 30px;
+}
+/* No line going down on the last item */
+.timeline-item:last-child::before {
+    bottom: calc(100% - 30px);
+}
+
+/* Circle marker */
+.timeline-marker {
+    width: 14px;
+    height: 14px;
+    border: 3px solid #333;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    left: 19px;
+    top: 22px;
+    z-index: 2;
+}
+.timeline-item.active .timeline-marker {
+    background: black;
+}
+
+.timeline-content {
+    margin-left: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.timeline-station {
+    font-size: 15px;
+    color: #333;
+}
+.timeline-item.active .timeline-station {
+    font-weight: bold;
+}
+
+.timeline-arrivals {
+    text-align: right;
+    font-size: 13px;
+}
+.next-arrival-title {
+    color: #555;
+    font-size: 12px;
+}
+.next-arrival-time {
+    color: #2ecc71;
+    font-weight: bold;
+    font-size: 16px;
+}
+.other-arrivals {
+    color: #555;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     #app-container {

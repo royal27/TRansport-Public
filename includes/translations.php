@@ -26,7 +26,12 @@ $translations = [
         'filter_bus' => 'Autobuze',
         'filter_tram' => 'Tramvaie',
         'filter_trolley' => 'Troleibuze',
-        'btn_metro' => 'Metrou'
+        'btn_metro' => 'Metrou',
+        'search_line' => 'Caută linie tramvai, autobuz...',
+        'switch_direction' => 'Schimbă direcția',
+        'select_station_schedule' => 'Selectați o stație pentru a vizualiza orarul',
+        'next_arrivals' => 'Următoarele sosiri',
+        'other_arrivals' => 'Alte sosiri programate: '
     ],
     'en' => [
         'app_name' => 'Bucharest Live Transport',
@@ -53,7 +58,12 @@ $translations = [
         'filter_bus' => 'Buses',
         'filter_tram' => 'Trams',
         'filter_trolley' => 'Trolleybuses',
-        'btn_metro' => 'Metro'
+        'btn_metro' => 'Metro',
+        'search_line' => 'Search tram, bus line...',
+        'switch_direction' => 'Change direction',
+        'select_station_schedule' => 'Select a station to view schedule',
+        'next_arrivals' => 'Next arrivals',
+        'other_arrivals' => 'Other scheduled arrivals: '
     ],
     'fr' => [
         'app_name' => 'Transport en direct de Bucarest',
@@ -80,7 +90,12 @@ $translations = [
         'filter_bus' => 'Bus',
         'filter_tram' => 'Tramways',
         'filter_trolley' => 'Trolleybus',
-        'btn_metro' => 'Métro'
+        'btn_metro' => 'Métro',
+        'search_line' => 'Rechercher ligne tram, bus...',
+        'switch_direction' => 'Changer de direction',
+        'select_station_schedule' => 'Sélectionnez une station pour voir les horaires',
+        'next_arrivals' => 'Prochaines arrivées',
+        'other_arrivals' => 'Autres arrivées prévues : '
     ]
 ];
 

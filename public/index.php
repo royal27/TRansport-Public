@@ -141,9 +141,36 @@ $current_date = date('d.m.Y');
             </div>
 
             <div id="welcome-info">
+                <div class="search-box">
+                    <input type="text" id="line-search" placeholder="<?= getTranslation('search_line', $lang) ?>">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
                 <div class="instructions">
                     <i class="fas fa-hand-pointer fa-2x"></i>
                     <p><?= getTranslation('click_station', $lang) ?></p>
+                </div>
+            </div>
+
+            <div id="line-info" class="hidden">
+                <div class="line-header-top">
+                    <button id="btn-back-line" class="btn-icon"><i class="fas fa-chevron-left"></i></button>
+                    <div class="line-badge" id="line-info-badge"><i class="fas fa-train-tram"></i> <span>32</span></div>
+                    <span class="agency-name">STB</span>
+                    <button class="btn-icon right"><i class="fas fa-share-nodes"></i></button>
+                </div>
+
+                <div class="line-direction">
+                    <div id="line-direction-text">Piata Unirii &rarr; Depoul Alexandria</div>
+                    <a href="#" class="switch-dir"><?= getTranslation('switch_direction', $lang) ?> <i class="fas fa-chevron-down"></i></a>
+                    <button class="btn-icon right-white"><i class="fas fa-external-link-alt"></i></button>
+                </div>
+
+                <div class="line-info-banner">
+                    <i class="fas fa-info-circle"></i> <?= getTranslation('select_station_schedule', $lang) ?>
+                </div>
+
+                <div class="timeline-container" id="timeline-list">
+                    <!-- Timeline items go here via JS -->
                 </div>
             </div>
         </div>
@@ -172,7 +199,9 @@ $current_date = date('d.m.Y');
             loading: "<?= getTranslation('loading', $lang) ?>",
             no_vehicles: "<?= getTranslation('no_vehicles', $lang) ?>",
             estimated_arrival: "<?= getTranslation('estimated_arrival', $lang) ?>",
-            min: "<?= getTranslation('min', $lang) ?>"
+            min: "<?= getTranslation('min', $lang) ?>",
+            next_arrivals: "<?= getTranslation('next_arrivals', $lang) ?>",
+            other_arrivals: "<?= getTranslation('other_arrivals', $lang) ?>"
         };
     </script>
     <script src="js/app.js"></script>

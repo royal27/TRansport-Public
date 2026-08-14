@@ -35,11 +35,100 @@ const stationNameEl = document.getElementById('station-name');
 const arrivalsListEl = document.getElementById('arrivals-list');
 const btnBack = document.getElementById('btn-back');
 
+const lineInfo = document.getElementById('line-info');
+const btnBackLine = document.getElementById('btn-back-line');
+const lineSearchInput = document.getElementById('line-search');
+const searchBtn = lineSearchInput ? lineSearchInput.nextElementSibling : null;
+
 // Event listeners UI
 btnBack.addEventListener('click', () => {
     stationInfo.classList.add('hidden');
     welcomeInfo.classList.remove('hidden');
 });
+
+if (btnBackLine) {
+    btnBackLine.addEventListener('click', () => {
+        lineInfo.classList.add('hidden');
+        welcomeInfo.classList.remove('hidden');
+        lineSearchInput.value = '';
+    });
+}
+
+// Logică de căutare linie
+async function searchLine(line) {
+    if (!line) return;
+
+    // Hide other panels
+    welcomeInfo.classList.add('hidden');
+    stationInfo.classList.add('hidden');
+    lineInfo.classList.remove('hidden');
+
+    const timelineList = document.getElementById('timeline-list');
+    timelineList.innerHTML = `<div class="loading">${i18n.loading || 'Se încarcă...'}</div>`;
+
+    try {
+        const response = await fetch(`/api/lines.php?q=${line}`);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            // Update Header
+            document.getElementById('line-info-badge').innerHTML = `<i class="${result.icon}"></i> <span>${result.line}</span>`;
+
+            // Culoare badge în funcție de tip
+            const badge = document.getElementById('line-info-badge');
+            if (result.type === 'TRAM') badge.style.borderColor = 'var(--tram)';
+            else if (result.type === 'TROLLEYBUS') badge.style.borderColor = 'var(--trolley)';
+            else badge.style.borderColor = 'var(--bus)';
+
+            document.getElementById('line-direction-text').innerHTML = result.direction;
+
+            // Build timeline
+            let html = '';
+            result.stations.forEach((station, index) => {
+                let activeClass = station.has_arrivals ? 'active' : '';
+
+                let arrivalsHtml = '';
+                if (station.has_arrivals) {
+                    arrivalsHtml = `
+                        <div class="timeline-arrivals">
+                            <div class="next-arrival-title">${i18n.next_arrivals || 'Următoarele sosiri'}</div>
+                            <div class="next-arrival-time">${station.next_arrival} <span>${i18n.min || 'min'}</span></div>
+                            <div class="other-arrivals">${i18n.other_arrivals || 'Alte sosiri programate: '}${station.other_arrivals}</div>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="timeline-item ${activeClass}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-station">${station.name}</div>
+                            ${arrivalsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            timelineList.innerHTML = html;
+        } else {
+            timelineList.innerHTML = '<div class="loading" style="color:red">Nu s-a găsit linia.</div>';
+        }
+    } catch (error) {
+        timelineList.innerHTML = '<div class="loading" style="color:red">Eroare la căutare.</div>';
+    }
+}
+
+if (searchBtn && lineSearchInput) {
+    searchBtn.addEventListener('click', () => {
+        searchLine(lineSearchInput.value.trim());
+    });
+
+    lineSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchLine(lineSearchInput.value.trim());
+        }
+    });
+}
 
 // Functie pt culori pe baza de tip vehicul
 function getColorByType(type) {
