@@ -6,12 +6,8 @@ require_once '../includes/translations.php';
 $lang = $_GET['lang'] ?? 'ro';
 if (!in_array($lang, ['ro', 'en', 'fr'])) $lang = 'ro';
 
-// Fetch schedules
-$db = getDB();
-$stmt = $db->query("SELECT * FROM schedules ORDER BY line_name ASC");
-$schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 // Logo pt Header
+$db = getDB();
 $stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'app_logo'");
 $logo_row = $stmt->fetch(PDO::FETCH_ASSOC);
 $logo_path = $logo_row ? $logo_row['setting_value'] : '';
@@ -23,7 +19,7 @@ $current_date = date('d.m.Y');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= getTranslation('schedules_title', $lang) ?> - <?= getTranslation('app_name', $lang) ?></title>
+    <title><?= getTranslation('btn_metro', $lang) ?> - <?= getTranslation('app_name', $lang) ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
@@ -46,13 +42,16 @@ $current_date = date('d.m.Y');
 
         .front-footer { background-color: #2c3e50; color: white; text-align: center; padding: 10px; margin-top: auto; font-size: 13px; }
 
-        .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; }
-        .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; text-align: center; }
+        .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; text-align: left; }
 
-        .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .schedule-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--primary); }
-        .schedule-card h3 { margin-top: 0; color: var(--primary-dark); font-size: 20px; display: flex; align-items: center; gap: 10px; }
-        .schedule-card p { color: #555; line-height: 1.6; white-space: pre-line; margin-bottom: 0; }
+        .metro-map-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 4px solid white;
+        }
 
         @media (max-width: 768px) {
             .front-header { flex-direction: column; gap: 10px; }
@@ -72,9 +71,9 @@ $current_date = date('d.m.Y');
 
         <div class="header-nav">
             <a href="index.php?lang=<?= $lang ?>"><i class="fas fa-map"></i> <?= getTranslation('btn_map', $lang) ?></a>
-            <a href="schedules.php?lang=<?= $lang ?>" class="active"><i class="fas fa-clock"></i> <?= getTranslation('btn_schedules', $lang) ?></a>
+            <a href="schedules.php?lang=<?= $lang ?>"><i class="fas fa-clock"></i> <?= getTranslation('btn_schedules', $lang) ?></a>
             <a href="flights.php?lang=<?= $lang ?>"><i class="fas fa-plane"></i> <?= getTranslation('btn_flights', $lang) ?></a>
-            <a href="metro.php?lang=<?= $lang ?>"><i class="fas fa-subway"></i> <?= getTranslation('btn_metro', $lang) ?></a>
+            <a href="metro.php?lang=<?= $lang ?>" class="active"><i class="fas fa-subway"></i> <?= getTranslation('btn_metro', $lang) ?></a>
         </div>
 
         <div class="header-right">
@@ -88,23 +87,11 @@ $current_date = date('d.m.Y');
     </header>
 
     <div class="page-content">
-        <h1 class="page-title"><i class="fas fa-list"></i> <?= getTranslation('schedules_title', $lang) ?></h1>
-
-        <?php if(count($schedules) > 0): ?>
-            <div class="schedule-grid">
-                <?php foreach($schedules as $s): ?>
-                    <div class="schedule-card">
-                        <h3><i class="fas fa-route"></i> <?= htmlspecialchars($s['line_name']) ?></h3>
-                        <p><?= htmlspecialchars($s['schedule_details']) ?></p>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <p style="text-align: center; color: #7f8c8d; padding: 40px; background: white; border-radius: 8px;">
-                <i class="fas fa-info-circle fa-2x"></i><br><br>
-                Nu există orare adăugate momentan. (Adaugă din Admin)
-            </p>
-        <?php endif; ?>
+        <h1 class="page-title"><i class="fas fa-subway"></i> <?= getTranslation('btn_metro', $lang) ?></h1>
+        <p style="color: #555; margin-bottom: 20px; text-align: left;">
+            Harta generală a rețelei de metrou din București (Metrorex).
+        </p>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Bucharest_Metro_network_map.svg/1024px-Bucharest_Metro_network_map.svg.png" alt="Metrorex Map" class="metro-map-img">
     </div>
 
     <footer class="front-footer">

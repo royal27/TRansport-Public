@@ -80,6 +80,7 @@ $current_date = date('d.m.Y');
             <a href="index.php?lang=<?= $lang ?>"><i class="fas fa-map"></i> <?= getTranslation('btn_map', $lang) ?></a>
             <a href="schedules.php?lang=<?= $lang ?>"><i class="fas fa-clock"></i> <?= getTranslation('btn_schedules', $lang) ?></a>
             <a href="flights.php?lang=<?= $lang ?>" class="active"><i class="fas fa-plane"></i> <?= getTranslation('btn_flights', $lang) ?></a>
+            <a href="metro.php?lang=<?= $lang ?>"><i class="fas fa-subway"></i> <?= getTranslation('btn_metro', $lang) ?></a>
         </div>
 
         <div class="header-right">

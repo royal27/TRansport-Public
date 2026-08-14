@@ -11,6 +11,23 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const vehiclesLayer = L.layerGroup().addTo(map);
 const stationsLayer = L.layerGroup().addTo(map);
 
+// Stare filtre
+const filters = {
+    'BUS': true,
+    'TRAM': true,
+    'TROLLEYBUS': true
+};
+
+const filterBus = document.getElementById('filter-bus');
+const filterTram = document.getElementById('filter-tram');
+const filterTrolley = document.getElementById('filter-trolley');
+
+if (filterBus) {
+    filterBus.addEventListener('change', (e) => { filters['BUS'] = e.target.checked; loadVehicles(); });
+    filterTram.addEventListener('change', (e) => { filters['TRAM'] = e.target.checked; loadVehicles(); });
+    filterTrolley.addEventListener('change', (e) => { filters['TROLLEYBUS'] = e.target.checked; loadVehicles(); });
+}
+
 // Referinte UI
 const welcomeInfo = document.getElementById('welcome-info');
 const stationInfo = document.getElementById('station-info');
@@ -41,6 +58,9 @@ async function loadVehicles() {
             vehiclesLayer.clearLayers();
 
             result.data.forEach(v => {
+                // Aplică filtrele
+                if (!filters[v.type]) return;
+
                 const color = getColorByType(v.type);
 
                 // Creare iconita custom cu HTML

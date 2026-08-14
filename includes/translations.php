@@ -22,7 +22,11 @@ $translations = [
         'status' => 'Status',
         'schedules_title' => 'Orar și Linii Curente',
         'line' => 'Linie',
-        'schedule_details' => 'Detalii Orar'
+        'schedule_details' => 'Detalii Orar',
+        'filter_bus' => 'Autobuze',
+        'filter_tram' => 'Tramvaie',
+        'filter_trolley' => 'Troleibuze',
+        'btn_metro' => 'Metrou'
     ],
     'en' => [
         'app_name' => 'Bucharest Live Transport',
@@ -45,7 +49,11 @@ $translations = [
         'status' => 'Status',
         'schedules_title' => 'Schedules & Current Lines',
         'line' => 'Line',
-        'schedule_details' => 'Schedule Details'
+        'schedule_details' => 'Schedule Details',
+        'filter_bus' => 'Buses',
+        'filter_tram' => 'Trams',
+        'filter_trolley' => 'Trolleybuses',
+        'btn_metro' => 'Metro'
     ],
     'fr' => [
         'app_name' => 'Transport en direct de Bucarest',
@@ -68,7 +76,11 @@ $translations = [
         'status' => 'Statut',
         'schedules_title' => 'Horaires et lignes actuelles',
         'line' => 'Ligne',
-        'schedule_details' => 'Détails des horaires'
+        'schedule_details' => 'Détails des horaires',
+        'filter_bus' => 'Bus',
+        'filter_tram' => 'Tramways',
+        'filter_trolley' => 'Trolleybus',
+        'btn_metro' => 'Métro'
     ]
 ];
 

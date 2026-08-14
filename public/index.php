@@ -101,6 +101,7 @@ $current_date = date('d.m.Y');
             <a href="index.php?lang=<?= $lang ?>" class="active"><i class="fas fa-map"></i> <?= getTranslation('btn_map', $lang) ?></a>
             <a href="schedules.php?lang=<?= $lang ?>"><i class="fas fa-clock"></i> <?= getTranslation('btn_schedules', $lang) ?></a>
             <a href="flights.php?lang=<?= $lang ?>"><i class="fas fa-plane"></i> <?= getTranslation('btn_flights', $lang) ?></a>
+            <a href="metro.php?lang=<?= $lang ?>"><i class="fas fa-subway"></i> <?= getTranslation('btn_metro', $lang) ?></a>
         </div>
 
         <div class="header-right">
@@ -148,7 +149,13 @@ $current_date = date('d.m.Y');
         </div>
 
         <!-- Harta -->
-        <div id="map"></div>
+        <div id="map" style="position: relative;">
+            <div class="map-filters">
+                <label><input type="checkbox" id="filter-bus" checked> <i class="fas fa-bus" style="color: var(--bus)"></i> <?= getTranslation('filter_bus', $lang) ?></label>
+                <label><input type="checkbox" id="filter-tram" checked> <i class="fas fa-train-tram" style="color: var(--tram)"></i> <?= getTranslation('filter_tram', $lang) ?></label>
+                <label><input type="checkbox" id="filter-trolley" checked> <i class="fas fa-bus-simple" style="color: var(--trolley)"></i> <?= getTranslation('filter_trolley', $lang) ?></label>
+            </div>
+        </div>
     </div>
 
     <footer class="front-footer">
