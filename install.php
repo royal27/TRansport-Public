@@ -55,6 +55,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 )
             ");
 
+            // Insert default settings if they don't exist
+            $pdo->exec("
+                INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
+                ('app_name', 'București Transport Live'),
+                ('app_logo', ''),
+                ('tpbi_api_key', ''),
+                ('theme_color', 'green'),
+                ('announcement_text', '')
+            ");
+
             // Check if admin user exists
             $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
             $stmt->execute([$admin_user]);

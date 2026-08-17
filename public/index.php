@@ -12,11 +12,20 @@ $stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'app_
 $logo_row = $stmt->fetch(PDO::FETCH_ASSOC);
 $logo_path = $logo_row ? $logo_row['setting_value'] : '';
 
+// Get theme and announcement settings
+$stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('theme_color', 'announcement_text')");
+$settings = [];
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $settings[$row['setting_key']] = $row['setting_value'];
+}
+$theme_color = $settings['theme_color'] ?? 'green';
+$announcement_text = $settings['announcement_text'] ?? '';
+
 // Vreme si Data pt header (PHP variables pt initializare)
 $current_date = date('d.m.Y');
 ?>
 <!DOCTYPE html>
-<html lang="<?= $lang ?>">
+<html lang="<?= $lang ?>" data-theme="<?= htmlspecialchars($theme_color) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,6 +61,13 @@ $current_date = date('d.m.Y');
     </nav>
 
     <!-- Adjacent white panel -->
+    <!-- Header with Light/Dark Mode toggle (for mobile/floating integration) -->
+    <div id="top-header" class="floating-header">
+        <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Mode">
+            <i class="fas fa-lightbulb"></i>
+        </button>
+    </div>
+
     <div id="sidebar">
         <!-- 3-column grid for line categories -->
         <div class="transport-categories">
@@ -116,6 +132,15 @@ $current_date = date('d.m.Y');
         </div>
     </div>
 </div>
+
+<?php if(!empty($announcement_text)): ?>
+<!-- Dynamic Frontend Footer for Announcements -->
+<div id="announcement-footer">
+    <div class="announcement-content">
+        <i class="fas fa-info-circle"></i> <span><?= htmlspecialchars($announcement_text) ?></span>
+    </div>
+</div>
+<?php endif; ?>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>

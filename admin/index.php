@@ -24,7 +24,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $api_key = $_POST['tpbi_api_key'] ?? '';
         $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('tpbi_api_key', ?)");
         $stmt->execute([$api_key]);
-        $success = "Setările TPBI au fost salvate.";
+
+        $theme_color = $_POST['theme_color'] ?? 'blue';
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('theme_color', ?)");
+        $stmt->execute([$theme_color]);
+
+        $announcement_text = $_POST['announcement_text'] ?? '';
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('announcement_text', ?)");
+        $stmt->execute([$announcement_text]);
+
+        // Refresh local settings array
+        $settings['tpbi_api_key'] = $api_key;
+        $settings['theme_color'] = $theme_color;
+        $settings['announcement_text'] = $announcement_text;
+
+        $success = "Setările generale au fost salvate.";
     } elseif ($_POST['action'] == 'upload_logo') {
         if (isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] == 0) {
 
@@ -147,14 +161,29 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
         </div>
 
         <div class="card">
-            <h2>Setări TPBI (mo-bi.ro)</h2>
-            <p style="color: #7f8c8d; font-size: 14px;">Introdu cheia API pentru a accesa datele reale GTFS-RT.</p>
+            <h2>Setări Generale Site</h2>
+            <p style="color: #7f8c8d; font-size: 14px;">Configurează API-ul, tema și anunțurile publice.</p>
             <form method="POST" action="">
                 <input type="hidden" name="action" value="save_settings">
                 <div class="form-group">
                     <label>Cheie API mo-bi.ro (Opțional pt MVP local)</label>
                     <input type="text" name="tpbi_api_key" value="<?= htmlspecialchars($settings['tpbi_api_key'] ?? '') ?>" placeholder="ex: 12345-abcde...">
                 </div>
+
+                <div class="form-group">
+                    <label>Culoare Temă</label>
+                    <select name="theme_color" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-width: 500px;">
+                        <option value="blue" <?= (isset($settings['theme_color']) && $settings['theme_color'] === 'blue') ? 'selected' : '' ?>>Albastru (Blue)</option>
+                        <option value="green" <?= (!isset($settings['theme_color']) || $settings['theme_color'] === 'green') ? 'selected' : '' ?>>Verde (Green) - Implicit</option>
+                        <option value="red" <?= (isset($settings['theme_color']) && $settings['theme_color'] === 'red') ? 'selected' : '' ?>>Roșu (Red)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Text Anunț (Afișat în footer pe site)</label>
+                    <input type="text" name="announcement_text" value="<?= htmlspecialchars($settings['announcement_text'] ?? '') ?>" placeholder="Ex: Întârzieri pe linia 41 astăzi.">
+                </div>
+
                 <button type="submit">Salvează Setările</button>
             </form>
         </div>

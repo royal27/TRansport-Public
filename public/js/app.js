@@ -309,6 +309,29 @@ loadStations();
 loadVehicles();
 setInterval(loadVehicles, 10000);
 
+// Dark Mode Toggle Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const htmlElement = document.documentElement;
+
+    // Load user preference from localStorage
+    const currentMode = localStorage.getItem('theme-mode');
+    if (currentMode === 'dark') {
+        htmlElement.classList.add('dark-mode');
+    }
+
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark-mode');
+            if (htmlElement.classList.contains('dark-mode')) {
+                localStorage.setItem('theme-mode', 'dark');
+            } else {
+                localStorage.setItem('theme-mode', 'light');
+            }
+        });
+    }
+});
+
 // Check for search parameter in URL
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
