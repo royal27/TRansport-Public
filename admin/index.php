@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once '../includes/db.php';
-require_once '../includes/translations.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/translations.php';
 
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header("Location: login.php");

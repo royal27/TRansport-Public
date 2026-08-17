@@ -1,180 +1,121 @@
-// Setari initiale harta
-const map = L.map('map').setView([44.4396, 26.0963], 13); // Centrat pe Bucuresti
 
-// Adaugare tile layer (OpenStreetMap)
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
+const map = L.map('map').setView([44.4268, 26.1025], 13);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
 }).addTo(map);
 
-// Grupuri pentru markere pentru a le putea sterge usor la update
 const vehiclesLayer = L.layerGroup().addTo(map);
 const stationsLayer = L.layerGroup().addTo(map);
+let currentRoutePolyline = null;
 
-// Stare filtre
-const filters = {
+// DOM Elements
+const welcomeInfo = document.getElementById('welcome-info');
+const stationInfo = document.getElementById('station-info');
+const lineInfo = document.getElementById('line-info');
+const btnBack = document.getElementById('btn-back');
+const btnBackLine = document.getElementById('btn-back-line');
+const stationNameEl = document.getElementById('station-name');
+const arrivalsListEl = document.getElementById('arrivals-list');
+const lineSearchInput = document.getElementById('line-search');
+const timelineList = document.getElementById('timeline-list');
+const bottomPanel = document.getElementById('bottom-panel');
+
+// State
+let filters = {
     'BUS': true,
     'TRAM': true,
     'TROLLEYBUS': true
 };
+let currentLineType = 'BUS'; // default category
 
-const filterBus = document.getElementById('filter-bus');
-const filterTram = document.getElementById('filter-tram');
-const filterTrolley = document.getElementById('filter-trolley');
-
-if (filterBus) {
-    filterBus.addEventListener('change', (e) => { filters['BUS'] = e.target.checked; loadVehicles(); });
-    filterTram.addEventListener('change', (e) => { filters['TRAM'] = e.target.checked; loadVehicles(); });
-    filterTrolley.addEventListener('change', (e) => { filters['TROLLEYBUS'] = e.target.checked; loadVehicles(); });
-}
-
-// Referinte UI
-const welcomeInfo = document.getElementById('welcome-info');
-const stationInfo = document.getElementById('station-info');
-const stationNameEl = document.getElementById('station-name');
-const arrivalsListEl = document.getElementById('arrivals-list');
-const btnBack = document.getElementById('btn-back');
-
-const lineInfo = document.getElementById('line-info');
-const btnBackLine = document.getElementById('btn-back-line');
-const lineSearchInput = document.getElementById('line-search');
-const searchBtn = lineSearchInput ? lineSearchInput.nextElementSibling : null;
-
-// Event listeners UI
-btnBack.addEventListener('click', () => {
+// Events for back buttons
+if (btnBack) btnBack.addEventListener('click', () => {
     stationInfo.classList.add('hidden');
     welcomeInfo.classList.remove('hidden');
 });
 
-if (btnBackLine) {
-    btnBackLine.addEventListener('click', () => {
-        lineInfo.classList.add('hidden');
-        welcomeInfo.classList.remove('hidden');
-        lineSearchInput.value = '';
+if (btnBackLine) btnBackLine.addEventListener('click', () => {
+    lineInfo.classList.add('hidden');
+    bottomPanel.classList.add('hidden');
+    welcomeInfo.classList.remove('hidden');
+    if (currentRoutePolyline) map.removeLayer(currentRoutePolyline);
+});
+
+// Setup Category Tabs
+document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+
+        const type = e.currentTarget.getAttribute('data-type');
+        if (type === 'bus') currentLineType = 'BUS';
+        else if (type === 'tram') currentLineType = 'TRAM';
+        else if (type === 'trolley') currentLineType = 'TROLLEYBUS';
+
+        // Optional: filter map markers immediately
+        filters['BUS'] = type === 'bus';
+        filters['TRAM'] = type === 'tram';
+        filters['TROLLEYBUS'] = type === 'trolley';
+
+        loadVehicles(); // refresh map
     });
-}
+});
 
-// Layer pt shape traseu pe harta
-let currentRoutePolyline = null;
+async function searchLine(line) {
+    if (!line) return;
 
-// Logică de căutare linie reală
-async function searchLine(lineSearchQuery) {
-    if (!lineSearchQuery) return;
-    lineSearchQuery = lineSearchQuery.toString().toLowerCase();
-
-    // Ascunde celelalte
     welcomeInfo.classList.add('hidden');
     stationInfo.classList.add('hidden');
     lineInfo.classList.remove('hidden');
+    bottomPanel.classList.remove('hidden'); // Show floating panel
 
-    const timelineList = document.getElementById('timeline-list');
-    timelineList.innerHTML = `<div class="loading">${i18n.loading || 'Se încarcă...'}</div>`;
-
-    // Stergem linia desenata anterior
-    if (currentRoutePolyline) {
-        map.removeLayer(currentRoutePolyline);
-        currentRoutePolyline = null;
-    }
+    timelineList.innerHTML = `<div class="loading">${i18n.loading}</div>`;
 
     try {
-        // Căutăm linia în proxy (mo-bi.ro)
-        const routesResponse = await fetch('/api/proxy_routes.php');
-        const routesResult = await routesResponse.json();
+        const response = await fetch(`api/lines.php?search=${encodeURIComponent(line)}`);
+        const result = await response.json();
 
-        let foundRoute = null;
-        if (routesResult.data) {
-            foundRoute = routesResult.data.find(r => r.route_short_name.toLowerCase() === lineSearchQuery);
-        }
-
-        if (!foundRoute) {
-            timelineList.innerHTML = '<div class="loading" style="color:red">Nu s-a găsit linia (Nu există în rețeaua curentă TPBI).</div>';
+        if (result.status !== 'success' || !result.data || result.data.length === 0) {
+            timelineList.innerHTML = `<div class="loading">${i18n.no_vehicles}</div>`;
+            bottomPanel.classList.add('hidden');
             return;
         }
 
-        // Preluam cheia API (daca exista) pentru a incerca client-side bypass catre mo-bi.ro direct
-        const settingsRes = await fetch('/api/vehicles.php');
-        const settingsResult = await settingsRes.json();
-        let headers = { 'Accept': 'application/json' };
-        if (settingsResult.tpbi_api_key) {
-            headers['Authorization'] = 'Bearer ' + settingsResult.tpbi_api_key;
-        }
+        const routeData = result.data[0];
 
-        let routeData = foundRoute;
+        let type = routeData.route_type == 0 ? 'TRAM' : (routeData.route_type == 11 ? 'TROLLEYBUS' : 'BUS');
+        let icon = type === 'TRAM' ? 'fas fa-train-tram' : (type === 'TROLLEYBUS' ? 'fas fa-bus-simple' : 'fas fa-bus');
+        let color = type === 'TRAM' ? 'var(--tram-red)' : (type === 'TROLLEYBUS' ? 'var(--trolley-green)' : 'var(--bus-blue)');
+
+        // Fetch shape
         let shapeCoords = [];
-        let realStations = [];
-
-        // 1. Incercam sa tragem Statiile Reale direct de pe client catre mo-bi.ro
-        try {
-            // Endpoint pentru tipare (patterns) - de obicei contine lista opririlor per directie
-            const patternResp = await fetch(`https://mo-bi.ro/api/v1/routes/${foundRoute.route_id}/stops`, { headers: headers });
-            if (patternResp.ok) {
-                const stopsData = await patternResp.json();
-                if (stopsData.data && stopsData.data.length > 0) {
-                    // Mapeaza statiile pe noul obiect
-                    realStations = stopsData.data.map(stop => {
-                        return {
-                            name: stop.stop_name || stop.name,
-                            has_arrivals: false
-                        };
-                    });
-                }
-            }
-        } catch (e) {
-            console.warn("Nu s-au putut prelua statiile directe:", e);
+        if (routeData.shape_id) {
+            const shapeRes = await fetch(`api/lines.php?shape=${routeData.shape_id}`);
+            const shapeResult = await shapeRes.json();
+            if (shapeResult.status === 'success') shapeCoords = shapeResult.data;
         }
 
-        // 2. Incercam sa preluam Shape-ul exact al rutei
-        try {
-            const shapeResp = await fetch(`https://mo-bi.ro/api/v1/routes/${foundRoute.route_id}`, { headers: headers });
-            if (shapeResp.ok) {
-                const shapeData = await shapeResp.json();
-                if (shapeData.data && shapeData.data.shape) {
-                    shapeCoords = shapeData.data.shape;
-                }
-            }
-        } catch(e) {
-            console.warn("Nu s-a putut prelua shape direct:", e);
-        }
-
-        // Daca nu am primit nimic prin client-side, apelam API-ul nostru de proxy pt shape (fallback cloudflare)
-        if (shapeCoords.length === 0) {
-            const proxyShapeResp = await fetch(`/api/proxy_routes.php?id=${foundRoute.route_id}`);
-            const proxyShapeResult = await proxyShapeResp.json();
-            if (proxyShapeResult.data && proxyShapeResult.data.shape) {
-                shapeCoords = proxyShapeResult.data.shape;
-            }
-        }
-
-        // Stabilim tipul vehiculului pt iconite
-        let routeType = 'BUS';
-        let iconStr = 'fas fa-bus';
-        if (routeData.route_type == 0) { routeType = 'TRAM'; iconStr = 'fas fa-train-tram'; }
-        else if (routeData.route_type == 11) { routeType = 'TROLLEYBUS'; iconStr = 'fas fa-bus-simple'; }
-
-        // Daca statiile inca sunt goale (de ex: endpoint-ul mo-bi nu a raspuns corect sau block cloudflare si la statii), afisam un mesaj
-        if (realStations.length === 0) {
-            realStations = [
-                { name: "Date stații indisponibile din rețea", has_arrivals: false }
-            ];
+        // Mock stations (or fetch real if API provides)
+        const realStations = [];
+        if (routeData.stations && routeData.stations.length > 0) {
+            routeData.stations.forEach(s => realStations.push(s));
         } else {
-            // Simulam arrival DOAR pt prima statie ca sa aratam ca in poza ta (pana conectam live stop updates)
-            realStations[0].has_arrivals = true;
-            realStations[0].next_arrival = Math.floor(Math.random() * 5) + 1;
-            const now = new Date();
-            const min1 = Math.floor(Math.random() * 10) + 5;
-            const min2 = Math.floor(Math.random() * 20) + 15;
-
-            const addMinutes = (date, minutes) => {
-                return new Date(date.getTime() + minutes*60000).toLocaleTimeString('ro-RO', {hour: '2-digit', minute:'2-digit'});
+            // Mock fallback
+            for (let i = 1; i <= 5; i++) {
+                realStations.push({
+                    name: `Stația ${i}`,
+                    has_arrivals: i === 2 || i === 4,
+                    next_arrival: i * 3,
+                    other_arrivals: `${i*3 + 10} min, ${i*3 + 25} min`
+                });
             }
-            realStations[0].other_arrivals = addMinutes(now, min1) + ", " + addMinutes(now, min2);
         }
 
         const formattedResult = {
-            status: 'success',
             line: routeData.route_short_name,
-            type: routeType,
-            icon: iconStr,
+            type: type,
+            icon: icon,
+            color: color,
             direction: routeData.route_long_name || routeData.route_short_name,
             stations: realStations
         };
@@ -182,22 +123,23 @@ async function searchLine(lineSearchQuery) {
         renderTimelineUI(formattedResult, shapeCoords);
 
     } catch (error) {
-        timelineList.innerHTML = '<div class="loading" style="color:red">Eroare conexiune server API. Date inaccesibile.</div>';
+        timelineList.innerHTML = '<div class="loading" style="color:red">Eroare conexiune server API.</div>';
     }
 }
 
 function renderTimelineUI(result, shapeCoordinates) {
-    const timelineList = document.getElementById('timeline-list');
-    document.getElementById('line-info-badge').innerHTML = `<i class="${result.icon}"></i> <span>${result.line}</span>`;
+    const badgeHtml = `<i class="${result.icon}"></i> <span style="margin-left:5px;">${result.line}</span>`;
 
-    // Culoare badge
-    const badge = document.getElementById('line-info-badge');
-    let color = 'var(--bus)';
-    if (result.type === 'TRAM') { badge.style.borderColor = 'var(--tram)'; color = 'var(--tram)'; }
-    else if (result.type === 'TROLLEYBUS') { badge.style.borderColor = 'var(--trolley)'; color = 'var(--trolley)'; }
-    else badge.style.borderColor = 'var(--bus)';
+    // Update sidebar header badge
+    const headerBadge = document.getElementById('line-info-badge');
+    headerBadge.innerHTML = badgeHtml;
+    headerBadge.style.backgroundColor = result.color;
 
-    document.getElementById('line-direction-text').innerHTML = result.direction;
+    // Update bottom panel
+    const bpBadge = document.getElementById('bp-line-badge');
+    bpBadge.innerHTML = badgeHtml;
+    bpBadge.style.backgroundColor = result.color;
+    document.getElementById('bp-direction-text').innerHTML = result.direction;
 
     // Build timeline
     let html = '';
@@ -206,10 +148,8 @@ function renderTimelineUI(result, shapeCoordinates) {
         let arrivalsHtml = '';
         if (station.has_arrivals) {
             arrivalsHtml = `
-                <div class="timeline-arrivals">
-                    <div class="next-arrival-title">${i18n.next_arrivals || 'Următoarele sosiri'}</div>
-                    <div class="next-arrival-time">${station.next_arrival} <span>${i18n.min || 'min'}</span></div>
-                    <div class="other-arrivals">${i18n.other_arrivals || 'Alte sosiri programate: '}${station.other_arrivals}</div>
+                <div style="text-align:right; font-size:12px;">
+                    <div style="color:var(--stb-green); font-weight:bold; font-size:15px;">${station.next_arrival} min</div>
                 </div>
             `;
         }
@@ -217,7 +157,7 @@ function renderTimelineUI(result, shapeCoordinates) {
         html += `
             <div class="timeline-item ${activeClass}">
                 <div class="timeline-marker"></div>
-                <div class="timeline-content">
+                <div class="timeline-content" style="margin-left:30px; width:100%; display:flex; justify-content:space-between;">
                     <div class="timeline-station">${station.name}</div>
                     ${arrivalsHtml}
                 </div>
@@ -226,19 +166,17 @@ function renderTimelineUI(result, shapeCoordinates) {
     });
     timelineList.innerHTML = html;
 
-    // Desenam traseul pe harta
+    if (currentRoutePolyline) map.removeLayer(currentRoutePolyline);
+
+    // Draw route
     if (shapeCoordinates && shapeCoordinates.length > 0) {
         const latlngs = shapeCoordinates.map(p => [p.lat, p.lng]);
-        currentRoutePolyline = L.polyline(latlngs, {color: color, weight: 5, opacity: 0.7}).addTo(map);
+        currentRoutePolyline = L.polyline(latlngs, {color: result.color, weight: 6, opacity: 0.8}).addTo(map);
         map.fitBounds(currentRoutePolyline.getBounds());
     }
 }
 
-if (searchBtn && lineSearchInput) {
-    searchBtn.addEventListener('click', () => {
-        searchLine(lineSearchInput.value.trim());
-    });
-
+if (lineSearchInput) {
     lineSearchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             searchLine(lineSearchInput.value.trim());
@@ -246,24 +184,18 @@ if (searchBtn && lineSearchInput) {
     });
 }
 
-// Functie pt culori pe baza de tip vehicul
 function getColorByType(type) {
-    if (type === 'TRAM') return 'var(--tram)';
-    if (type === 'TROLLEYBUS') return 'var(--trolley)';
-    return 'var(--bus)';
+    if (type === 'TRAM') return 'var(--tram-red)';
+    if (type === 'TROLLEYBUS') return 'var(--trolley-green)';
+    return 'var(--bus-blue)';
 }
 
-// Randeaza vehicule pe harta
 function renderVehiclesOnMap(dataList) {
     vehiclesLayer.clearLayers();
-
     dataList.forEach(v => {
-        // Aplică filtrele
         if (!filters[v.type]) return;
 
         const color = getColorByType(v.type);
-
-        // Creare iconita custom cu HTML
         const icon = L.divIcon({
             className: 'custom-div-icon',
             html: `<div class="vehicle-marker" style="background-color: ${color}">${v.line}</div>`,
@@ -272,41 +204,27 @@ function renderVehiclesOnMap(dataList) {
         });
 
         const marker = L.marker([v.lat, v.lng], { icon: icon });
-
-        // Popup simplu
-        marker.bindPopup(`<b>Linia ${v.line}</b><br>Tip: ${v.type}<br>Viteza: ${v.speed} km/h`);
-
+        marker.bindPopup(`<b>Linia ${v.line}</b>`);
         vehiclesLayer.addLayer(marker);
     });
 }
 
-// Incarcare vehicule
 async function loadVehicles() {
     try {
-        // Incepem prin a cere backend-ului nostru (pentru cheie si fallback)
-        const response = await fetch('/api/vehicles.php');
+        const response = await fetch('api/vehicles.php');
         const result = await response.json();
 
-        // Daca backend-ul returneaza date REALE, le folosim
         if (result.status === 'success' && result.data_source !== 'mock_data') {
             renderVehiclesOnMap(result.data);
             return;
         }
 
-        // Incercam preluarea din Frontend direct
-        // Chiar daca nu avem cheie (API open conform TPBI), trimitem requestul
         if (result.try_frontend_fetch) {
             try {
-                let headers = {
-                    'Accept': 'application/json'
-                };
-                if (result.tpbi_api_key) {
-                    headers['Authorization'] = 'Bearer ' + result.tpbi_api_key;
-                }
+                let headers = { 'Accept': 'application/json' };
+                if (result.tpbi_api_key) headers['Authorization'] = 'Bearer ' + result.tpbi_api_key;
 
-                const mobiResponse = await fetch('https://mo-bi.ro/api/v1/vehicles', {
-                    headers: headers
-                });
+                const mobiResponse = await fetch('https://mo-bi.ro/api/v1/vehicles', { headers: headers });
 
                 if (mobiResponse.ok) {
                     const realData = await mobiResponse.json();
@@ -315,45 +233,26 @@ async function loadVehicles() {
                             let type = 'BUS';
                             if (v.route_type == 0) type = 'TRAM';
                             else if (v.route_type == 11) type = 'TROLLEYBUS';
-
-                            return {
-                                id: v.vehicle_id,
-                                line: v.route_short_name || '?',
-                                type: type,
-                                lat: v.latitude,
-                                lng: v.longitude,
-                                heading: v.bearing,
-                                speed: v.speed
-                            };
+                            return { id: v.vehicle_id, line: v.route_short_name || '?', type: type, lat: v.latitude, lng: v.longitude };
                         });
                         renderVehiclesOnMap(parsedVehicles);
-                        return; // Oprim aici daca a mers frontend fetch
+                        return;
                     }
                 }
-            } catch (frontendErr) {
-                console.warn('Frontend direct fetch failed (CORS/Cloudflare):', frontendErr);
-            }
+            } catch (err) {}
         }
 
-        // Fallback: folosim datele trimise de backend (mock_data) daca tot restul a picat
-        if (result.status === 'success') {
-            renderVehiclesOnMap(result.data);
-        }
-
-    } catch (error) {
-        console.error('Eroare la incarcare vehicule (Complet):', error);
-    }
+        if (result.status === 'success') renderVehiclesOnMap(result.data);
+    } catch (e) {}
 }
 
-// Incarcare statii
 async function loadStations() {
     try {
-        const response = await fetch('/api/stations.php');
+        const response = await fetch('api/stations.php');
         const result = await response.json();
 
         if (result.status === 'success') {
             stationsLayer.clearLayers();
-
             result.data.forEach(s => {
                 const icon = L.divIcon({
                     className: 'custom-div-icon',
@@ -363,30 +262,23 @@ async function loadStations() {
                 });
 
                 const marker = L.marker([s.lat, s.lng], { icon: icon });
-
-                // La click pe statie cerem detaliile
-                marker.on('click', () => {
-                    fetchStationArrivals(s.id, s.name);
-                });
-
+                marker.on('click', () => { fetchStationArrivals(s.id, s.name); });
                 stationsLayer.addLayer(marker);
             });
         }
-    } catch (error) {
-        console.error('Eroare la incarcare statii:', error);
-    }
+    } catch (e) {}
 }
 
-// Fetch sosiri pentru o statie (Ce vine la statia mea)
 async function fetchStationArrivals(stationId, stationName) {
-    // UI Update
     welcomeInfo.classList.add('hidden');
+    lineInfo.classList.add('hidden');
+    bottomPanel.classList.add('hidden');
     stationInfo.classList.remove('hidden');
     stationNameEl.textContent = stationName;
     arrivalsListEl.innerHTML = `<div class="loading">${i18n.loading}</div>`;
 
     try {
-        const response = await fetch(`/api/stations.php?id=${stationId}`);
+        const response = await fetch(`api/stations.php?id=${stationId}`);
         const result = await response.json();
 
         if (result.status === 'success') {
@@ -396,50 +288,37 @@ async function fetchStationArrivals(stationId, stationName) {
             }
 
             let html = '';
-            const iconMap = {
-                'BUS': '<i class="fas fa-bus"></i>',
-                'TRAM': '<i class="fas fa-train-tram"></i>',
-                'TROLLEYBUS': '<i class="fas fa-bus-simple"></i>' // placeholder if no trolley icon
-            };
-
             result.arrivals.forEach(a => {
+                let color = a.type === 'TRAM' ? 'var(--tram-red)' : (a.type === 'TROLLEYBUS' ? 'var(--trolley-green)' : 'var(--bus-blue)');
                 html += `
-                    <div class="arrival-item">
-                        <div class="route-badge type-${a.type}">
+                    <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #eee;">
+                        <div style="background:${color}; color:white; width:45px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:4px; font-weight:bold; margin-right:15px;">
                             ${a.line}
                         </div>
-                        <div class="arrival-details">
-                            <div class="route-type">${iconMap[a.type] || ''} ${i18n.estimated_arrival}</div>
-                        </div>
-                        <div class="arrival-time">
-                            ${a.minutes} <span>${i18n.min}</span>
-                        </div>
+                        <div style="flex:1;">Sosire</div>
+                        <div style="font-size:18px; font-weight:bold; color:var(--stb-green);">${a.minutes} <span style="font-size:14px; font-weight:normal; color:#777;">min</span></div>
                     </div>
                 `;
             });
-
             arrivalsListEl.innerHTML = html;
         }
-    } catch (error) {
-        console.error('Eroare la preluare sosiri:', error);
-        arrivalsListEl.innerHTML = `<div class="loading" style="color:red">${i18n.loading} (Error)</div>`;
-    }
+    } catch (e) {}
 }
 
-// Init si check params (dinspre schedules)
-const urlParams = new URLSearchParams(window.location.search);
-const searchParam = urlParams.get('search');
-if (searchParam && lineSearchInput) {
-    lineSearchInput.value = searchParam;
-    searchLine(searchParam);
-} else {
-    loadStations();
-    loadVehicles();
-}
+loadStations();
+loadVehicles();
+setInterval(loadVehicles, 10000);
 
-// Polling pt vehicule la fiecare 10 secunde (doar cand nu avem linie selectata pt timeline)
-setInterval(() => {
-    if (welcomeInfo.classList.contains('hidden') === false || stationInfo.classList.contains('hidden') === false) {
-        loadVehicles();
+// Check for search parameter in URL
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lineToSearch = urlParams.get('search');
+    if (lineToSearch) {
+        if (lineSearchInput) {
+            lineSearchInput.value = lineToSearch;
+        }
+        setTimeout(() => {
+            searchLine(lineToSearch);
+        }, 500); // Give map time to init
     }
-}, 10000);
+});

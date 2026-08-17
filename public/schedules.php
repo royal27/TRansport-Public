@@ -1,6 +1,6 @@
 <?php
-require_once '../includes/db.php';
-require_once '../includes/translations.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/translations.php';
 
 // Limba
 $lang = $_GET['lang'] ?? 'ro';
@@ -129,7 +129,7 @@ $current_date = date('d.m.Y');
     <script>
     document.addEventListener("DOMContentLoaded", async function() {
         try {
-            const res = await fetch('/api/proxy_routes.php');
+            const res = await fetch('api/proxy_routes.php');
             const result = await res.json();
 
             if (result && result.data) {

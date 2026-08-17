@@ -1,10 +1,11 @@
+
 :root {
-    --primary: #3498db;
-    --primary-dark: #2980b9;
-    --bus: #3498db;
-    --tram: #e74c3c;
-    --trolley: #2ecc71;
-    --bg-light: #f8f9fa;
+    --stb-green: #008855;
+    --stb-green-dark: #006640;
+    --bus-blue: #007bff;
+    --tram-red: #e63946;
+    --trolley-green: #2a9d8f;
+    --bg-light: #f4f6f8;
     --text: #333;
     --border: #e0e0e0;
 }
@@ -19,47 +20,120 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: var(--text);
     overflow: hidden;
+    background-color: var(--bg-light);
 }
 
-#app-container {
+#app-wrapper {
     display: flex;
     height: 100vh;
     width: 100vw;
 }
 
-#sidebar {
-    width: 350px;
-    background: white;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    z-index: 1000;
+/* Left Green Navigation */
+.left-nav {
+    width: 60px;
+    background-color: var(--stb-green);
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    z-index: 1050;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
 }
 
-.sidebar-header {
-    background: var(--primary);
+.nav-item {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 24px;
+    margin-bottom: 30px;
+    text-decoration: none;
+    transition: color 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.nav-item:hover, .nav-item.active {
     color: white;
-    padding: 20px;
 }
 
-.sidebar-header h2 {
+/* Adjacent White Panel */
+#sidebar {
+    width: 320px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+/* Transport Categories Grid */
+.transport-categories {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--border);
+}
+
+.cat-btn {
+    background: white;
+    border: none;
+    padding: 15px 0;
     font-size: 20px;
-    margin-bottom: 5px;
+    color: #999;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
 }
 
-.sidebar-header p {
+.cat-btn:hover {
+    background: #f8f9fa;
+}
+
+.cat-btn.bus-btn.active {
+    color: var(--bus-blue);
+    border-bottom-color: var(--bus-blue);
+}
+.cat-btn.tram-btn.active {
+    color: var(--tram-red);
+    border-bottom-color: var(--tram-red);
+}
+.cat-btn.trolley-btn.active {
+    color: var(--trolley-green);
+    border-bottom-color: var(--trolley-green);
+}
+
+/* Search Box Container */
+.search-box-container {
+    padding: 15px;
+    background: var(--bg-light);
+    border-bottom: 1px solid var(--border);
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 8px 15px;
+}
+
+.search-icon {
+    color: #888;
+    margin-right: 10px;
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    width: 100%;
     font-size: 14px;
-    opacity: 0.9;
 }
 
-#map {
-    flex: 1;
-    height: 100%;
-}
-
-.hidden {
-    display: none !important;
-}
+/* Dynamic Views */
+.hidden { display: none !important; }
 
 #welcome-info {
     flex: 1;
@@ -68,27 +142,22 @@ body {
     justify-content: center;
     padding: 20px;
     text-align: center;
-    color: #7f8c8d;
+    color: #aaa;
 }
 
-.instructions i {
-    margin-bottom: 15px;
-    color: #bdc3c7;
-}
-
-/* Station Info UI */
-#station-info {
+/* Station and Line Info */
+#station-info, #line-info {
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
-.station-header {
+.station-header, .line-header-top {
     display: flex;
     align-items: center;
     padding: 15px;
     border-bottom: 1px solid var(--border);
-    background: var(--bg-light);
 }
 
 .btn-icon {
@@ -98,72 +167,88 @@ body {
     color: #555;
     cursor: pointer;
     margin-right: 15px;
-    padding: 5px;
 }
 
-#station-name {
-    font-size: 18px;
-    font-weight: 600;
+#station-name, .agency-name {
+    font-size: 16px;
+    font-weight: bold;
 }
 
-#arrivals-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-}
-
-.arrival-item {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-    transition: background 0.2s;
-}
-
-.arrival-item:hover {
-    background: #f9f9f9;
-}
-
-.route-badge {
+.line-badge {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 45px;
-    height: 30px;
     border-radius: 4px;
+    padding: 4px 10px;
+    font-weight: bold;
+    font-size: 14px;
+    margin-right: 10px;
     color: white;
-    font-weight: bold;
-    font-size: 14px;
-    margin-right: 15px;
 }
 
-.type-BUS { background-color: var(--bus); }
-.type-TRAM { background-color: var(--tram); }
-.type-TROLLEYBUS { background-color: var(--trolley); }
-
-.arrival-details {
+/* Timeline */
+.timeline-container, #arrivals-list {
     flex: 1;
+    overflow-y: auto;
+    padding: 15px;
 }
 
-.arrival-time {
-    font-size: 18px;
+.timeline-item {
+    display: flex;
+    position: relative;
+    padding: 10px 0 20px 20px;
+}
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 15px;
+    bottom: -15px;
+    width: 3px;
+    background: #ccc;
+}
+.timeline-item:last-child::before { display: none; }
+
+.timeline-marker {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #666;
+    position: absolute;
+    left: -1px;
+    top: 15px;
+    z-index: 2;
+}
+
+.timeline-item.active .timeline-marker {
+    border-color: var(--stb-green);
+    background: var(--stb-green);
+}
+.timeline-item.active .timeline-station {
     font-weight: bold;
-    color: #2c3e50;
+    color: #000;
 }
 
-.arrival-time span {
+.timeline-station {
     font-size: 14px;
-    font-weight: normal;
-    color: #7f8c8d;
+    color: #555;
 }
 
-.loading {
-    text-align: center;
-    padding: 30px;
-    color: #7f8c8d;
+/* Map Container */
+#map-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Map markers custom css */
+#map {
+    flex: 1;
+    width: 100%;
+}
+
+/* Custom map markers */
 .vehicle-marker {
     display: flex;
     align-items: center;
@@ -180,223 +265,107 @@ body {
 
 .station-marker {
     background-color: white;
-    border: 2px solid var(--primary-dark);
+    border: 2px solid #555;
     border-radius: 50%;
     width: 14px;
     height: 14px;
 }
 
-/* Map Filters */
-.map-filters {
+/* Floating Bottom Panel */
+#bottom-panel {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 30px;
+    padding: 10px 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     z-index: 1000;
-    background: white;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    width: 80%;
+    max-width: 500px;
 }
 
-.map-filters label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.map-filters input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-}
-
-/* Search Box */
-.search-box {
-    display: flex;
-    margin-bottom: 20px;
-    width: 100%;
-}
-.search-box input {
-    flex: 1;
-    padding: 12px;
-    border: 1px solid var(--border);
-    border-right: none;
-    border-radius: 4px 0 0 4px;
-    outline: none;
-}
-.search-box button {
-    padding: 12px 15px;
-    background: var(--primary);
-    border: none;
-    color: white;
-    border-radius: 0 4px 4px 0;
-    cursor: pointer;
-}
-
-/* Line Info UI */
-#line-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: white;
-    overflow: hidden;
-}
-
-.line-header-top {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    background: white;
-    border-bottom: 1px solid var(--border);
-}
-
-.line-badge {
-    display: flex;
-    align-items: center;
-    border: 1px solid var(--tram);
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-weight: bold;
-    font-size: 14px;
-    margin-right: 10px;
-}
-.line-badge i { margin-right: 5px; }
-
-.agency-name { color: #555; font-weight: 500; }
-.btn-icon.right { margin-left: auto; margin-right: 0; }
-
-.line-direction {
-    background: #2c3e50;
-    color: white;
-    padding: 15px;
-    position: relative;
-}
-#line-direction-text {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 5px;
-}
-.switch-dir {
-    color: #3498db;
-    font-size: 13px;
-    text-decoration: none;
-}
-.btn-icon.right-white {
-    position: absolute;
-    right: 15px;
-    top: 20px;
-    color: white;
-}
-
-.line-info-banner {
-    background: #e9f2fb;
-    color: #2c3e50;
-    padding: 12px 15px;
-    font-size: 13px;
-    border-bottom: 1px solid var(--border);
-}
-
-.timeline-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px 0;
-}
-
-.timeline-item {
-    display: flex;
-    position: relative;
-    padding: 15px 20px;
-    min-height: 40px;
-}
-
-/* Vertical Line */
-.timeline-item::before {
-    content: '';
-    position: absolute;
-    left: 28px;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: black;
-}
-/* No line going up on the first item */
-.timeline-item:first-child::before {
-    top: 30px;
-}
-/* No line going down on the last item */
-.timeline-item:last-child::before {
-    bottom: calc(100% - 30px);
-}
-
-/* Circle marker */
-.timeline-marker {
-    width: 14px;
-    height: 14px;
-    border: 3px solid #333;
-    border-radius: 50%;
-    background: white;
-    position: absolute;
-    left: 19px;
-    top: 22px;
-    z-index: 2;
-}
-.timeline-item.active .timeline-marker {
-    background: black;
-}
-
-.timeline-content {
-    margin-left: 30px;
-    width: 100%;
+.bottom-panel-content {
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
-.timeline-station {
+.bp-left {
+    display: flex;
+    align-items: center;
+}
+
+#bp-direction-text {
+    font-weight: bold;
     font-size: 15px;
-    color: #333;
-}
-.timeline-item.active .timeline-station {
-    font-weight: bold;
 }
 
-.timeline-arrivals {
-    text-align: right;
-    font-size: 13px;
-}
-.next-arrival-title {
-    color: #555;
-    font-size: 12px;
-}
-.next-arrival-time {
-    color: #2ecc71;
-    font-weight: bold;
-    font-size: 16px;
-}
-.other-arrivals {
-    color: #555;
-    font-size: 12px;
-    margin-top: 5px;
+.btn-icon-circular {
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.2s;
 }
 
-/* Responsive */
+.btn-icon-circular:hover {
+    background: #e0e0e0;
+}
+
+/* Media Queries for Mobile */
 @media (max-width: 768px) {
-    #app-container {
-        flex-direction: column-reverse;
+    #app-wrapper {
+        flex-direction: column;
     }
-
+    .left-nav {
+        width: 100%;
+        height: 50px;
+        flex-direction: row;
+        padding: 0 20px;
+    }
+    .nav-item {
+        margin-bottom: 0;
+        margin-right: 20px;
+        width: auto;
+    }
     #sidebar {
         width: 100%;
-        height: 40vh; /* Ocupă partea de jos pe mobil */
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        height: 40vh;
     }
-
-    #map {
+    #map-container {
         height: 60vh;
     }
+    #bottom-panel {
+        bottom: 10px;
+        width: 90%;
+    }
+}
+
+/* Language Selector in Left Nav */
+.lang-selector-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.lang-selector-nav a {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.lang-selector-nav a:hover, .lang-selector-nav a.active {
+    color: white;
 }

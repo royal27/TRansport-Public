@@ -1,6 +1,6 @@
 <?php
-require_once '../includes/db.php';
-require_once '../includes/translations.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/translations.php';
 
 // Limba
 $lang = $_GET['lang'] ?? 'ro';
@@ -108,7 +108,7 @@ $current_date = date('d.m.Y');
     <script>
         async function loadFlights() {
             try {
-                const response = await fetch('/api/flights.php');
+                const response = await fetch('api/flights.php');
                 const result = await response.json();
 
                 const container = document.getElementById('flights-container');

@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-require_once '../includes/db.php';
+require_once __DIR__ . '/../../includes/db.php';
 
 $vehicles = [];
 $status = 'success';

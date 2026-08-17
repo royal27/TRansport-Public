@@ -1,6 +1,6 @@
 <?php
-require_once '../includes/db.php';
-require_once '../includes/translations.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/translations.php';
 
 // Limba
 $lang = $_GET['lang'] ?? 'ro';

@@ -1,5 +1,5 @@
 <?php
-require_once '../includes/config.php';
+require_once __DIR__ . '/config.php';
 
 function getDB() {
     $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
