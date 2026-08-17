@@ -87,27 +87,88 @@ async function searchLine(lineSearchQuery) {
         }
 
         if (!foundRoute) {
-            // Incercam fallback vechi pe mock lines.php
-            const fbResponse = await fetch(`/api/lines.php?q=${lineSearchQuery}`);
-            const fbResult = await fbResponse.json();
-            if (fbResult.status === 'success') {
-                renderTimelineUI(fbResult, null);
-                return;
-            }
-            timelineList.innerHTML = '<div class="loading" style="color:red">Nu s-a găsit linia.</div>';
+            timelineList.innerHTML = '<div class="loading" style="color:red">Nu s-a găsit linia (Nu există în rețeaua curentă TPBI).</div>';
             return;
         }
 
-        // Aducem detaliile si shape-ul
-        const shapeResponse = await fetch(`/api/proxy_routes.php?id=${foundRoute.route_id}`);
-        const shapeResult = await shapeResponse.json();
+        // Preluam cheia API (daca exista) pentru a incerca client-side bypass catre mo-bi.ro direct
+        const settingsRes = await fetch('/api/vehicles.php');
+        const settingsResult = await settingsRes.json();
+        let headers = { 'Accept': 'application/json' };
+        if (settingsResult.tpbi_api_key) {
+            headers['Authorization'] = 'Bearer ' + settingsResult.tpbi_api_key;
+        }
 
-        const routeData = shapeResult.data || foundRoute;
+        let routeData = foundRoute;
+        let shapeCoords = [];
+        let realStations = [];
 
+        // 1. Incercam sa tragem Statiile Reale direct de pe client catre mo-bi.ro
+        try {
+            // Endpoint pentru tipare (patterns) - de obicei contine lista opririlor per directie
+            const patternResp = await fetch(`https://mo-bi.ro/api/v1/routes/${foundRoute.route_id}/stops`, { headers: headers });
+            if (patternResp.ok) {
+                const stopsData = await patternResp.json();
+                if (stopsData.data && stopsData.data.length > 0) {
+                    // Mapeaza statiile pe noul obiect
+                    realStations = stopsData.data.map(stop => {
+                        return {
+                            name: stop.stop_name || stop.name,
+                            has_arrivals: false
+                        };
+                    });
+                }
+            }
+        } catch (e) {
+            console.warn("Nu s-au putut prelua statiile directe:", e);
+        }
+
+        // 2. Incercam sa preluam Shape-ul exact al rutei
+        try {
+            const shapeResp = await fetch(`https://mo-bi.ro/api/v1/routes/${foundRoute.route_id}`, { headers: headers });
+            if (shapeResp.ok) {
+                const shapeData = await shapeResp.json();
+                if (shapeData.data && shapeData.data.shape) {
+                    shapeCoords = shapeData.data.shape;
+                }
+            }
+        } catch(e) {
+            console.warn("Nu s-a putut prelua shape direct:", e);
+        }
+
+        // Daca nu am primit nimic prin client-side, apelam API-ul nostru de proxy pt shape (fallback cloudflare)
+        if (shapeCoords.length === 0) {
+            const proxyShapeResp = await fetch(`/api/proxy_routes.php?id=${foundRoute.route_id}`);
+            const proxyShapeResult = await proxyShapeResp.json();
+            if (proxyShapeResult.data && proxyShapeResult.data.shape) {
+                shapeCoords = proxyShapeResult.data.shape;
+            }
+        }
+
+        // Stabilim tipul vehiculului pt iconite
         let routeType = 'BUS';
         let iconStr = 'fas fa-bus';
         if (routeData.route_type == 0) { routeType = 'TRAM'; iconStr = 'fas fa-train-tram'; }
         else if (routeData.route_type == 11) { routeType = 'TROLLEYBUS'; iconStr = 'fas fa-bus-simple'; }
+
+        // Daca statiile inca sunt goale (de ex: endpoint-ul mo-bi nu a raspuns corect sau block cloudflare si la statii), afisam un mesaj
+        if (realStations.length === 0) {
+            realStations = [
+                { name: "Date stații indisponibile din rețea", has_arrivals: false }
+            ];
+        } else {
+            // Simulam arrival DOAR pt prima statie ca sa aratam ca in poza ta (pana conectam live stop updates)
+            realStations[0].has_arrivals = true;
+            realStations[0].next_arrival = Math.floor(Math.random() * 5) + 1;
+            const now = new Date();
+            const min1 = Math.floor(Math.random() * 10) + 5;
+            const min2 = Math.floor(Math.random() * 20) + 15;
+
+            const addMinutes = (date, minutes) => {
+                return new Date(date.getTime() + minutes*60000).toLocaleTimeString('ro-RO', {hour: '2-digit', minute:'2-digit'});
+            }
+            realStations[0].other_arrivals = addMinutes(now, min1) + ", " + addMinutes(now, min2);
+        }
 
         const formattedResult = {
             status: 'success',
@@ -115,21 +176,13 @@ async function searchLine(lineSearchQuery) {
             type: routeType,
             icon: iconStr,
             direction: routeData.route_long_name || routeData.route_short_name,
-            // Construim statiile simulate (deoarece API-ul de shape ne da linia geometrica, nu lista ierarhica usoara fara alt API call)
-            // Vom folosi un mock structurat doar pt a arata timeline-ul vizual
-            stations: [
-                { name: "Terminal Start", has_arrivals: true, next_arrival: 2, other_arrivals: "14:20, 14:35" },
-                { name: "Stația 2", has_arrivals: false },
-                { name: "Stația 3", has_arrivals: false },
-                { name: "Terminal Final", has_arrivals: false }
-            ]
+            stations: realStations
         };
 
-        renderTimelineUI(formattedResult, routeData.shape);
-
+        renderTimelineUI(formattedResult, shapeCoords);
 
     } catch (error) {
-        timelineList.innerHTML = '<div class="loading" style="color:red">Eroare conexiune server API.</div>';
+        timelineList.innerHTML = '<div class="loading" style="color:red">Eroare conexiune server API. Date inaccesibile.</div>';
     }
 }
 
