@@ -8,15 +8,19 @@ if (!file_exists(__DIR__ . '/config.php')) {
         $redirectUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
         $path = dirname($_SERVER['PHP_SELF']);
 
+        // Make it robust by redirecting to absolute web path root install.php
+        $base_dir = rtrim(dirname(dirname($_SERVER['SCRIPT_NAME'])), '/\\');
+
         if (strpos($path, 'admin') !== false) {
-             $redirectUrl .= str_replace('/admin', '', $path) . '/install.php';
+            header("Location: " . $base_dir . "/install.php");
+            exit;
         } else if (strpos($path, 'public') !== false || strpos($path, 'api') !== false) {
-            // Need to adjust depending on structure
-             header("Location: ../install.php");
-             exit;
+            // If in public folder, install.php is usually one level up
+            header("Location: " . $base_dir . "/install.php");
+            exit;
         } else {
-             header("Location: install.php");
-             exit;
+            header("Location: install.php");
+            exit;
         }
     }
 } else {
@@ -30,6 +34,34 @@ function getDB() {
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         // Asigurare automată că tabelele necesare există (pentru update-uri fără reinstall)
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS settings (
+                setting_key VARCHAR(50) PRIMARY KEY,
+                setting_value TEXT
+            )
+        ");
+
+        $pdo->exec("
+            INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
+            ('app_name', 'București Transport Live'),
+            ('app_logo', ''),
+            ('tpbi_api_key', ''),
+            ('theme_color', 'green'),
+            ('announcement_text', ''),
+            ('route_data_source', 'api'),
+            ('snap_threshold_meters', '20')
+        ");
+
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS schedules (
                 id INT AUTO_INCREMENT PRIMARY KEY,
