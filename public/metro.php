@@ -60,33 +60,26 @@ $current_date = date('d.m.Y');
 </head>
 <body>
 
-    <header class="front-header">
-        <div class="header-left">
-            <?php if($logo_path): ?>
-                <img src="<?= htmlspecialchars($logo_path) ?>" alt="Logo" class="header-logo">
-            <?php else: ?>
-                <h2><i class="fas fa-bus-alt"></i> <?= getTranslation('app_name', $lang) ?></h2>
-            <?php endif; ?>
+    <nav class="left-nav">
+        <div class="nav-top">
+            <a href="index.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_map', $lang) ?>"><i class="fas fa-map-marker-alt"></i></a>
+            <a href="schedules.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_schedules', $lang) ?>"><i class="fas fa-clock"></i></a>
+            <a href="lines.php?lang=<?= $lang ?>" class="nav-item" title="Orar și Linii Curente"><i class="fas fa-route"></i></a>
+            <a href="flights.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_flights', $lang) ?>"><i class="fas fa-plane"></i></a>
+            <a href="metro.php?lang=<?= $lang ?>" class="nav-item active" title="<?= getTranslation('btn_metro', $lang) ?>"><i class="fas fa-subway"></i></a>
         </div>
-
-        <div class="header-nav">
-            <a href="index.php?lang=<?= $lang ?>"><i class="fas fa-map"></i> <?= getTranslation('btn_map', $lang) ?></a>
-            <a href="schedules.php?lang=<?= $lang ?>"><i class="fas fa-clock"></i> <?= getTranslation('btn_schedules', $lang) ?></a>
-            <a href="flights.php?lang=<?= $lang ?>"><i class="fas fa-plane"></i> <?= getTranslation('btn_flights', $lang) ?></a>
-            <a href="metro.php?lang=<?= $lang ?>" class="active"><i class="fas fa-subway"></i> <?= getTranslation('btn_metro', $lang) ?></a>
-        </div>
-
-        <div class="header-right">
-            <div class="time-info"><i class="fas fa-calendar-alt"></i> <?= $current_date ?></div>
-            <div class="lang-selector">
-                <a href="?lang=ro" style="color: white; text-decoration: <?= $lang=='ro'?'underline':'none' ?>">RO</a> |
-                <a href="?lang=en" style="color: white; text-decoration: <?= $lang=='en'?'underline':'none' ?>">EN</a> |
-                <a href="?lang=fr" style="color: white; text-decoration: <?= $lang=='fr'?'underline':'none' ?>">FR</a>
+        <div class="nav-bottom">
+            <div class="lang-selector-nav">
+                <a href="?lang=ro" class="<?= $lang=='ro'?'active':'' ?>">RO</a>
+                <a href="?lang=en" class="<?= $lang=='en'?'active':'' ?>">EN</a>
+                <a href="?lang=fr" class="<?= $lang=='fr'?'active':'' ?>">FR</a>
             </div>
+            <a href="admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
         </div>
-    </header>
+    </nav>
 
-    <div class="page-content">
+    <div id="app-wrapper">
+    <div class="page-content" style="margin-left: 60px;">
         <h1 class="page-title"><i class="fas fa-subway"></i> <?= getTranslation('btn_metro', $lang) ?></h1>
         <p style="color: #555; margin-bottom: 20px; text-align: left;">
             Harta generală a rețelei de metrou din București (Metrorex).

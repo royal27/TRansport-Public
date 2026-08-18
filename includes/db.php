@@ -39,6 +39,39 @@ function getDB() {
             )
         ");
 
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS custom_lines (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                color VARCHAR(20) DEFAULT '#000000',
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS custom_routes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                line_id INT NOT NULL,
+                latitude DECIMAL(10, 8) NOT NULL,
+                longitude DECIMAL(11, 8) NOT NULL,
+                order_idx INT NOT NULL,
+                FOREIGN KEY (line_id) REFERENCES custom_lines(id) ON DELETE CASCADE
+            )
+        ");
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS custom_markers (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                line_id INT NOT NULL,
+                latitude DECIMAL(10, 8) NOT NULL,
+                longitude DECIMAL(11, 8) NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                description TEXT,
+                FOREIGN KEY (line_id) REFERENCES custom_lines(id) ON DELETE CASCADE
+            )
+        ");
+
         return $pdo;
     } catch (PDOException $e) {
         die("Eroare conexiune: " . $e->getMessage());

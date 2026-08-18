@@ -150,6 +150,8 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
     <div class="sidebar">
         <a href="index.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard & Setări</a>
         <a href="schedules.php"><i class="fas fa-clock"></i> Gestiune Orar & Linii</a>
+        <a href="create_lines.php"><i class="fas fa-route"></i> Creează Linii</a>
+        <a href="draw_lines.php"><i class="fas fa-draw-polygon"></i> Desenează Linii</a>
         <a href="../public/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Vezi site-ul</a>
         <a href="?action=logout" style="color: #e74c3c; margin-top: 50px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
