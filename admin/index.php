@@ -49,14 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('weather_api_key', ?)");
         $stmt->execute([$weather_api_key]);
 
-        $route_data_source = $_POST['route_data_source'] ?? 'api';
-        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('route_data_source', ?)");
-        $stmt->execute([$route_data_source]);
-
-        $snap_threshold_meters = $_POST['snap_threshold_meters'] ?? '20';
-        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('snap_threshold_meters', ?)");
-        $stmt->execute([$snap_threshold_meters]);
-
         // Refresh local settings array
         $settings['tpbi_api_key'] = $api_key;
         $settings['theme_color'] = $theme_color;
@@ -65,8 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $settings['app_version'] = $app_version;
         $settings['app_author'] = $app_author;
         $settings['weather_api_key'] = $weather_api_key;
-        $settings['route_data_source'] = $route_data_source;
-        $settings['snap_threshold_meters'] = $snap_threshold_meters;
 
         $success = "Setările generale au fost salvate.";
     } elseif ($_POST['action'] == 'upload_logo') {
@@ -234,25 +224,6 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
                 <div class="form-group">
                     <label>Cheie API OpenWeatherMap (Pentru Vremea Live)</label>
                     <input type="text" name="weather_api_key" value="<?= htmlspecialchars($settings['weather_api_key'] ?? '') ?>" placeholder="ex: 12345abcde...">
-                </div>
-
-                <div class="form-group">
-                    <label>Sursă Date Trasee (Căutare pe hartă)</label>
-                    <select name="route_data_source" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px;">
-                        <option value="api" <?= (isset($settings['route_data_source']) && $settings['route_data_source'] === 'api') ? 'selected' : '' ?>>API Oficial (STB/TPBI)</option>
-                        <option value="custom" <?= (isset($settings['route_data_source']) && $settings['route_data_source'] === 'custom') ? 'selected' : '' ?>>Liniile mele (Custom Desenate)</option>
-                    </select>
-                    <small style="color:#666; display:block; margin-top:5px;">Când utilizatorii caută o linie (ex. "32"), sistemul va afișa traseul conform acestei setări.</small>
-                </div>
-
-                <div class="form-group">
-                    <label>Prag "Snap to Route" (Distanță acceptată de la GPS la linie)</label>
-                    <select name="snap_threshold_meters" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px;">
-                        <option value="5" <?= (isset($settings['snap_threshold_meters']) && $settings['snap_threshold_meters'] === '5') ? 'selected' : '' ?>>5 metri (Foarte strict)</option>
-                        <option value="10" <?= (isset($settings['snap_threshold_meters']) && $settings['snap_threshold_meters'] === '10') ? 'selected' : '' ?>>10 metri</option>
-                        <option value="20" <?= (!isset($settings['snap_threshold_meters']) || $settings['snap_threshold_meters'] === '20') ? 'selected' : '' ?>>20 metri (Echilibrat)</option>
-                        <option value="50" <?= (isset($settings['snap_threshold_meters']) && $settings['snap_threshold_meters'] === '50') ? 'selected' : '' ?>>50 metri (Permisiv)</option>
-                    </select>
                 </div>
 
                 <button type="submit">Salvează Setările</button>

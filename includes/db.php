@@ -57,9 +57,7 @@ function getDB() {
             ('app_logo', ''),
             ('tpbi_api_key', ''),
             ('theme_color', 'green'),
-            ('announcement_text', ''),
-            ('route_data_source', 'api'),
-            ('snap_threshold_meters', '20')
+            ('announcement_text', '')
         ");
 
         $pdo->exec("
