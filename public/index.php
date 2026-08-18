@@ -45,26 +45,11 @@ $current_date = date('d.m.Y');
 </head>
 <body>
 
-<!-- New Top Bar -->
-<div id="top-bar">
-    <div class="tb-left">
-        <i class="far fa-calendar-alt"></i> <span id="tb-date"><?= $current_date ?></span>
-        <i class="fas fa-map-marker-alt" style="margin-left: 15px;"></i> <span id="tb-location">București</span>
-        <i class="fas fa-cloud-sun" style="margin-left: 5px;"></i> <span id="tb-weather">-- °C</span>
-    </div>
-    <div class="tb-center">
-        <?php if(!empty($announcement_text)): ?>
-            <marquee behavior="scroll" direction="left" scrollamount="5">
-                <i class="fas fa-info-circle"></i> <?= htmlspecialchars($announcement_text) ?>
-            </marquee>
-        <?php endif; ?>
-    </div>
-    <div class="tb-right">
-        <!-- The theme toggle button is moved here from floating-header -->
-        <button id="theme-toggle" class="theme-toggle-btn-top" title="Toggle Light/Dark Mode">
-            <i class="fas fa-lightbulb"></i>
-        </button>
-    </div>
+<!-- Theme toggle moved back to floating for cleaner UI -->
+<div id="top-header" class="floating-header">
+    <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Mode">
+        <i class="fas fa-lightbulb"></i>
+    </button>
 </div>
 
 <div id="app-wrapper">
@@ -154,6 +139,23 @@ $current_date = date('d.m.Y');
                 </div>
                 <button id="bp-switch-dir" class="btn-icon-circular"><i class="fas fa-exchange-alt"></i></button>
             </div>
+        </div>
+
+        <!-- Modern Bottom Bar -->
+        <div id="modern-bottom-bar">
+            <div class="mbb-widgets">
+                <div class="mbb-badge"><i class="fas fa-map-marker-alt"></i> București</div>
+                <div class="mbb-badge"><i class="fas fa-cloud-sun"></i> <span id="tb-weather">-- °C</span></div>
+                <div class="mbb-badge"><i class="far fa-calendar-alt"></i> <?= $current_date ?></div>
+            </div>
+            <?php if(!empty($announcement_text)): ?>
+            <div class="mbb-ticker-container">
+                <div class="mbb-ticker-label"><i class="fas fa-bolt"></i> INFO</div>
+                <div class="mbb-ticker-wrap">
+                    <div class="mbb-ticker-text"><?= htmlspecialchars($announcement_text) ?></div>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
