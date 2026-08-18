@@ -13,13 +13,17 @@ $logo_row = $stmt->fetch(PDO::FETCH_ASSOC);
 $logo_path = $logo_row ? $logo_row['setting_value'] : '';
 
 // Get theme and announcement settings
-$stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('theme_color', 'announcement_text')");
+$stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('theme_color', 'announcement_text', 'app_name', 'app_version', 'app_author', 'weather_api_key')");
 $settings = [];
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $settings[$row['setting_key']] = $row['setting_value'];
 }
 $theme_color = $settings['theme_color'] ?? 'green';
 $announcement_text = $settings['announcement_text'] ?? '';
+$app_name = $settings['app_name'] ?? 'București Transport Live';
+$app_version = $settings['app_version'] ?? '1.0.0';
+$app_author = $settings['app_author'] ?? 'Admin';
+$weather_api_key = $settings['weather_api_key'] ?? '';
 
 // Vreme si Data pt header (PHP variables pt initializare)
 $current_date = date('d.m.Y');
@@ -29,7 +33,7 @@ $current_date = date('d.m.Y');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= getTranslation('app_name', $lang) ?></title>
+    <title><?= htmlspecialchars($app_name) ?></title>
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
@@ -40,6 +44,28 @@ $current_date = date('d.m.Y');
 
 </head>
 <body>
+
+<!-- New Top Bar -->
+<div id="top-bar">
+    <div class="tb-left">
+        <i class="far fa-calendar-alt"></i> <span id="tb-date"><?= $current_date ?></span>
+        <i class="fas fa-map-marker-alt" style="margin-left: 15px;"></i> <span id="tb-location">București</span>
+        <i class="fas fa-cloud-sun" style="margin-left: 5px;"></i> <span id="tb-weather">-- °C</span>
+    </div>
+    <div class="tb-center">
+        <?php if(!empty($announcement_text)): ?>
+            <marquee behavior="scroll" direction="left" scrollamount="5">
+                <i class="fas fa-info-circle"></i> <?= htmlspecialchars($announcement_text) ?>
+            </marquee>
+        <?php endif; ?>
+    </div>
+    <div class="tb-right">
+        <!-- The theme toggle button is moved here from floating-header -->
+        <button id="theme-toggle" class="theme-toggle-btn-top" title="Toggle Light/Dark Mode">
+            <i class="fas fa-lightbulb"></i>
+        </button>
+    </div>
+</div>
 
 <div id="app-wrapper">
     <!-- Distinct left green navigation bar -->
@@ -61,13 +87,6 @@ $current_date = date('d.m.Y');
     </nav>
 
     <!-- Adjacent white panel -->
-    <!-- Header with Light/Dark Mode toggle (for mobile/floating integration) -->
-    <div id="top-header" class="floating-header">
-        <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Mode">
-            <i class="fas fa-lightbulb"></i>
-        </button>
-    </div>
-
     <div id="sidebar">
         <!-- 3-column grid for line categories -->
         <div class="transport-categories">
@@ -112,6 +131,12 @@ $current_date = date('d.m.Y');
                 <!-- Timeline items go here via JS -->
             </div>
         </div>
+
+        <!-- Sidebar Footer App Info -->
+        <div id="sidebar-footer" class="app-info-footer">
+            <strong><?= htmlspecialchars($app_name) ?></strong> v<?= htmlspecialchars($app_version) ?><br>
+            <small>by <?= htmlspecialchars($app_author) ?></small>
+        </div>
     </div>
 
     <!-- Harta -->
@@ -133,20 +158,12 @@ $current_date = date('d.m.Y');
     </div>
 </div>
 
-<?php if(!empty($announcement_text)): ?>
-<!-- Dynamic Frontend Footer for Announcements -->
-<div id="announcement-footer">
-    <div class="announcement-content">
-        <i class="fas fa-info-circle"></i> <span><?= htmlspecialchars($announcement_text) ?></span>
-    </div>
-</div>
-<?php endif; ?>
-
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
     <!-- Pass translations to JS -->
     <script>
+        const weatherApiKey = "<?= htmlspecialchars($weather_api_key) ?>";
         const i18n = {
             loading: "<?= getTranslation('loading', $lang) ?>",
             no_vehicles: "<?= getTranslation('no_vehicles', $lang) ?>",

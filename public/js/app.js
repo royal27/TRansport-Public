@@ -345,3 +345,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500); // Give map time to init
     }
 });
+
+// OpenWeatherMap Integration
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof weatherApiKey !== 'undefined' && weatherApiKey.trim() !== '') {
+        const city = 'Bucharest';
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${weatherApiKey}&lang=ro`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.main && data.main.temp) {
+                    const temp = Math.round(data.main.temp);
+                    const desc = data.weather[0].description;
+                    document.getElementById('tb-weather').innerHTML = `${temp}°C, ${desc}`;
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching weather:", error);
+            });
+    }
+});

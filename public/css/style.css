@@ -483,3 +483,82 @@ html.dark-mode .theme-toggle-btn {
         bottom: 60px; /* above mobile nav */
     }
 }
+
+/* New Top Bar CSS */
+#top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--nav-bg, #27ae60);
+    color: white;
+    padding: 10px 20px;
+    height: 45px;
+    z-index: 1100;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.tb-left, .tb-right {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.tb-center {
+    flex: 1;
+    overflow: hidden;
+    margin: 0 20px;
+    display: flex;
+    align-items: center;
+}
+
+.tb-center marquee {
+    color: #ffd700; /* Gold color for visibility */
+    font-weight: bold;
+}
+
+/* Adjust wrapper to account for top bar */
+#app-wrapper {
+    height: calc(100vh - 45px);
+}
+
+.theme-toggle-btn-top {
+    background: transparent;
+    border: none;
+    color: #f1c40f;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.theme-toggle-btn-top:hover {
+    transform: scale(1.1);
+}
+
+/* Sidebar App Info Footer */
+.app-info-footer {
+    padding: 15px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: #777;
+    background: var(--bg-light);
+    margin-top: auto; /* Push to bottom of flex container if space allows */
+}
+
+/* Fix mobile layout for top bar */
+@media (max-width: 768px) {
+    #top-bar {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        height: auto;
+        flex-direction: column;
+    }
+    .tb-center {
+        width: 100%;
+        margin: 5px 0;
+    }
+    #app-wrapper {
+        height: calc(100vh - 70px);
+    }
+}

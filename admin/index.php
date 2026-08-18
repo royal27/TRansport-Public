@@ -33,10 +33,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('announcement_text', ?)");
         $stmt->execute([$announcement_text]);
 
+        $app_name = $_POST['app_name'] ?? '';
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('app_name', ?)");
+        $stmt->execute([$app_name]);
+
+        $app_version = $_POST['app_version'] ?? '';
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('app_version', ?)");
+        $stmt->execute([$app_version]);
+
+        $app_author = $_POST['app_author'] ?? '';
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('app_author', ?)");
+        $stmt->execute([$app_author]);
+
+        $weather_api_key = $_POST['weather_api_key'] ?? '';
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('weather_api_key', ?)");
+        $stmt->execute([$weather_api_key]);
+
         // Refresh local settings array
         $settings['tpbi_api_key'] = $api_key;
         $settings['theme_color'] = $theme_color;
         $settings['announcement_text'] = $announcement_text;
+        $settings['app_name'] = $app_name;
+        $settings['app_version'] = $app_version;
+        $settings['app_author'] = $app_author;
+        $settings['weather_api_key'] = $weather_api_key;
 
         $success = "Setările generale au fost salvate.";
     } elseif ($_POST['action'] == 'upload_logo') {
@@ -180,8 +200,28 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
                 </div>
 
                 <div class="form-group">
-                    <label>Text Anunț (Afișat în footer pe site)</label>
+                    <label>Text Anunț (Afișat sus ca Live Text)</label>
                     <input type="text" name="announcement_text" value="<?= htmlspecialchars($settings['announcement_text'] ?? '') ?>" placeholder="Ex: Întârzieri pe linia 41 astăzi.">
+                </div>
+
+                <div class="form-group">
+                    <label>Numele Aplicației</label>
+                    <input type="text" name="app_name" value="<?= htmlspecialchars($settings['app_name'] ?? 'București Transport Live') ?>" placeholder="Ex: Transport Live">
+                </div>
+
+                <div class="form-group">
+                    <label>Versiunea Aplicației</label>
+                    <input type="text" name="app_version" value="<?= htmlspecialchars($settings['app_version'] ?? '1.0.0') ?>" placeholder="Ex: 1.0.0">
+                </div>
+
+                <div class="form-group">
+                    <label>Autorul Aplicației</label>
+                    <input type="text" name="app_author" value="<?= htmlspecialchars($settings['app_author'] ?? 'Admin') ?>" placeholder="Ex: John Doe">
+                </div>
+
+                <div class="form-group">
+                    <label>Cheie API OpenWeatherMap (Pentru Vremea Live)</label>
+                    <input type="text" name="weather_api_key" value="<?= htmlspecialchars($settings['weather_api_key'] ?? '') ?>" placeholder="ex: 12345abcde...">
                 </div>
 
                 <button type="submit">Salvează Setările</button>
