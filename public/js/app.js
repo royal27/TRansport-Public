@@ -22,9 +22,23 @@ const customLineId = urlParams.get('custom_line_id');
 let customPolyline = null;
 let customPassedPolyline = null;
 let customRouteCoords = [];
+let customMarkersData = [];
 let customLineColor = '#000';
 let userMarker = null;
 let watchId = null;
+
+let appSettings = {
+    route_data_source: 'api',
+    snap_threshold_meters: 20
+};
+
+// Fetch global settings
+fetch('api/custom_lines.php?action=get_settings')
+    .then(res => res.json())
+    .then(data => {
+        if (data.route_data_source) appSettings.route_data_source = data.route_data_source;
+        if (data.snap_threshold_meters) appSettings.snap_threshold_meters = parseInt(data.snap_threshold_meters, 10);
+    });
 
 if (customLineId) {
     // Ascunde sidebarul default de STB si arata un panel de custom live trace
@@ -79,6 +93,7 @@ if (customLineId) {
         .then(res => res.json())
         .then(data => {
             if (Array.isArray(data)) {
+                customMarkersData = data;
                 data.forEach(m => {
                     L.marker([m.latitude, m.longitude], {icon: customIcons[m.type] || customIcons['station']})
                      .bindPopup(`<b>Detaliu:</b><br>${escapeHtml(m.description)}`)
@@ -86,6 +101,22 @@ if (customLineId) {
                 });
             }
         });
+
+    // Create notification banner element
+    const banner = document.createElement('div');
+    banner.id = 'station-notification-banner';
+    banner.style.cssText = 'position:fixed; top:-100px; left:50%; transform:translateX(-50%); background:#2c3e50; color:white; padding:15px 30px; border-radius:30px; z-index:9999; box-shadow:0 4px 15px rgba(0,0,0,0.3); font-weight:bold; transition:top 0.4s ease-in-out; display:flex; flex-direction:column; align-items:center; text-align:center; min-width:300px;';
+    document.body.appendChild(banner);
+
+    let lastNotifiedStationId = null;
+    function showStationNotification(currentStationName, nextStationName) {
+        banner.innerHTML = `
+            <div style="font-size:18px; color:#2ecc71; margin-bottom:5px;"><i class="fas fa-map-marker-alt"></i> Ai ajuns la stația: ${currentStationName}</div>
+            ${nextStationName ? `<div style="font-size:14px; color:#bdc3c7;">Următoarea stație: ${nextStationName}</div>` : `<div style="font-size:14px; color:#bdc3c7;">Capăt de linie</div>`}
+        `;
+        banner.style.top = '20px';
+        setTimeout(() => { banner.style.top = '-100px'; }, 5000);
+    }
 
     // Live Trace Logic
     document.getElementById('sidebar').addEventListener('click', function(e) {
@@ -130,22 +161,64 @@ if (customLineId) {
                                     const lineGeoJson = turf.lineString(customRouteCoords.map(c => [c[1], c[0]]));
                                     const ptGeoJson = turf.point([lng, lat]);
 
-                                    // Snap user pos to line
-                                    const snapped = turf.nearestPointOnLine(lineGeoJson, ptGeoJson);
+                                    // Distance in km, convert to meters
+                                    const distanceToLine = turf.pointToLineDistance(ptGeoJson, lineGeoJson, {units: 'kilometers'}) * 1000;
 
-                                    // Split line at snapped point
-                                    const split = turf.lineSplit(lineGeoJson, snapped);
+                                    if (distanceToLine > appSettings.snap_threshold_meters) {
+                                        statusEl.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">Ești în afara traseului (${Math.round(distanceToLine)}m distanță)</span>`;
+                                        // Do not snap if too far
+                                    } else {
+                                        statusEl.innerText = `GPS Activ (${lat.toFixed(4)}, ${lng.toFixed(4)}) - Pe traseu`;
+                                        // Snap user pos to line perfectly
+                                        const snapped = turf.nearestPointOnLine(lineGeoJson, ptGeoJson);
+                                        const snappedCoords = snapped.geometry.coordinates;
+                                        userMarker.setLatLng([snappedCoords[1], snappedCoords[0]]);
 
-                                    if (split.features.length >= 2) {
-                                        // Asumăm că prima parte (index 0) este parcursă.
-                                        const passedSegment = split.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                                        const remainingSegment = split.features[1].geometry.coordinates.map(c => [c[1], c[0]]);
+                                        // Split line at snapped point
+                                        const split = turf.lineSplit(lineGeoJson, snapped);
 
-                                        if (customPassedPolyline) map.removeLayer(customPassedPolyline);
-                                        if (customPolyline) map.removeLayer(customPolyline);
+                                        if (split.features.length >= 2) {
+                                            // Asumăm că prima parte (index 0) este parcursă.
+                                            const passedSegment = split.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                                            const remainingSegment = split.features[1].geometry.coordinates.map(c => [c[1], c[0]]);
 
-                                        customPassedPolyline = L.polyline(passedSegment, {color: '#000000', weight: 5, dashArray: '5, 10'}).addTo(map);
-                                        customPolyline = L.polyline(remainingSegment, {color: '#e74c3c', weight: 5}).addTo(map);
+                                            // Add the snapped point to both segments to avoid gaps
+                                            passedSegment.push([snappedCoords[1], snappedCoords[0]]);
+                                            remainingSegment.unshift([snappedCoords[1], snappedCoords[0]]);
+
+                                            if (customPassedPolyline) map.removeLayer(customPassedPolyline);
+                                            if (customPolyline) map.removeLayer(customPolyline);
+
+                                            customPassedPolyline = L.polyline(passedSegment, {color: '#000000', weight: 6}).addTo(map);
+                                            customPolyline = L.polyline(remainingSegment, {color: customLineColor, weight: 6}).addTo(map);
+                                        }
+
+                                        // Station Detection Logic
+                                        const stationMarkers = customMarkersData.filter(m => m.type === 'station');
+                                        let currentStation = null;
+                                        let currentStationIndex = -1;
+
+                                        for (let i = 0; i < stationMarkers.length; i++) {
+                                            const st = stationMarkers[i];
+                                            const stPt = turf.point([st.longitude, st.latitude]);
+                                            const distToSt = turf.distance(ptGeoJson, stPt, {units: 'kilometers'}) * 1000;
+
+                                            // Daca e la mai putin de 30m de statie
+                                            if (distToSt < 30) {
+                                                currentStation = st;
+                                                currentStationIndex = i;
+                                                break;
+                                            }
+                                        }
+
+                                        if (currentStation && currentStation.id !== lastNotifiedStationId) {
+                                            lastNotifiedStationId = currentStation.id;
+                                            let nextStationName = null;
+                                            if (currentStationIndex >= 0 && currentStationIndex < stationMarkers.length - 1) {
+                                                nextStationName = escapeHtml(stationMarkers[currentStationIndex + 1].description || 'Necunoscut');
+                                            }
+                                            showStationNotification(escapeHtml(currentStation.description || 'Necunoscut'), nextStationName);
+                                        }
                                     }
                                 } catch (err) {
                                     console.error("Turf splitting error:", err);
@@ -234,6 +307,16 @@ async function searchLine(line) {
     timelineList.innerHTML = `<div class="loading">${i18n.loading}</div>`;
 
     try {
+        if (appSettings.route_data_source === 'custom') {
+            const customRes = await fetch(`api/custom_lines.php?action=search_line&q=${encodeURIComponent(line)}`);
+            const customResult = await customRes.json();
+            if (customResult.status === 'success' && customResult.data) {
+                window.location.href = `index.php?custom_line_id=${customResult.data.id}&lang=${urlParams.get('lang') || 'ro'}`;
+                return;
+            }
+            // Fallback to API if custom not found, though we could just show not found
+        }
+
         const response = await fetch(`api/lines.php?search=${encodeURIComponent(line)}`);
         const result = await response.json();
 
