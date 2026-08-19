@@ -509,7 +509,7 @@ html.dark-mode .theme-toggle-btn {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    pointer-events: none; /* Let clicks pass through to the map if empty spaces exist */
+    pointer-events: none;
 }
 
 /* Push the existing bottom panel slightly higher to avoid overlap */
