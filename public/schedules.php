@@ -27,7 +27,7 @@ $current_date = date('d.m.Y');
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        body { display: flex; flex-direction: column; min-height: 100vh; overflow-y: auto; background-color: #f4f7f6; }
+        body { display: flex; flex-direction: row; height: 100vh; overflow-y: hidden; background-color: #f4f7f6; }
         .front-header {
             background-color: var(--primary-dark);
             color: white;
@@ -46,7 +46,7 @@ $current_date = date('d.m.Y');
 
         .front-footer { background-color: #2c3e50; color: white; text-align: center; padding: 10px; margin-top: auto; font-size: 13px; }
 
-        .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; }
+        .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
         .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
 
         .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
@@ -75,12 +75,12 @@ $current_date = date('d.m.Y');
                 <a href="?lang=en" class="<?= $lang=='en'?'active':'' ?>">EN</a>
                 <a href="?lang=fr" class="<?= $lang=='fr'?'active':'' ?>">FR</a>
             </div>
-            <a href="admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
+            <a href="/admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
         </div>
     </nav>
 
     <div id="app-wrapper">
-    <div class="page-content" style="margin-left: 60px;">
+    <div class="page-content">
         <h1 class="page-title"><i class="fas fa-list"></i> <?= getTranslation('schedules_title', $lang) ?> (Live STB)</h1>
 
         <div id="dynamic-schedules" style="text-align:center; padding: 40px;">
@@ -153,5 +153,6 @@ $current_date = date('d.m.Y');
         }
     });
     </script>
+</div>
 </body>
 </html>

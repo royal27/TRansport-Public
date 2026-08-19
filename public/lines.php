@@ -21,7 +21,7 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="css/style.css">
     <style>
         body { display: flex; height: 100vh; overflow: hidden; background-color: #f4f7f6; }
-        .page-content { margin-left: 60px; padding: 30px; flex: 1; overflow-y: auto; }
+        .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
         .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
         .lines-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .line-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #ccc; transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; display: block; }
@@ -47,7 +47,7 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <a href="?lang=en" class="<?= $lang=='en'?'active':'' ?>">EN</a>
                 <a href="?lang=fr" class="<?= $lang=='fr'?'active':'' ?>">FR</a>
             </div>
-            <a href="admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
+            <a href="/admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
         </div>
     </nav>
 
@@ -72,5 +72,6 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
+</div>
 </body>
 </html>

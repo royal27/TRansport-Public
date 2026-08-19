@@ -52,9 +52,7 @@ $current_date = date('d.m.Y');
     </button>
 </div>
 
-<div id="app-wrapper">
-    <!-- Distinct left green navigation bar -->
-    <nav class="left-nav">
+<nav class="left-nav">
                 <div class="nav-top">
             <a href="index.php?lang=<?= $lang ?>" class="nav-item active" title="<?= getTranslation('btn_map', $lang) ?>"><i class="fas fa-map-marker-alt"></i></a>
             <a href="schedules.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_schedules', $lang) ?>"><i class="fas fa-clock"></i></a>
@@ -68,9 +66,11 @@ $current_date = date('d.m.Y');
                 <a href="?lang=en" class="<?= $lang=='en'?'active':'' ?>">EN</a>
                 <a href="?lang=fr" class="<?= $lang=='fr'?'active':'' ?>">FR</a>
             </div>
-            <a href="admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
+            <a href="/admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
         </div>
     </nav>
+
+<div id="app-wrapper">
 
     <!-- Adjacent white panel -->
     <div id="sidebar">
@@ -146,7 +146,7 @@ $current_date = date('d.m.Y');
         <div id="modern-bottom-bar">
             <div class="mbb-widgets">
                 <div class="mbb-badge"><i class="fas fa-map-marker-alt"></i> București</div>
-                <div class="mbb-badge"><i class="fas fa-cloud-sun"></i> <span id="tb-weather">-- °C</span></div>
+                <div class="mbb-badge"><a href="https://www.google.com/search?q=vremea+bucuresti" target="_blank" style="color: inherit; text-decoration: none;"><i class="fas fa-cloud-sun"></i> Vremea București</a></div>
                 <div class="mbb-badge"><i class="far fa-calendar-alt"></i> <?= $current_date ?></div>
             </div>
             <?php if(!empty($announcement_text)): ?>

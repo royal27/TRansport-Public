@@ -23,7 +23,7 @@ $current_date = date('d.m.Y');
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        body { display: flex; flex-direction: column; min-height: 100vh; overflow-y: auto; background-color: #f4f7f6; }
+        body { display: flex; flex-direction: row; height: 100vh; overflow-y: hidden; background-color: #f4f7f6; }
         .front-header {
             background-color: var(--primary-dark);
             color: white;
@@ -40,9 +40,11 @@ $current_date = date('d.m.Y');
         .header-nav a:hover, .header-nav a.active { background-color: rgba(255,255,255,0.2); }
         .header-right { display: flex; align-items: center; gap: 15px; font-size: 14px; }
 
+        #app-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
         .front-footer { background-color: #2c3e50; color: white; text-align: center; padding: 10px; margin-top: auto; font-size: 13px; }
 
-        .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; }
+        .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
         .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
 
         table.flights-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
@@ -81,12 +83,12 @@ $current_date = date('d.m.Y');
                 <a href="?lang=en" class="<?= $lang=='en'?'active':'' ?>">EN</a>
                 <a href="?lang=fr" class="<?= $lang=='fr'?'active':'' ?>">FR</a>
             </div>
-            <a href="admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
+            <a href="/admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
         </div>
     </nav>
 
     <div id="app-wrapper">
-    <div class="page-content" style="margin-left: 60px;">
+    <div class="page-content">
         <h1 class="page-title"><i class="fas fa-plane-departure"></i> <?= getTranslation('flights_title', $lang) ?></h1>
 
         <div id="flights-container">
@@ -144,5 +146,6 @@ $current_date = date('d.m.Y');
         // Reload la 60 secunde
         setInterval(loadFlights, 60000);
     </script>
+</div>
 </body>
 </html>

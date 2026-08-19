@@ -23,7 +23,7 @@ $current_date = date('d.m.Y');
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        body { display: flex; flex-direction: column; min-height: 100vh; overflow-y: auto; background-color: #f4f7f6; }
+        body { display: flex; flex-direction: row; height: 100vh; overflow-y: hidden; background-color: #f4f7f6; }
         .front-header {
             background-color: var(--primary-dark);
             color: white;
@@ -42,11 +42,12 @@ $current_date = date('d.m.Y');
 
         .front-footer { background-color: #2c3e50; color: white; text-align: center; padding: 10px; margin-top: auto; font-size: 13px; }
 
-        .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; text-align: center; }
-        .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; text-align: left; }
+        #app-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
+        .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; text-align: center; width: 100%; }
 
-        .metro-map-img {
-            max-width: 100%;
+        .metro-map-img { margin: 0 auto; display: block;
+            max-width: 90%;
             height: auto;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -74,14 +75,14 @@ $current_date = date('d.m.Y');
                 <a href="?lang=en" class="<?= $lang=='en'?'active':'' ?>">EN</a>
                 <a href="?lang=fr" class="<?= $lang=='fr'?'active':'' ?>">FR</a>
             </div>
-            <a href="admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
+            <a href="/admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
         </div>
     </nav>
 
     <div id="app-wrapper">
-    <div class="page-content" style="margin-left: 60px;">
+    <div class="page-content">
         <h1 class="page-title"><i class="fas fa-subway"></i> <?= getTranslation('btn_metro', $lang) ?></h1>
-        <p style="color: #555; margin-bottom: 20px; text-align: left;">
+        <p style="color: #555; margin-bottom: 20px; text-align: center;">
             Harta generală a rețelei de metrou din București (Metrorex).
         </p>
         <!-- Harta oficială Metrorex / Harta generică actualizată -->
@@ -92,5 +93,6 @@ $current_date = date('d.m.Y');
         <?= getTranslation('footer_text', $lang) ?>
     </footer>
 
+</div>
 </body>
 </html>
