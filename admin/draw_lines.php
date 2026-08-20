@@ -22,34 +22,8 @@ $linesJson = json_encode($lines);
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
-        .admin-header { background-color: #34495e; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 1000;}
-        .wrapper { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 250px; background-color: #2c3e50; color: white; padding-top: 20px; overflow-y: auto; z-index: 1000;}
-        .sidebar h3 { text-align: center; margin-bottom: 30px; font-weight: 300; }
-        .sidebar a { display: block; color: white; text-decoration: none; padding: 15px 20px; transition: background 0.2s; }
-        .sidebar a:hover, .sidebar a.active { background-color: #34495e; border-left: 4px solid #3498db; }
-        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; }
 
-        .toolbar { padding: 15px; background: white; border-bottom: 1px solid #ddd; display: flex; gap: 15px; align-items: center; z-index: 1000;}
-        .toolbar select, .toolbar button, .toolbar input { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
-        .toolbar button { background-color: #3498db; color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .toolbar button:hover { background-color: #2980b9; }
-        .toolbar button.btn-save { background-color: #2ecc71; }
-        .toolbar button.btn-save:hover { background-color: #27ae60; }
-
-        #map { flex: 1; width: 100%; z-index: 1; }
-
-        /* Marker control panel */
-        .marker-controls { padding: 10px; background: #fff; border-bottom: 1px solid #ddd; display: flex; gap: 10px; align-items: center; z-index: 1000; flex-wrap: wrap;}
-        .marker-btn { padding: 5px 10px; border: 1px solid #ccc; background: #f9f9f9; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .marker-btn:hover, .marker-btn.active { background: #e0e0e0; border-color: #999; }
-        .marker-btn i { font-size: 16px; }
-
-        .custom-popup { min-width: 200px; }
-        .custom-popup input, .custom-popup textarea { width: 100%; box-sizing: border-box; margin-bottom: 5px; }
-    </style>
+    <link rel="stylesheet" href="css/admin_style.css">
 </head>
 <body>
 
@@ -395,3 +369,4 @@ $linesJson = json_encode($lines);
 </script>
 </body>
 </html>
+<script>document.getElementById("menuToggle")?.addEventListener("click", function(){ document.querySelector(".sidebar").classList.toggle("open"); });</script>

@@ -32,8 +32,8 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
 
     <link rel="stylesheet" href="css/style.css">
     <style>
-        body { display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden; background-color: #f4f7f6; }
-        #map-container { flex: 1; height: 100vh; position: relative; }
+        /* Mobile overrides handled in style.css for body and wrapper */
+        #map-container { flex: 1; height: 100%; position: relative; min-height: 50vh; }
         #map { width: 100%; height: 100%; z-index: 1; }
 
         /* Sidebar styling for route page */
@@ -178,7 +178,7 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
         </div>
     </nav>
 
-    <div id="app-wrapper" style="display: flex; flex: 1; flex-direction: row; height: 100%;">
+    <div id="app-wrapper">
 
         <div id="route-sidebar">
             <div class="route-header">

@@ -41,6 +41,7 @@ body {
     padding: 20px 0;
     z-index: 1050;
     box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    overflow-y: auto;
 }
 
 .nav-item {
@@ -331,32 +332,68 @@ body {
 @media (max-width: 768px) {
     #app-wrapper {
         flex-direction: column;
+        height: calc(100vh - 60px); /* Leave space for bottom nav */
     }
+
     .left-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
         width: 100%;
-        height: 50px;
+        height: 60px; /* Make it easily tappable */
         flex-direction: row;
-        padding: 0 20px;
+        padding: 0;
+        justify-content: flex-start;
+        align-items: center;
+        border-top: 1px solid rgba(0,0,0,0.1);
+        z-index: 9999;
+        overflow-x: auto; /* Allow scrolling if too many icons */
+        -webkit-overflow-scrolling: touch;
     }
-    .nav-item {
-        margin-bottom: 0;
-        margin-right: 20px;
+
+    .nav-top, .nav-bottom {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
         width: auto;
+        margin: 0;
     }
+
+    .nav-bottom {
+        margin-left: auto; /* Push bottom nav icons to the right */
+        padding-right: 10px;
+    }
+
+    .nav-item {
+        margin: 0 5px; /* Add spacing between icons */
+        width: 44px; /* Touch friendly size */
+        height: 44px;
+        flex: 0 0 44px; /* Prevent shrinking */
+        border-radius: 50%;
+        font-size: 20px;
+    }
+
+    .nav-top .nav-item {
+        display: flex; /* Ensure they remain visible */
+    }
+
+    /* Hide language picker */
+    .lang-selector-nav {
+        display: none !important;
+    }
+
     #sidebar {
         width: 100%;
-        height: 40vh;
+        height: auto;
+        max-height: 40vh;
     }
-    #map-container {
-    flex: 1;
-    position: relative;
-}
-    #bottom-panel {
-        bottom: 10px;
-        width: 90%;
 
-    z-index: 1000;
-}
+    #map-container {
+        flex: 1;
+        position: relative;
+        min-height: 50vh;
+    }
 }
 
 /* Language Selector in Left Nav */

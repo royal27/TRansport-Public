@@ -63,11 +63,14 @@ $current_date = date('d.m.Y');
 
         @media (max-width: 768px) {
             .front-header { flex-direction: column; gap: 10px; }
-            .flights-table th, .flights-table td { padding: 10px; font-size: 14px; }
+            .flights-table th, .flights-table td { padding: 5px; font-size: 12px; }
+            .page-content { padding: 0 5px; margin: 10px auto; overflow-x: hidden; width: 100%; box-sizing: border-box; }
+            .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .flights-table { width: 100%; min-width: 500px; table-layout: fixed; }
         }
     </style>
 </head>
-<body style="display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden; background-color: #f4f7f6;">
+<body>
 
     <nav class="left-nav">
         <div class="nav-top">
@@ -113,6 +116,7 @@ $current_date = date('d.m.Y');
 
                 if (result.status === 'success') {
                     let html = `
+                        <div class="table-responsive">
                         <table class="flights-table">
                             <thead>
                                 <tr>

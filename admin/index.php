@@ -114,32 +114,14 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - București Transport</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        .admin-header { background-color: #34495e; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .admin-footer { background-color: #2c3e50; color: white; text-align: center; padding: 15px; margin-top: auto; font-size: 14px; }
-        .wrapper { display: flex; flex: 1; }
-        .sidebar { width: 250px; background-color: #2c3e50; color: white; padding-top: 20px; }
-        .sidebar h3 { text-align: center; margin-bottom: 30px; font-weight: 300; }
-        .sidebar a { display: block; color: white; text-decoration: none; padding: 15px 20px; transition: background 0.2s; }
-        .sidebar a:hover, .sidebar a.active { background-color: #34495e; border-left: 4px solid #3498db; }
-        .main-content { flex: 1; padding: 30px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h1, h2 { color: #333; margin-top: 0; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #555; font-weight: 600; }
-        input[type="text"], input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; max-width: 500px; }
-        button { padding: 10px 20px; background-color: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        button:hover { background-color: #27ae60; }
-        .success { color: #155724; background-color: #d4edda; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #c3e6cb; }
-        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
-        .logo-preview { margin-top: 10px; max-width: 200px; max-height: 100px; border: 1px solid #ddd; padding: 5px; }
-    </style>
+
+    <link rel="stylesheet" href="css/admin_style.css">
 </head>
 <body>
 
 <header class="admin-header">
-    <div>
+    <div class="header-left">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars" style="color:white;"></i></button>
         <?php if($logo_path): ?>
             <img src="../public/<?= htmlspecialchars($logo_path) ?>" alt="Logo" style="height: 40px; vertical-align: middle;">
         <?php else: ?>
