@@ -42,13 +42,27 @@ $logo_path = $logo_row ? $logo_row['setting_value'] : '';
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
+    <?php
+    // Get responsive mode setting
+    $is_responsive = true; // Default
+    if (isset($db)) {
+        try {
+            $resp_stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'responsive_mode'");
+            $resp_row = $resp_stmt->fetch(PDO::FETCH_ASSOC);
+            if ($resp_row && $resp_row['setting_value'] === '0') {
+                $is_responsive = false;
+            }
+        } catch(Exception $e) { }
+    }
+    if ($is_responsive): ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php endif; ?>
     <title>Gestiune Linii și Orare - București Transport</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="css/admin_style.css">
 </head>
-<body>
+<body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
 <header class="admin-header">
     <div class="header-left">

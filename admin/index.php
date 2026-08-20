@@ -53,6 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('weather_api_key', ?)");
         $stmt->execute([$weather_api_key]);
 
+        $responsive_mode = isset($_POST['responsive_mode']) ? '1' : '0';
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('responsive_mode', ?)");
+        $stmt->execute([$responsive_mode]);
+
         // Refresh local settings array
         $settings['tpbi_api_key'] = $api_key;
         $settings['theme_color'] = $theme_color;
@@ -62,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $settings['app_version'] = $app_version;
         $settings['app_author'] = $app_author;
         $settings['weather_api_key'] = $weather_api_key;
+        $settings['responsive_mode'] = $responsive_mode;
 
         $success = "Setările generale au fost salvate.";
     } elseif ($_POST['action'] == 'upload_logo') {
@@ -111,13 +116,27 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
+    <?php
+    // Get responsive mode setting
+    $is_responsive = true; // Default
+    if (isset($db)) {
+        try {
+            $resp_stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'responsive_mode'");
+            $resp_row = $resp_stmt->fetch(PDO::FETCH_ASSOC);
+            if ($resp_row && $resp_row['setting_value'] === '0') {
+                $is_responsive = false;
+            }
+        } catch(Exception $e) { }
+    }
+    if ($is_responsive): ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php endif; ?>
     <title>Dashboard - București Transport</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="css/admin_style.css">
 </head>
-<body>
+<body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
 <header class="admin-header">
     <div class="header-left">
@@ -218,6 +237,14 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
                 <div class="form-group">
                     <label>Cheie API OpenWeatherMap (Pentru Vremea Live)</label>
                     <input type="text" name="weather_api_key" value="<?= htmlspecialchars($settings['weather_api_key'] ?? '') ?>" placeholder="ex: 12345abcde...">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="responsive_mode" value="1" <?= (isset($settings['responsive_mode']) && $settings['responsive_mode'] == '1') ? 'checked' : '' ?>>
+                        Activează versiunea telefon / tabletă (Responsive)
+                    </label>
+                    <small style="display:block; color:#777; margin-top:5px;">Dacă e debifat, site-ul va arăta ca pe desktop inclusiv pe dispozitivele mobile.</small>
                 </div>
 
                 <button type="submit">Salvează Setările</button>

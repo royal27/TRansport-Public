@@ -69,7 +69,8 @@ function getDB() {
             ('tpbi_api_key', ''),
             ('theme_color', 'green'),
             ('announcement_text', ''),
-            ('announcement_speed', '15')
+            ('announcement_speed', '15'),
+            ('responsive_mode', '1')
         ");
 
         $pdo->exec("

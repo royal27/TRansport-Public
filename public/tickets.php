@@ -24,7 +24,21 @@ $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <html lang="<?= $lang ?>" data-theme="<?= htmlspecialchars($theme_color) ?>">
 <head>
     <meta charset="UTF-8">
+    <?php
+    // Get responsive mode setting
+    $is_responsive = true; // Default
+    if (isset($db)) {
+        try {
+            $resp_stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'responsive_mode'");
+            $resp_row = $resp_stmt->fetch(PDO::FETCH_ASSOC);
+            if ($resp_row && $resp_row['setting_value'] === '0') {
+                $is_responsive = false;
+            }
+        } catch(Exception $e) { }
+    }
+    if ($is_responsive): ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php endif; ?>
     <title>Cumpără Ticket SMS - <?= htmlspecialchars($app_name) ?></title>
 
     <!-- FontAwesome -->
@@ -158,7 +172,7 @@ $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     </style>
 </head>
-<body>
+<body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
     <nav class="left-nav">
         <div class="nav-top">
