@@ -1,6 +1,6 @@
 
 const map = L.map('map').setView([44.4268, 26.1025], 13);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO'
 }).addTo(map);
 
@@ -332,9 +332,74 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Check for search parameter in URL
+let userLocationMarker = null;
+let liveTrackingWatchId = null;
+let isLiveTracking = false;
+
+// Live Route Tracking logic
+document.addEventListener('DOMContentLoaded', () => {
+    const btnLiveTrack = document.getElementById('bp-live-track');
+    if(btnLiveTrack) {
+        btnLiveTrack.addEventListener('click', () => {
+            if(!isLiveTracking) {
+                // Start tracking
+                if(!navigator.geolocation) {
+                    alert('Geolocalizarea nu este suportată de browser.');
+                    return;
+                }
+
+                isLiveTracking = true;
+                btnLiveTrack.style.backgroundColor = '#2ecc71'; // Green active
+
+                liveTrackingWatchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const latlng = L.latLng(lat, lng);
+
+                        if(!userLocationMarker) {
+                            const icon = L.divIcon({
+                                className: 'custom-div-icon',
+                                html: `<div style="background:#2980b9; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 5px rgba(0,0,0,0.5);"></div>`,
+                                iconSize: [22, 22],
+                                iconAnchor: [11, 11]
+                            });
+                            userLocationMarker = L.marker(latlng, {icon: icon, zIndexOffset: 1000}).addTo(map);
+                            userLocationMarker.bindPopup("Poziția ta curentă");
+                        } else {
+                            userLocationMarker.setLatLng(latlng);
+                        }
+
+                        map.panTo(latlng);
+                    },
+                    (error) => {
+                        console.error("GPS Error:", error);
+                        alert("Eroare la preluarea locației GPS: " + error.message);
+                    },
+                    { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+                );
+            } else {
+                // Stop tracking
+                isLiveTracking = false;
+                btnLiveTrack.style.backgroundColor = '#e74c3c'; // Back to red
+                if(liveTrackingWatchId) {
+                    navigator.geolocation.clearWatch(liveTrackingWatchId);
+                    liveTrackingWatchId = null;
+                }
+                if(userLocationMarker) {
+                    map.removeLayer(userLocationMarker);
+                    userLocationMarker = null;
+                }
+            }
+        });
+    }
+});
+
+// Check for search parameter in URL or Custom Line
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
+
+    // Default TPBI line search
     const lineToSearch = urlParams.get('search');
     if (lineToSearch) {
         if (lineSearchInput) {
@@ -344,4 +409,131 @@ document.addEventListener('DOMContentLoaded', () => {
             searchLine(lineToSearch);
         }, 500); // Give map time to init
     }
+
+    // Custom line from DB
+    const customLineId = urlParams.get('custom_line_id');
+    if (customLineId) {
+        setTimeout(() => {
+            loadCustomLine(customLineId);
+        }, 500);
+    }
 });
+
+async function loadCustomLine(id) {
+    welcomeInfo.classList.add('hidden');
+    stationInfo.classList.add('hidden');
+    lineInfo.classList.remove('hidden');
+    bottomPanel.classList.remove('hidden');
+
+    timelineList.innerHTML = '<div class="loading">Se încarcă linia...</div>';
+
+    if (currentRoutePolyline) map.removeLayer(currentRoutePolyline);
+
+    try {
+        // Fetch info
+        const infoRes = await fetch(`api/custom_lines.php?action=get_info&line_id=${id}`);
+        const infoResult = await infoRes.json();
+        if (infoResult.error) throw new Error(infoResult.error);
+
+        // Fetch route
+        const routeRes = await fetch(`api/custom_lines.php?action=get_routes&line_id=${id}`);
+        const routeResult = await routeRes.json();
+
+        // Fetch markers
+        const markersRes = await fetch(`api/custom_lines.php?action=get_markers&line_id=${id}`);
+        const markersResult = await markersRes.json();
+
+        const badgeHtml = `<i class="fas fa-bus-alt"></i> <span style="margin-left:5px;">${infoResult.name}</span>`;
+
+        const headerBadge = document.getElementById('line-info-badge');
+        if(headerBadge) {
+            headerBadge.innerHTML = badgeHtml;
+            headerBadge.style.backgroundColor = infoResult.color;
+        }
+
+        const bpBadge = document.getElementById('bp-line-badge');
+        if(bpBadge) {
+            bpBadge.innerHTML = badgeHtml;
+            bpBadge.style.backgroundColor = infoResult.color;
+        }
+
+        const bpDirText = document.getElementById('bp-direction-text');
+        if(bpDirText) {
+            bpDirText.innerHTML = infoResult.description || 'Traseu Customizat';
+        }
+
+        // Draw route
+        if (routeResult && routeResult.length > 0) {
+            const latlngs = routeResult.map(p => [p.latitude, p.longitude]);
+            currentRoutePolyline = L.polyline(latlngs, {color: infoResult.color, weight: 6, opacity: 0.8}).addTo(map);
+            map.fitBounds(currentRoutePolyline.getBounds());
+        }
+
+        // Draw custom markers onto map and build timeline
+        let html = '';
+
+        const markerIcons = {
+            'station': L.divIcon({ html: '<i class="fas fa-map-marker-alt fa-2x" style="color:#3498db; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'work': L.divIcon({ html: '<i class="fas fa-hard-hat fa-2x" style="color:#f39c12; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'accident': L.divIcon({ html: '<i class="fas fa-car-crash fa-2x" style="color:#e74c3c; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'detour': L.divIcon({ html: '<i class="fas fa-directions fa-2x" style="color:#9b59b6; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'traffic': L.divIcon({ html: '<i class="fas fa-traffic-light fa-2x" style="color:#e67e22; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'police': L.divIcon({ html: '<i class="fas fa-user-shield fa-2x" style="color:#2980b9; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'interventie': L.divIcon({ html: '<i class="fas fa-ambulance fa-2x" style="color:#c0392b; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'suspended': L.divIcon({ html: '<i class="fas fa-ban fa-2x" style="color:#000; text-shadow: 1px 1px 2px #fff;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] })
+        };
+
+        if (markersResult && markersResult.length > 0) {
+            markersResult.forEach(m => {
+                // Add marker to map
+                const marker = L.marker([m.latitude, m.longitude], {icon: markerIcons[m.type] || markerIcons['station']});
+                marker.bindPopup(`<b>${infoResult.name}</b><br>${m.description}`);
+
+                // Add to our route polyline group conceptually, but actually just add to map.
+                // To keep it simple and clean up properly later, we should ideally put it in a LayerGroup.
+                // We'll reuse currentRoutePolyline by making it a FeatureGroup if we have markers, or just add them to the map directly.
+                // Let's add them to the map directly but we would need to track them to remove them.
+                // For simplicity here, we create a temporary array attached to currentRoutePolyline
+                if (!currentRoutePolyline.markers) currentRoutePolyline.markers = [];
+                currentRoutePolyline.markers.push(marker);
+                marker.addTo(map);
+
+                // Add to timeline
+                let markerIconTimeline = '';
+                if(m.type === 'work') markerIconTimeline = '<i class="fas fa-hard-hat" style="color:#f39c12;"></i> ';
+                else if(m.type === 'accident') markerIconTimeline = '<i class="fas fa-car-crash" style="color:#e74c3c;"></i> ';
+                else if(m.type === 'detour') markerIconTimeline = '<i class="fas fa-directions" style="color:#9b59b6;"></i> ';
+                else if(m.type === 'traffic') markerIconTimeline = '<i class="fas fa-traffic-light" style="color:#e67e22;"></i> ';
+                else if(m.type === 'police') markerIconTimeline = '<i class="fas fa-user-shield" style="color:#2980b9;"></i> ';
+                else if(m.type === 'interventie') markerIconTimeline = '<i class="fas fa-ambulance" style="color:#c0392b;"></i> ';
+                else if(m.type === 'suspended') markerIconTimeline = '<i class="fas fa-ban" style="color:#000;"></i> ';
+                else markerIconTimeline = '<i class="fas fa-map-marker-alt" style="color:#3498db;"></i> ';
+
+                html += `
+                    <div class="timeline-item">
+                        <div class="timeline-marker" style="border-color:${infoResult.color};"></div>
+                        <div class="timeline-content" style="margin-left:30px; width:100%;">
+                            <div class="timeline-station">${markerIconTimeline} ${m.description || 'Punct pe traseu'}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            html = '<div style="padding:20px; color:#666;">Acest traseu nu are marcaje sau stații definite.</div>';
+        }
+
+        timelineList.innerHTML = html;
+
+        // Cleanup old markers when new route is loaded
+        const originalRemove = map.removeLayer.bind(map);
+        map.removeLayer = function(layer) {
+            if (layer === currentRoutePolyline && layer.markers) {
+                layer.markers.forEach(m => originalRemove(m));
+            }
+            originalRemove(layer);
+        };
+
+    } catch (e) {
+        timelineList.innerHTML = `<div class="loading" style="color:red">Eroare: ${e.message}</div>`;
+    }
+}

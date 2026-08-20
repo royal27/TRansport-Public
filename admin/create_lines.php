@@ -24,6 +24,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = "Numele liniei este obligatoriu.";
         }
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'edit') {
+        $id = $_POST['id'] ?? 0;
+        $name = $_POST['name'] ?? '';
+        $color = $_POST['color'] ?? '#000000';
+        $desc = $_POST['description'] ?? '';
+
+        if ($id && !empty($name)) {
+            $stmt = $db->prepare("UPDATE custom_lines SET name = ?, color = ?, description = ? WHERE id = ?");
+            $stmt->execute([$name, $color, $desc, $id]);
+            $success = "Linia a fost modificată cu succes!";
+        } else {
+            $error = "Date invalide pentru editare.";
+        }
     } elseif (isset($_POST['action']) && $_POST['action'] === 'delete') {
         $id = $_POST['id'] ?? 0;
         if ($id) {
@@ -69,7 +82,14 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .error { color: #721c24; background-color: #f8d7da; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
         .btn-delete { background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
         .btn-delete:hover { background-color: #c0392b; }
+        .btn-edit { background-color: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-right: 5px;}
+        .btn-edit:hover { background-color: #d68910; }
         .color-box { display: inline-block; width: 20px; height: 20px; border: 1px solid #000; vertical-align: middle; }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border-radius: 8px; width: 500px; max-width: 90%; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover, .close:focus { color: black; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -85,6 +105,8 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <a href="schedules.php"><i class="fas fa-clock"></i> Gestiune Orar & Linii</a>
         <a href="create_lines.php" class="active"><i class="fas fa-route"></i> Creează Linii</a>
         <a href="draw_lines.php"><i class="fas fa-draw-polygon"></i> Desenează Linii</a>
+        <a href="manage_users.php"><i class="fas fa-users"></i> Administrează Utilizatori</a>
+        <a href="manage_tickets.php"><i class="fas fa-ticket-alt"></i> Plăți prin SMS</a>
         <a href="../public/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Vezi site-ul</a>
         <a href="index.php?action=logout" style="color: #e74c3c; margin-top: 50px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
@@ -143,6 +165,7 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </td>
                                 <td><?= htmlspecialchars($line['description']) ?></td>
                                 <td>
+                                    <button type="button" class="btn-edit" onclick="openEditModal(<?= $line['id'] ?>, '<?= htmlspecialchars(addslashes($line['name'])) ?>', '<?= htmlspecialchars(addslashes($line['color'])) ?>', '<?= htmlspecialchars(addslashes($line['description'])) ?>')"><i class="fas fa-edit"></i> Editează</button>
                                     <form method="POST" style="display:inline;" onsubmit="return confirm('Sigur ștergi această linie? Toate datele desenate pe ea vor fi pierdute.');">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="id" value="<?= $line['id'] ?>">
@@ -160,9 +183,56 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </div>
 
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeEditModal()">&times;</span>
+    <h2>Editează Linia</h2>
+    <form method="POST" action="">
+        <input type="hidden" name="action" value="edit">
+        <input type="hidden" name="id" id="edit_id" value="">
+        <div class="form-group">
+            <label>Nume Linie:</label>
+            <input type="text" name="name" id="edit_name" required>
+        </div>
+        <div class="form-group">
+            <label>Culoare Linie pe hartă:</label>
+            <input type="color" name="color" id="edit_color">
+        </div>
+        <div class="form-group">
+            <label>Descriere/Detalii:</label>
+            <textarea name="description" id="edit_description" rows="3"></textarea>
+        </div>
+        <button type="submit"><i class="fas fa-save"></i> Salvează Modificările</button>
+    </form>
+  </div>
+</div>
+
 <footer class="admin-footer">
     CopyRight Transport 2026 By Stoian rudolf
 </footer>
+
+<script>
+function openEditModal(id, name, color, desc) {
+    document.getElementById('edit_id').value = id;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_color').value = color;
+    document.getElementById('edit_description').value = desc;
+    document.getElementById('editModal').style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+// Close modal if clicked outside
+window.onclick = function(event) {
+    let modal = document.getElementById('editModal');
+    if (event.target == modal) {
+        closeEditModal();
+    }
+}
+</script>
 
 </body>
 </html>

@@ -13,13 +13,14 @@ $logo_row = $stmt->fetch(PDO::FETCH_ASSOC);
 $logo_path = $logo_row ? $logo_row['setting_value'] : '';
 
 // Get theme and announcement settings
-$stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('theme_color', 'announcement_text', 'app_name', 'app_version', 'app_author', 'weather_api_key')");
+$stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('theme_color', 'announcement_text', 'announcement_speed', 'app_name', 'app_version', 'app_author', 'weather_api_key')");
 $settings = [];
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $settings[$row['setting_key']] = $row['setting_value'];
 }
 $theme_color = $settings['theme_color'] ?? 'green';
 $announcement_text = $settings['announcement_text'] ?? '';
+$announcement_speed = $settings['announcement_speed'] ?? '15';
 $app_name = $settings['app_name'] ?? 'București Transport Live';
 $app_version = $settings['app_version'] ?? '1.0.0';
 $app_author = $settings['app_author'] ?? 'Admin';
@@ -60,6 +61,7 @@ $current_date = date('d.m.Y');
             <a href="flights.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_flights', $lang) ?>"><i class="fas fa-plane"></i></a>
             <a href="metro.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_metro', $lang) ?>"><i class="fas fa-subway"></i></a>
             <a href="route.php?lang=<?= $lang ?>" class="nav-item" title="Organizează rută"><i class="fas fa-directions"></i></a>
+            <a href="tickets.php?lang=<?= $lang ?>" class="nav-item" title="Cumpără Ticket"><i class="fas fa-ticket-alt"></i></a>
         </div>
                 <div class="nav-bottom">
             <div class="lang-selector-nav">
@@ -140,7 +142,10 @@ $current_date = date('d.m.Y');
                         <span id="bp-direction-text">Direction</span>
                     </div>
                 </div>
-                <button id="bp-switch-dir" class="btn-icon-circular"><i class="fas fa-exchange-alt"></i></button>
+                <div>
+                    <button id="bp-live-track" class="btn-icon-circular" style="background:#e74c3c; color:white; margin-right: 10px;" title="Live Route Tracking"><i class="fas fa-crosshairs"></i></button>
+                    <button id="bp-switch-dir" class="btn-icon-circular"><i class="fas fa-exchange-alt"></i></button>
+                </div>
             </div>
         </div>
 
@@ -155,7 +160,7 @@ $current_date = date('d.m.Y');
             <div class="mbb-ticker-container">
                 <div class="mbb-ticker-label"><i class="fas fa-bolt"></i> INFO</div>
                 <div class="mbb-ticker-wrap">
-                    <div class="mbb-ticker-text"><?= htmlspecialchars($announcement_text) ?></div>
+                    <div class="mbb-ticker-text" style="animation-duration: <?= (int)$announcement_speed ?>s;"><?= htmlspecialchars($announcement_text) ?></div>
                 </div>
             </div>
             <?php endif; ?>

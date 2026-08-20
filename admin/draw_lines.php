@@ -64,6 +64,8 @@ $linesJson = json_encode($lines);
         <a href="schedules.php"><i class="fas fa-clock"></i> Gestiune Orar & Linii</a>
         <a href="create_lines.php"><i class="fas fa-route"></i> Creează Linii</a>
         <a href="draw_lines.php" class="active"><i class="fas fa-draw-polygon"></i> Desenează Linii</a>
+        <a href="manage_users.php"><i class="fas fa-users"></i> Administrează Utilizatori</a>
+        <a href="manage_tickets.php"><i class="fas fa-ticket-alt"></i> Plăți prin SMS</a>
         <a href="../public/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Vezi site-ul</a>
         <a href="index.php?action=logout" style="color: #e74c3c; margin-top: 50px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
@@ -80,6 +82,7 @@ $linesJson = json_encode($lines);
                 <?php endforeach; ?>
             </select>
             <button id="btnSaveRoute" class="btn-save" style="display: none;"><i class="fas fa-save"></i> Salvează Traseul desenat</button>
+            <button id="btnLiveRecord" class="btn-save" style="display: none; background-color: #e74c3c; margin-left:10px;"><i class="fas fa-circle"></i> Începe înregistrarea traseului</button>
             <span id="statusMsg" style="color: #27ae60; font-weight: bold; margin-left: 10px;"></span>
         </div>
 
@@ -92,6 +95,7 @@ $linesJson = json_encode($lines);
             <button class="marker-btn" data-type="traffic"><i class="fas fa-traffic-light" style="color:#e67e22;"></i> Aglomerație</button>
             <button class="marker-btn" data-type="police"><i class="fas fa-user-shield" style="color:#2980b9;"></i> Poliție</button>
             <button class="marker-btn" data-type="interventie"><i class="fas fa-ambulance" style="color:#c0392b;"></i> Intervenție STB</button>
+            <button class="marker-btn" data-type="suspended"><i class="fas fa-ban" style="color:#000;"></i> Linie suspendată</button>
         </div>
 
         <div id="map"></div>
@@ -142,7 +146,8 @@ $linesJson = json_encode($lines);
         'detour': L.divIcon({ html: '<i class="fas fa-directions fa-2x" style="color:#9b59b6; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
         'traffic': L.divIcon({ html: '<i class="fas fa-traffic-light fa-2x" style="color:#e67e22; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
         'police': L.divIcon({ html: '<i class="fas fa-user-shield fa-2x" style="color:#2980b9; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
-        'interventie': L.divIcon({ html: '<i class="fas fa-ambulance fa-2x" style="color:#c0392b; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] })
+        'interventie': L.divIcon({ html: '<i class="fas fa-ambulance fa-2x" style="color:#c0392b; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+        'suspended': L.divIcon({ html: '<i class="fas fa-ban fa-2x" style="color:#000; text-shadow: 1px 1px 2px #fff;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] })
     };
 
     let activeMarkerType = null;
@@ -151,7 +156,8 @@ $linesJson = json_encode($lines);
         currentLineId = this.value;
         if (currentLineId) {
             currentLineColor = this.options[this.selectedIndex].getAttribute('data-color');
-            document.getElementById('btnSaveRoute').style.display = 'block';
+            document.getElementById('btnSaveRoute').style.display = 'inline-block';
+            document.getElementById('btnLiveRecord').style.display = 'inline-block';
             document.getElementById('markerControls').style.display = 'flex';
             map.addControl(drawControl);
             drawControl.setDrawingOptions({
@@ -160,11 +166,17 @@ $linesJson = json_encode($lines);
             loadLineData(currentLineId);
         } else {
             document.getElementById('btnSaveRoute').style.display = 'none';
+            document.getElementById('btnLiveRecord').style.display = 'none';
             document.getElementById('markerControls').style.display = 'none';
             map.removeControl(drawControl);
             drawnItems.clearLayers();
             markersLayer.clearLayers();
             if(routePolyline) map.removeLayer(routePolyline);
+
+            // Stop recording if active
+            if (isRecording) {
+                document.getElementById('btnLiveRecord').click();
+            }
         }
     });
 
@@ -235,6 +247,71 @@ $linesJson = json_encode($lines);
             if(data.success) showStatus('Traseu salvat cu succes!');
             else alert('Eroare: ' + data.error);
         });
+    });
+
+    // Live GPS Recording
+    let isRecording = false;
+    let watchId = null;
+    let livePolyline = null;
+    let liveCoordinates = [];
+
+    const btnLiveRecord = document.getElementById('btnLiveRecord');
+    btnLiveRecord.addEventListener('click', function() {
+        if (!currentLineId) return;
+
+        if (!isRecording) {
+            // Start recording
+            if (!navigator.geolocation) {
+                alert('Geolocalizarea nu este suportată de browser-ul tău.');
+                return;
+            }
+
+            isRecording = true;
+            this.innerHTML = '<i class="fas fa-square"></i> Oprește înregistrarea traseului';
+            this.style.backgroundColor = '#7f8c8d'; // Grey
+
+            // Clear existing drawn polyline to start fresh
+            drawnItems.clearLayers();
+            if(routePolyline) map.removeLayer(routePolyline);
+
+            liveCoordinates = [];
+            livePolyline = L.polyline([], {color: currentLineColor, weight: 5}).addTo(drawnItems);
+
+            showStatus('Înregistrare live pornită...');
+
+            watchId = navigator.geolocation.watchPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const newLatLng = L.latLng(lat, lng);
+
+                    liveCoordinates.push(newLatLng);
+                    livePolyline.setLatLngs(liveCoordinates);
+                    map.panTo(newLatLng);
+                },
+                function(error) {
+                    console.error('Error getting GPS:', error);
+                    showStatus('Eroare semnal GPS: ' + error.message);
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+                }
+            );
+
+        } else {
+            // Stop recording
+            isRecording = false;
+            this.innerHTML = '<i class="fas fa-circle"></i> Începe înregistrarea traseului';
+            this.style.backgroundColor = '#e74c3c'; // Red
+
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            showStatus('Înregistrare oprită. Nu uita să salvezi traseul!');
+        }
     });
 
     // Custom Marker Placement

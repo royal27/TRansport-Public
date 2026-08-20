@@ -69,6 +69,7 @@ $current_date = date('d.m.Y');
             <a href="flights.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_flights', $lang) ?>"><i class="fas fa-plane"></i></a>
             <a href="metro.php?lang=<?= $lang ?>" class="nav-item active" title="<?= getTranslation('btn_metro', $lang) ?>"><i class="fas fa-subway"></i></a>
             <a href="route.php?lang=<?= $lang ?>" class="nav-item" title="Organizează rută"><i class="fas fa-directions"></i></a>
+            <a href="tickets.php?lang=<?= $lang ?>" class="nav-item" title="Cumpără Ticket"><i class="fas fa-ticket-alt"></i></a>
         </div>
         <div class="nav-bottom">
             <div class="lang-selector-nav">

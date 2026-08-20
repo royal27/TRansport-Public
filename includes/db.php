@@ -68,7 +68,8 @@ function getDB() {
             ('app_logo', ''),
             ('tpbi_api_key', ''),
             ('theme_color', 'green'),
-            ('announcement_text', '')
+            ('announcement_text', ''),
+            ('announcement_speed', '15')
         ");
 
         $pdo->exec("
@@ -110,6 +111,18 @@ function getDB() {
                 type VARCHAR(50) NOT NULL,
                 description TEXT,
                 FOREIGN KEY (line_id) REFERENCES custom_lines(id) ON DELETE CASCADE
+            )
+        ");
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS tickets_sms (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                sms_number VARCHAR(20) NOT NULL,
+                price VARCHAR(50) NOT NULL,
+                sms_text VARCHAR(50) NOT NULL,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ");
 

@@ -33,6 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('announcement_text', ?)");
         $stmt->execute([$announcement_text]);
 
+        $announcement_speed = $_POST['announcement_speed'] ?? '15';
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('announcement_speed', ?)");
+        $stmt->execute([$announcement_speed]);
+
         $app_name = $_POST['app_name'] ?? '';
         $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('app_name', ?)");
         $stmt->execute([$app_name]);
@@ -53,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $settings['tpbi_api_key'] = $api_key;
         $settings['theme_color'] = $theme_color;
         $settings['announcement_text'] = $announcement_text;
+        $settings['announcement_speed'] = $announcement_speed;
         $settings['app_name'] = $app_name;
         $settings['app_version'] = $app_version;
         $settings['app_author'] = $app_author;
@@ -152,6 +157,8 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
         <a href="schedules.php"><i class="fas fa-clock"></i> Gestiune Orar & Linii</a>
         <a href="create_lines.php"><i class="fas fa-route"></i> Creează Linii</a>
         <a href="draw_lines.php"><i class="fas fa-draw-polygon"></i> Desenează Linii</a>
+        <a href="manage_users.php"><i class="fas fa-users"></i> Administrează Utilizatori</a>
+        <a href="manage_tickets.php"><i class="fas fa-ticket-alt"></i> Plăți prin SMS</a>
         <a href="../public/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Vezi site-ul</a>
         <a href="?action=logout" style="color: #e74c3c; margin-top: 50px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
@@ -203,7 +210,12 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
 
                 <div class="form-group">
                     <label>Text Anunț (Afișat sus ca Live Text)</label>
-                    <input type="text" name="announcement_text" value="<?= htmlspecialchars($settings['announcement_text'] ?? '') ?>" placeholder="Ex: Întârzieri pe linia 41 astăzi.">
+                    <textarea name="announcement_text" rows="3" placeholder="Ex: Întârzieri pe linia 41 astăzi."><?= htmlspecialchars($settings['announcement_text'] ?? '') ?></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Viteză Anunț (în secunde - ex: 15 pentru normal, 30 pentru lent)</label>
+                    <input type="number" name="announcement_speed" value="<?= htmlspecialchars($settings['announcement_speed'] ?? '15') ?>" min="1" max="100">
                 </div>
 
                 <div class="form-group">

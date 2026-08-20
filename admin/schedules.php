@@ -90,6 +90,8 @@ $logo_path = $logo_row ? $logo_row['setting_value'] : '';
     <div class="sidebar">
         <a href="index.php"><i class="fas fa-tachometer-alt"></i> Dashboard & Setări</a>
         <a href="schedules.php" class="active"><i class="fas fa-clock"></i> Gestiune Orar & Linii</a>
+        <a href="manage_users.php"><i class="fas fa-users"></i> Administrează Utilizatori</a>
+        <a href="manage_tickets.php"><i class="fas fa-ticket-alt"></i> Plăți prin SMS</a>
         <a href="../public/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Vezi site-ul</a>
         <a href="index.php?action=logout" style="color: #e74c3c; margin-top: 50px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
