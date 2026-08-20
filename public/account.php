@@ -95,11 +95,11 @@ $is_logged_in = isset($_SESSION['app_user_id']);
     <link rel="stylesheet" href="css/style.css">
     <style>
         body { display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden; background-color: #f4f7f6; }
-        .content-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; justify-content: center; align-items: flex-start; }
+        .content-container { flex: 1; overflow-y: auto; padding: 40px; display: flex; justify-content: center; align-items: flex-start; }
 
         .account-box {
             background: white;
-            padding: 20px;
+            padding: 40px;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
@@ -155,29 +155,6 @@ $is_logged_in = isset($_SESSION['app_user_id']);
         @media (max-width: 768px) {
             .auth-forms { flex-direction: column; }
         }
-    </style>
-    <style>
-
-        @media (max-width: 768px) {
-
-            .content-container, .main-content, body {
-
-                padding-bottom: 70px !important;
-
-                padding-left: 10px !important;
-
-                padding-right: 10px !important;
-
-            }
-
-            .auth-box {
-
-                padding: 20px !important;
-
-            }
-
-        }
-
     </style>
 </head>
 <body>

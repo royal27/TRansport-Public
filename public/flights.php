@@ -69,29 +69,6 @@ $current_date = date('d.m.Y');
             .flights-table { width: 100%; min-width: 500px; table-layout: fixed; }
         }
     </style>
-    <style>
-
-        @media (max-width: 768px) {
-
-            .content-container, .main-content, body {
-
-                padding-bottom: 70px !important;
-
-                padding-left: 10px !important;
-
-                padding-right: 10px !important;
-
-            }
-
-            .auth-box {
-
-                padding: 20px !important;
-
-            }
-
-        }
-
-    </style>
 </head>
 <body>
 

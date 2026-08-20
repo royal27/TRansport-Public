@@ -154,41 +154,6 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
             border-top: 1px solid #eee;
         }
     </style>
-    <style>
-
-        @media (max-width: 768px) {
-
-            #route-sidebar {
-
-                width: 100% !important;
-
-                height: auto !important;
-
-                max-height: 50vh !important;
-
-                overflow-y: auto !important;
-
-            }
-
-            #app-wrapper {
-
-                flex-direction: column !important;
-
-                height: calc(100vh - 60px) !important;
-
-                overflow-y: auto !important;
-
-            }
-
-            #map-container {
-
-                min-height: 50vh !important;
-
-            }
-
-        }
-
-    </style>
 </head>
 <body>
 

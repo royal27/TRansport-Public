@@ -23,35 +23,12 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
         body { display: flex; height: 100vh; overflow: hidden; background-color: #f4f7f6; }
         .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
         .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
-        .lines-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .lines-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .line-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #ccc; transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; display: block; }
         .line-card:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
         .line-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .line-name { font-size: 1.2em; font-weight: bold; }
         .line-desc { color: #666; font-size: 0.9em; }
-    </style>
-    <style>
-
-        @media (max-width: 768px) {
-
-            .content-container, .main-content, body {
-
-                padding-bottom: 70px !important;
-
-                padding-left: 10px !important;
-
-                padding-right: 10px !important;
-
-            }
-
-            .auth-box {
-
-                padding: 20px !important;
-
-            }
-
-        }
-
     </style>
 </head>
 <body style="display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden; background-color: #f4f7f6;">
