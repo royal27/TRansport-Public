@@ -1,3 +1,5 @@
 includes/config.php
 vendor/
 node_modules/
+database.sqlite
+includes/db.sqlite

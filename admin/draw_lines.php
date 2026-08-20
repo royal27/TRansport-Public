@@ -72,7 +72,7 @@ $linesJson = json_encode($lines);
             <button class="marker-btn" data-type="suspended"><i class="fas fa-ban" style="color:#000;"></i> Linie suspendată</button>
         </div>
 
-        <div id="map"></div>
+        <div id="map" style="height: 600px; min-height: 600px; width: 100%; display: block; position: relative; z-index: 1;"></div>
     </div>
 </div>
 
