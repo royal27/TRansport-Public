@@ -33,7 +33,7 @@ $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="css/style.css">
     <style>
         body { display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden; background-color: #f4f7f6; }
-        .content-container { flex: 1; overflow-y: auto; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+        .content-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 
         .page-header { text-align: center; margin-bottom: 40px; }
         .page-header h1 { color: var(--primary-color, #2ecc71); font-size: 2.5em; margin-bottom: 10px; }
@@ -41,7 +41,7 @@ $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         .tickets-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 25px;
             width: 100%;
             max-width: 1100px;
@@ -157,6 +157,29 @@ $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
     </style>
+    <style>
+
+        @media (max-width: 768px) {
+
+            .content-container, .main-content, body {
+
+                padding-bottom: 70px !important;
+
+                padding-left: 10px !important;
+
+                padding-right: 10px !important;
+
+            }
+
+            .auth-box {
+
+                padding: 20px !important;
+
+            }
+
+        }
+
+    </style>
 </head>
 <body>
 
@@ -217,7 +240,7 @@ $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <div style="background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
+            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center;">
                 <i class="fas fa-ticket-alt" style="font-size: 50px; color: #ccc; margin-bottom: 20px;"></i>
                 <h2>Nu există bilete configurate.</h2>
                 <p style="color: #777;">Administratorul nu a adăugat încă opțiuni de plată prin SMS.</p>

@@ -49,7 +49,7 @@ $current_date = date('d.m.Y');
         .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
         .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
 
-        .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
         .schedule-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--primary); }
         .schedule-card h3 { margin-top: 0; color: var(--primary-dark); font-size: 20px; display: flex; align-items: center; gap: 10px; }
         .schedule-card p { color: #555; line-height: 1.6; white-space: pre-line; margin-bottom: 0; }
@@ -57,6 +57,29 @@ $current_date = date('d.m.Y');
         @media (max-width: 768px) {
             .front-header { flex-direction: column; gap: 10px; }
         }
+    </style>
+    <style>
+
+        @media (max-width: 768px) {
+
+            .content-container, .main-content, body {
+
+                padding-bottom: 70px !important;
+
+                padding-left: 10px !important;
+
+                padding-right: 10px !important;
+
+            }
+
+            .auth-box {
+
+                padding: 20px !important;
+
+            }
+
+        }
+
     </style>
 </head>
 <body style="display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden; background-color: #f4f7f6;">
@@ -86,7 +109,7 @@ $current_date = date('d.m.Y');
     <div class="page-content">
         <h1 class="page-title"><i class="fas fa-list"></i> <?= getTranslation('schedules_title', $lang) ?> (Live STB)</h1>
 
-        <div id="dynamic-schedules" style="text-align:center; padding: 40px;">
+        <div id="dynamic-schedules" style="text-align:center; padding: 20px;">
             <i class="fas fa-spinner fa-spin fa-3x" style="color:var(--primary)"></i>
             <p style="margin-top:15px; color:#555;"><?= getTranslation('loading', $lang) ?></p>
         </div>
