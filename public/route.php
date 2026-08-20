@@ -155,7 +155,7 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
         }
     </style>
 </head>
-<body>
+<body style="display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden;">
 
     <nav class="left-nav">
         <div class="nav-top">

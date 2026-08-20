@@ -473,14 +473,14 @@ async function loadCustomLine(id) {
         let html = '';
 
         const markerIcons = {
-            'station': L.divIcon({ html: '<i class="fas fa-map-marker-alt fa-2x" style="color:#3498db; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
-            'work': L.divIcon({ html: '<i class="fas fa-hard-hat fa-2x" style="color:#f39c12; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
-            'accident': L.divIcon({ html: '<i class="fas fa-car-crash fa-2x" style="color:#e74c3c; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
-            'detour': L.divIcon({ html: '<i class="fas fa-directions fa-2x" style="color:#9b59b6; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
-            'traffic': L.divIcon({ html: '<i class="fas fa-traffic-light fa-2x" style="color:#e67e22; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
-            'police': L.divIcon({ html: '<i class="fas fa-user-shield fa-2x" style="color:#2980b9; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
-            'interventie': L.divIcon({ html: '<i class="fas fa-ambulance fa-2x" style="color:#c0392b; text-shadow: 1px 1px 2px #000;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
-            'suspended': L.divIcon({ html: '<i class="fas fa-ban fa-2x" style="color:#000; text-shadow: 1px 1px 2px #fff;"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] })
+            'station': L.divIcon({ html: '<i class="fas fa-map-marker-alt fa-2x" style="color:#3498db"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'work': L.divIcon({ html: '<i class="fas fa-hard-hat fa-2x" style="color:#f39c12"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'accident': L.divIcon({ html: '<i class="fas fa-car-crash fa-2x" style="color:#e74c3c"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'detour': L.divIcon({ html: '<i class="fas fa-directions fa-2x" style="color:#9b59b6"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'traffic': L.divIcon({ html: '<i class="fas fa-traffic-light fa-2x" style="color:#e67e22"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'police': L.divIcon({ html: '<i class="fas fa-user-shield fa-2x" style="color:#2980b9"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'interventie': L.divIcon({ html: '<i class="fas fa-ambulance fa-2x" style="color:#c0392b"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+            'suspended': L.divIcon({ html: '<i class="fas fa-ban fa-2x" style="color:#000"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] })
         };
 
         if (markersResult && markersResult.length > 0) {
