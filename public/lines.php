@@ -31,7 +31,7 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .line-desc { color: #666; font-size: 0.9em; }
     </style>
 </head>
-<body>
+<body style="display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden; background-color: #f4f7f6;">
 
     <nav class="left-nav">
         <div class="nav-top">
@@ -40,6 +40,7 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <a href="lines.php?lang=<?= $lang ?>" class="nav-item active" title="Orar și Linii Curente"><i class="fas fa-route"></i></a>
             <a href="flights.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_flights', $lang) ?>"><i class="fas fa-plane"></i></a>
             <a href="metro.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_metro', $lang) ?>"><i class="fas fa-subway"></i></a>
+            <a href="route.php?lang=<?= $lang ?>" class="nav-item" title="Organizează rută"><i class="fas fa-directions"></i></a>
         </div>
         <div class="nav-bottom">
             <div class="lang-selector-nav">
@@ -47,6 +48,7 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <a href="?lang=en" class="<?= $lang=='en'?'active':'' ?>">EN</a>
                 <a href="?lang=fr" class="<?= $lang=='fr'?'active':'' ?>">FR</a>
             </div>
+            <a href="account.php?lang=<?= $lang ?>" class="nav-item" title="Contul meu"><i class="fas fa-user-circle"></i></a>
             <a href="/admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
         </div>
     </nav>
