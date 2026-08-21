@@ -160,6 +160,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
         <a href="draw_lines.php"><i class="fas fa-draw-polygon"></i> Desenează Linii</a>
         <a href="manage_users.php"><i class="fas fa-users"></i> Administrează Utilizatori</a>
         <a href="manage_tickets.php"><i class="fas fa-ticket-alt"></i> Plăți prin SMS</a>
+        <a href="backup.php"><i class="fas fa-save"></i> Backup / Restore</a>
         <a href="../public/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Vezi site-ul</a>
         <a href="?action=logout" style="color: #e74c3c; margin-top: 50px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
