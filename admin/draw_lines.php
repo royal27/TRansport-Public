@@ -42,12 +42,12 @@ $linesJson = json_encode($lines);
 <body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
 <header class="admin-header">
-    <div><i class="fas fa-bus"></i> Admin Panel - Editor Hartă</div>
+    <div class="header-left"><button class="menu-toggle" id="menuToggle"><i class="fas fa-bars" style="color:white;"></i></button> <span><i class="fas fa-bus"></i> Admin Panel - Editor Hartă</span></div>
     <div><i class="fas fa-user"></i> <?= htmlspecialchars($_SESSION['admin_user']) ?></div>
 </header>
 
 <div class="wrapper">
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <a href="index.php"><i class="fas fa-tachometer-alt"></i> Dashboard & Setări</a>
         <a href="schedules.php"><i class="fas fa-clock"></i> Gestiune Orar & Linii</a>
         <a href="create_lines.php"><i class="fas fa-route"></i> Creează Linii</a>

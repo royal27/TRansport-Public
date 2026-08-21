@@ -153,7 +153,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
 </header>
 
 <div class="wrapper">
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <a href="index.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard & Setări</a>
         <a href="schedules.php"><i class="fas fa-clock"></i> Gestiune Orar & Linii</a>
         <a href="create_lines.php"><i class="fas fa-route"></i> Creează Linii</a>
