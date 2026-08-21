@@ -47,7 +47,6 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
     <link rel="stylesheet" href="css/style.css">
     <style>
         /* Mobile overrides handled in style.css for body and wrapper */
-        #map-container { flex: 1; height: 100%; position: relative; min-height: 50vh; }
         #map { width: 100%; height: 100%; z-index: 1; }
 
         /* Sidebar styling for route page */

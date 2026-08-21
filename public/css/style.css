@@ -279,6 +279,11 @@ body {
     height: 14px;
 }
 
+/* Map Marker Shadow for Readability */
+.custom-icon i {
+    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8));
+}
+
 /* Floating Bottom Panel */
 #bottom-panel {
     position: absolute;
@@ -368,22 +373,30 @@ body {
     }
     body.is-responsive #app-wrapper {
         height: calc(100vh - 60px);
-        flex-direction: column;
-    }
-    body.is-responsive #sidebar, body.is-responsive #route-sidebar {
-        width: 100%;
-        height: 45vh;
-        order: 2;
-        border-right: none;
-        border-top: 1px solid var(--border);
-        overflow-y: auto;
+        display: block;
+        position: relative;
     }
     body.is-responsive #map-container {
-        flex: 1;
-        height: 55vh;
-        position: relative;
-        order: 1;
-        min-height: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+    body.is-responsive #sidebar, body.is-responsive #route-sidebar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-height: 50vh;
+        background: white;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+        border: none;
+        overflow-y: auto;
+        z-index: 1000;
     }
     body.is-responsive #announcement-footer {
         left: 0;
