@@ -370,25 +370,27 @@ body {
         height: calc(100vh - 60px);
         flex-direction: column;
     }
-    body.is-responsive #sidebar {
+    body.is-responsive #sidebar, body.is-responsive #route-sidebar {
         width: 100%;
-        height: 50vh;
+        height: 45vh;
         order: 2;
         border-right: none;
         border-top: 1px solid var(--border);
+        overflow-y: auto;
     }
     body.is-responsive #map-container {
         flex: 1;
-        height: 50vh;
+        height: 55vh;
         position: relative;
         order: 1;
+        min-height: 0;
     }
     body.is-responsive #announcement-footer {
         left: 0;
         bottom: 60px; /* Above nav */
     }
     body.is-responsive #modern-bottom-bar {
-        bottom: 70px;
+        bottom: 110px;
         left: 10px;
         right: 10px;
     }
@@ -396,7 +398,7 @@ body {
         flex-wrap: wrap;
     }
     body.is-responsive #bottom-panel {
-        bottom: 130px !important;
+        bottom: 160px !important;
     }
 }
 
