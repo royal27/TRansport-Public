@@ -138,4 +138,3 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 </body>
 </html>
-<script>document.getElementById("menuToggle")?.addEventListener("click", function(){ document.querySelector(".sidebar").classList.toggle("open"); });</script>
