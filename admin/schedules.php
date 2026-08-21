@@ -151,5 +151,17 @@ $logo_path = $logo_row ? $logo_row['setting_value'] : '';
     CopyRight Transport 2026 By Stoian rudolf
 </footer>
 
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var menuToggle = document.getElementById("menuToggle");
+    var sidebar = document.getElementById("sidebar");
+    if(menuToggle && sidebar) {
+        menuToggle.addEventListener("click", function() {
+            sidebar.classList.toggle("open");
+        });
+    }
+});
+</script>
 </body>
 </html>

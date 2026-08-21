@@ -50,12 +50,13 @@ th { background-color: #f9f9f9; }
 .marker-btn.active { background: #3498db; color: white; border-color: #2980b9; }
 
 /* Mobile Optimizations */
+
 @media (max-width: 768px) {
-    .menu-toggle { display: inline-block; }
-    .wrapper { flex-direction: column; overflow: visible; height: auto; }
+    body.is-responsive .menu-toggle { display: inline-block; }
+    body.is-responsive .wrapper { flex-direction: column; overflow: visible; height: auto; }
 
     /* Transform sidebar to off-canvas menu */
-    .sidebar {
+    body.is-responsive .sidebar {
         position: fixed;
         top: 60px; /* Below header */
         left: -250px;
@@ -63,19 +64,24 @@ th { background-color: #f9f9f9; }
         box-shadow: 2px 0 5px rgba(0,0,0,0.2);
     }
 
-    .sidebar.open { left: 0; }
+    body.is-responsive .sidebar.open { left: 0; }
 
-    .main-content { padding: 15px; width: 100%; box-sizing: border-box; }
-    .admin-header { padding: 10px 15px; }
+    body.is-responsive .main-content { padding: 15px; width: 100%; box-sizing: border-box; }
+    body.is-responsive .admin-header { padding: 10px 15px; }
 
-    input[type="text"], input[type="password"], input[type="number"], select, textarea, button {
+    body.is-responsive input[type="text"],
+    body.is-responsive input[type="password"],
+    body.is-responsive input[type="number"],
+    body.is-responsive select,
+    body.is-responsive textarea,
+    body.is-responsive button {
         font-size: 16px; /* Prevent iOS zoom */
         min-height: 44px;
     }
 
-    .toolbar, .marker-controls { padding: 10px; }
-    .marker-btn { flex: 1 1 calc(50% - 10px); text-align: left; }
-    #map { min-height: 50vh; }
+    body.is-responsive .toolbar, body.is-responsive .marker-controls { padding: 10px; }
+    body.is-responsive .marker-btn { flex: 1 1 calc(50% - 10px); text-align: left; }
+    body.is-responsive #map { min-height: 50vh; }
 }
 
 /* Fixes for Draw Lines Map & Icons */

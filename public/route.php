@@ -169,7 +169,7 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
         }
     </style>
 </head>
-<body style="display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden;" class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
+<body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
     <nav class="left-nav">
         <div class="nav-top">

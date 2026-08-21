@@ -58,7 +58,7 @@ $current_date = date('d.m.Y');
     <link rel="stylesheet" href="css/style.css">
 
 </head>
-<body style="display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden;" class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
+<body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
 <!-- Theme toggle moved back to floating for cleaner UI -->
 <div id="top-header" class="floating-header">

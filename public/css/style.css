@@ -21,13 +21,16 @@ body {
     color: var(--text);
     overflow: hidden;
     background-color: var(--bg-light);
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
 }
 
 #app-wrapper {
     flex: 1;
     display: flex;
     flex-direction: row;
-    /* margin-left: 60px; (removed since body is flex) */
+    overflow: hidden;
 }
 
 /* Left Green Navigation */
@@ -328,36 +331,75 @@ body {
 }
 
 /* Media Queries for Mobile */
+
 @media (max-width: 768px) {
-    #app-wrapper {
+    body.is-responsive {
         flex-direction: column;
     }
-    .left-nav {
+    body.is-responsive .left-nav {
         width: 100%;
-        height: 50px;
+        height: 60px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
         flex-direction: row;
-        padding: 0 20px;
+        padding: 0;
+        z-index: 2000;
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
     }
-    .nav-item {
+    body.is-responsive .nav-top {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 0;
-        margin-right: 20px;
+        overflow-x: auto; /* Allow scrolling if too many icons */
+        white-space: nowrap;
+        padding: 0 10px;
+    }
+    body.is-responsive .nav-bottom {
+        display: none; /* Hide back button etc on bottom nav */
+    }
+    body.is-responsive .nav-item {
+        margin: 0;
+        padding: 10px;
         width: auto;
     }
-    #sidebar {
-        width: 100%;
-        height: 40vh;
+    body.is-responsive #app-wrapper {
+        height: calc(100vh - 60px);
+        flex-direction: column;
     }
-    #map-container {
-    flex: 1;
-    position: relative;
+    body.is-responsive #sidebar {
+        width: 100%;
+        height: 50vh;
+        order: 2;
+        border-right: none;
+        border-top: 1px solid var(--border);
+    }
+    body.is-responsive #map-container {
+        flex: 1;
+        height: 50vh;
+        position: relative;
+        order: 1;
+    }
+    body.is-responsive #announcement-footer {
+        left: 0;
+        bottom: 60px; /* Above nav */
+    }
+    body.is-responsive #modern-bottom-bar {
+        bottom: 70px;
+        left: 10px;
+        right: 10px;
+    }
+    body.is-responsive .mbb-widgets {
+        flex-wrap: wrap;
+    }
+    body.is-responsive #bottom-panel {
+        bottom: 130px !important;
+    }
 }
-    #bottom-panel {
-        bottom: 10px;
-        width: 90%;
 
-    z-index: 1000;
-}
-}
 
 /* Language Selector in Left Nav */
 .lang-selector-nav {
@@ -480,12 +522,7 @@ html.dark-mode .theme-toggle-btn {
     margin-right: 10px;
     font-size: 1.2rem;
 }
-@media (max-width: 768px) {
-    #announcement-footer {
-        left: 0;
-        bottom: 60px; /* above mobile nav */
-    }
-}
+
 
 /* Adjust wrapper to account for top bar */
 
@@ -603,16 +640,55 @@ html.dark-mode .mbb-ticker-text {
     100% { transform: translateX(-100%); }
 }
 
+
+
+/* Page Content Padding for Mobile */
 @media (max-width: 768px) {
-    #modern-bottom-bar {
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
+    body.is-responsive .page-content {
+        padding-bottom: 80px; /* Space for bottom nav on scrollable pages */
+        overflow-y: auto;
+        height: 100%;
     }
-    .mbb-widgets {
-        flex-wrap: wrap;
-    }
-    #bottom-panel {
-        bottom: 120px !important;
-    }
+}
+
+/* Schedules Page Line Pills */
+:root {
+    --tram: #e63946;
+    --trolley: #2a9d8f;
+    --bus: #007bff;
+    --primary: #3498db;
+    --primary-dark: #2980b9;
+}
+.category-header {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin: 30px 0 15px 0;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.line-pill-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.line-pill {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 8px 15px;
+    font-weight: bold;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.line-pill:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-2px);
 }

@@ -381,6 +381,18 @@ $linesJson = json_encode($lines);
         setTimeout(() => el.innerText = '', 3000);
     }
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var menuToggle = document.getElementById("menuToggle");
+    var sidebar = document.getElementById("sidebar");
+    if(menuToggle && sidebar) {
+        menuToggle.addEventListener("click", function() {
+            sidebar.classList.toggle("open");
+        });
+    }
+});
+</script>
 </body>
 </html>
 <script>document.getElementById("menuToggle")?.addEventListener("click", function(){ document.querySelector(".sidebar").classList.toggle("open"); });</script>

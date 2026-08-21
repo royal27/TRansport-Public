@@ -45,7 +45,7 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .line-desc { color: #666; font-size: 0.9em; }
     </style>
 </head>
-<body style="display: flex; flex-direction: row; height: 100vh; margin: 0; overflow: hidden; background-color: #f4f7f6;" class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
+<body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
     <nav class="left-nav">
         <div class="nav-top">
