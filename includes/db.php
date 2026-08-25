@@ -62,6 +62,208 @@ function getDB() {
             )
         ");
 
+
+        $default_metro_html = <<<EOT
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harta Metrou Bucuresti 2026 - schema retelei Metrorex</title>
+<meta name="description" content="Harta metrou Bucuresti: schema retelei metroului bucurestean  Metrorex cu cele 6 magistrale in exploatare si 64 de statii, total 80 km de retea.">
+<meta name="keywords" content="harta metrou bucuresti, metrou bucuresti, statii metrou, magistrale metrou">
+<meta name="author" content="GhidBucureștean">
+<meta name="robots" content="index, follow">
+<meta name="google-site-verification" content="9Cx7PD6SqCQRb_R9zg6LHEudw4TsWXPeU6UuK6QFQaM" />
+
+<meta name="theme-color" content="#649B1C">
+<base href="https://www.ghidbucurestean.ro/">
+<link rel="canonical" href="https://www.ghidbucurestean.ro/harta-metrou-bucurti">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Harta Metrou Bucuresti 2026 - schema retelei Metrorex">
+<meta property="og:description" content="Harta metrou Bucuresti: schema retelei metroului bucurestean  Metrorex cu cele 6 magistrale in exploatare si 64 de statii, total 80 km de retea.">
+<meta property="og:url" content="https://www.ghidbucurestean.ro/harta-metrou-bucuresti">
+<meta property="og:image" content="https://www.ghidbucurestean.ro/img/og-ghidbucurestean.png">
+<link rel="preload" href="css/figtree-var-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="leaflet/leaflet.css?v=1785881326">
+<link rel="stylesheet" href="css/style.css?v=1786759045">
+<script src="js/cookie.js?v=1785634749" defer></script>
+</head>
+<body data-ga="G-B30JWWV9RK">
+<svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+
+
+
+
+            <button class="buton-meniu" id="buton-meniu" type="button" aria-expanded="false" a
+
+
+
+
+
+
+
+<section class="invelis continut-seo">
+    <p class="insigne">
+        <span class="insigna">78-80 km rețea</span>
+        <span class="insigna">6 magistrale</span>
+        <span class="insigna">64 de stații</span>
+        <span class="insigna insigna-neutra">distanță medie 1,5 km</span>
+        <span class="insigna insigna-neutra">lungime stații 135-175 m</span>
+    </p>
+
+    <h2>Magistrale metrou în exploatare</h2>
+
+    <div class="linie-vizual linie-m1">
+        <p class="linie-titlu"><span class="insigna-linie insigna-m1">M1</span> Pantelimon – Dristor 2</p>
+        <div class="linie-derulare">
+            <ol class="linie-statii">
+                <li class="capat"><span class="punct"></span><span class="nume">Pantelimon</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Republica</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Costin Georgian</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Titan</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Nicolae Grigorescu</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Dristor 1</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Mihai Bravu</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Timpuri Noi</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Piața Unirii 1</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Izvor</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Eroilor</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Grozăvești</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Petrache Poenaru</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Crângași</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Basarab</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Gara de Nord 1</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Piața Victoriei</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Ștefan cel Mare</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Obor</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Piața Iancului</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Piața Muncii</span></li>
+                <li class="capat"><span class="punct"></span><span class="nume">Dristor 2</span></li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="linie-vizual linie-m2">
+        <p class="linie-titlu"><span class="insigna-linie insigna-m2">M2</span> Tudor Arghezi – Pipera</p>
+        <div class="linie-derulare">
+            <ol class="linie-statii">
+                <li class="capat"><span class="punct"></span><span class="nume">Tudor Arghezi</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Berceni</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Dimitrie Leonida</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Apărătorii Patriei</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Piața Sudului</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Constantin Brâncoveanu</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Eroii Revoluției</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Tineretului</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Piața Unirii 2</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Universitate</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Piața Romană</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Piața Victoriei</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Aviatorilor</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Aurel Vlaicu</span></li>
+                <li class="capat"><span class="punct"></span><span class="nume">Pipera</span></li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="linie-vizual linie-m3">
+        <p class="linie-titlu"><span class="insigna-linie insigna-m3">M3</span> Preciziei – Anghel Saligny</p>
+        <div class="linie-derulare">
+            <ol class="linie-statii">
+                <li class="capat"><span class="punct"></span><span class="nume">Preciziei</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Păcii</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Gorjului</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Lujerului</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Politehnica</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Eroilor</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Izvor</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Piața Unirii 1</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Timpuri Noi</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Mihai Bravu</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Dristor 1</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Nicolae Grigorescu</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">1 Decembrie 1918</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Nicolae Teclu</span></li>
+                <li class="capat"><span class="punct"></span><span class="nume">Anghel Saligny</span></li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="linie-vizual linie-m4">
+        <p class="linie-titlu"><span class="insigna-linie insigna-m4">M4</span> Gara de Nord 2 – Depou Străulești</p>
+        <div class="linie-derulare">
+            <ol class="linie-statii">
+                <li class="capat"><span class="punct"></span><span class="nume">Gara de Nord 2</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Basarab</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Grivița</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">1 Mai</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Jiului</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Parc Bazilescu</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Laminorului</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Lac Străulești</span></li>
+                <li class="capat"><span class="punct"></span><span class="nume">Depou Străulești</span></li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="linie-vizual linie-m5">
+        <p class="linie-titlu"><span class="insigna-linie insigna-m5">M5</span> Râul Doamnei – Eroilor</p>
+        <div class="linie-derulare">
+            <ol class="linie-statii">
+                <li class="capat"><span class="punct"></span><span class="nume">Râul Doamnei</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Brâncuși</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Valea Ialomiței</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Romancierilor</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Parc Drumul Taberei</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Tudor Vladimirescu</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Favorit</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Orizont</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Academia Militară</span></li>
+                <li class="capat"><span class="punct"></span><span class="nume">Eroilor</span></li>
+            </ol>
+        </div>
+    </div>
+
+    <h2>Magistrale metrou în execuție</h2>
+
+    <div class="linie-vizual linie-m6">
+        <p class="linie-titlu"><span class="insigna-linie insigna-m6">M6</span> 1 Mai – Aeroportul Henri Coandă Otopeni <span class="insigna-neutra insigna">în execuție</span></p>
+        <div class="linie-derulare">
+            <ol class="linie-statii">
+                <li class="capat"><span class="punct"></span><span class="nume">1 Mai</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Pajura</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Expoziției</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Piața Montreal</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Gara Băneasa</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Aeroport Băneasa</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Tokyo</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Washington</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Paris</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Bruxelles</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Otopeni</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Ion I.C. Brătianu</span></li>
+                <li class="capat"><span class="punct"></span><span class="nume">Aeroport Henri Coandă Otopeni</span></li>
+            </ol>
+        </div>
+    </div>
+
+    <h2>Magistrale metrou în pregătire</h2>
+
+    <div class="linie-vizual linie-m5">
+        <p class="linie-titlu"><span class="insigna-linie insigna-m5">M5</span> Eroilor  – Pantelimon</p>
+        <div class="linie-derulare">
+            <ol class="linie-statii">
+                <li class="capat"><span class="punct"></span><span class="nume">Eroilor </span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Universitate</span></li>
+                <li class="jos"><span class="punct"></span><span class="nume">Piata Iancului</span></li>
+                <li class="sus"><span class="punct"></span><span class="nume">Pantelimon</span></li>
+            </ol>
+        </div>
+    </div>
+    <br>
+EOT;
+
         $pdo->exec("
             INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
             ('app_name', 'București Transport Live'),
@@ -70,9 +272,12 @@ function getDB() {
             ('theme_color', 'green'),
             ('announcement_text', ''),
             ('announcement_speed', '15'),
-            ('responsive_mode', '1'),
-            ('metro_map_html', '')
+            ('responsive_mode', '1')
         ");
+
+        $stmt_metro = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('metro_map_html', :html)");
+        $stmt_metro->execute(['html' => $default_metro_html]);
+
 
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS schedules (
