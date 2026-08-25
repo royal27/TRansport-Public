@@ -32,7 +32,7 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>Orar și Linii Curente</title>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= time() ?>">
     <style>
         body { display: flex; height: 100vh; overflow: hidden; background-color: #f4f7f6; }
         .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }

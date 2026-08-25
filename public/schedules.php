@@ -39,7 +39,7 @@ $current_date = date('d.m.Y');
     <?php endif; ?>
     <title><?= getTranslation('schedules_title', $lang) ?> - <?= getTranslation('app_name', $lang) ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= time() ?>">
     <style>
         body { display: flex; flex-direction: row; height: 100vh; overflow-y: hidden; background-color: #f4f7f6; }
         .front-header {

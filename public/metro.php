@@ -35,7 +35,7 @@ $current_date = date('d.m.Y');
     <?php endif; ?>
     <title><?= getTranslation('btn_metro', $lang) ?> - <?= getTranslation('app_name', $lang) ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= time() ?>">
     <style>
         body { display: flex; flex-direction: row; height: 100vh; overflow-y: hidden; background-color: #f4f7f6; }
         .front-header {
@@ -103,7 +103,7 @@ $current_date = date('d.m.Y');
             Harta generală a rețelei de metrou din București (Metrorex).
         </p>
         <!-- Harta oficială Metrorex / Harta generică actualizată -->
-        <img src="img/metro_map.svg" alt="Metrorex Map" class="metro-map-img">
+        <img src="img/metro_map.png" alt="Metrorex Map" class="metro-map-img">
     </div>
 
     <footer class="front-footer">

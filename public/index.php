@@ -55,7 +55,7 @@ $current_date = date('d.m.Y');
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= time() ?>">
 
 </head>
 <body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
@@ -197,6 +197,6 @@ $current_date = date('d.m.Y');
             other_arrivals: "<?= getTranslation('other_arrivals', $lang) ?>"
         };
     </script>
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=<?= time() ?>"></script>
 </body>
 </html>

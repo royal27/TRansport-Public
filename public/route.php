@@ -44,7 +44,7 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= time() ?>">
     <style>
         /* Mobile overrides handled in style.css for body and wrapper */
         #map { width: 100%; height: 100%; z-index: 1; }
