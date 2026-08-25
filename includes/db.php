@@ -84,10 +84,10 @@ function getDB() {
 <meta property="og:description" content="Harta metrou Bucuresti: schema retelei metroului bucurestean  Metrorex cu cele 6 magistrale in exploatare si 64 de statii, total 80 km de retea.">
 <meta property="og:url" content="https://www.ghidbucurestean.ro/harta-metrou-bucuresti">
 <meta property="og:image" content="https://www.ghidbucurestean.ro/img/og-ghidbucurestean.png">
-<link rel="preload" href="css/figtree-var-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="leaflet/leaflet.css?v=1785881326">
-<link rel="stylesheet" href="css/style.css?v=1786759045">
-<script src="js/cookie.js?v=1785634749" defer></script>
+<link rel="preload" href="https://www.ghidbucurestean.ro/css/figtree-var-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="https://www.ghidbucurestean.ro/leaflet/leaflet.css?v=1785881326">
+<link rel="stylesheet" href="https://www.ghidbucurestean.ro/css/style.css?v=1786759045">
+
 </head>
 <body data-ga="G-B30JWWV9RK">
 <svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -104,15 +104,7 @@ function getDB() {
 
 
 <section class="invelis continut-seo">
-    <p class="insigne">
-        <span class="insigna">78-80 km rețea</span>
-        <span class="insigna">6 magistrale</span>
-        <span class="insigna">64 de stații</span>
-        <span class="insigna insigna-neutra">distanță medie 1,5 km</span>
-        <span class="insigna insigna-neutra">lungime stații 135-175 m</span>
-    </p>
 
-    <h2>Magistrale metrou în exploatare</h2>
 
     <div class="linie-vizual linie-m1">
         <p class="linie-titlu"><span class="insigna-linie insigna-m1">M1</span> Pantelimon – Dristor 2</p>
