@@ -12,6 +12,11 @@ $stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'app_
 $logo_row = $stmt->fetch(PDO::FETCH_ASSOC);
 $logo_path = $logo_row ? $logo_row['setting_value'] : '';
 
+// Metro Map HTML Setting
+$stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'metro_map_html'");
+$metro_map_html_row = $stmt->fetch(PDO::FETCH_ASSOC);
+$metro_map_html = $metro_map_html_row ? $metro_map_html_row['setting_value'] : '';
+
 $current_date = date('d.m.Y');
 ?>
 <!DOCTYPE html>
@@ -68,6 +73,14 @@ $current_date = date('d.m.Y');
             border: 4px solid white;
         }
 
+        .metro-map-html-container {
+            width: 100%;
+            text-align: center;
+        }
+        .metro-map-html-container iframe {
+            max-width: 100%;
+        }
+
         @media (max-width: 768px) {
             .front-header { flex-direction: column; gap: 10px; }
         }
@@ -102,8 +115,14 @@ $current_date = date('d.m.Y');
         <p style="color: #555; margin-bottom: 20px; text-align: center;">
             Harta generală a rețelei de metrou din București (Metrorex).
         </p>
-        <!-- Harta oficială Metrorex / Harta generică actualizată -->
-        <img src="img/metro_map.png" alt="Metrorex Map" class="metro-map-img">
+        <?php if (!empty(trim($metro_map_html))): ?>
+            <div class="metro-map-html-container">
+                <?= $metro_map_html ?>
+            </div>
+        <?php else: ?>
+            <!-- Harta oficială Metrorex / Harta generică actualizată -->
+            <img src="img/metro_map.png" alt="Metrorex Map" class="metro-map-img">
+        <?php endif; ?>
     </div>
 
     <footer class="front-footer">

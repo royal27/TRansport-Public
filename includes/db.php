@@ -70,7 +70,8 @@ function getDB() {
             ('theme_color', 'green'),
             ('announcement_text', ''),
             ('announcement_speed', '15'),
-            ('responsive_mode', '1')
+            ('responsive_mode', '1'),
+            ('metro_map_html', '')
         ");
 
         $pdo->exec("

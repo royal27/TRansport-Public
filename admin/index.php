@@ -53,6 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('weather_api_key', ?)");
         $stmt->execute([$weather_api_key]);
 
+        $metro_map_html = $_POST['metro_map_html'] ?? '';
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('metro_map_html', ?)");
+        $stmt->execute([$metro_map_html]);
+
         $responsive_mode = isset($_POST['responsive_mode']) ? '1' : '0';
         $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('responsive_mode', ?)");
         $stmt->execute([$responsive_mode]);
@@ -66,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $settings['app_version'] = $app_version;
         $settings['app_author'] = $app_author;
         $settings['weather_api_key'] = $weather_api_key;
+        $settings['metro_map_html'] = $metro_map_html;
         $settings['responsive_mode'] = $responsive_mode;
 
         $success = "Setările generale au fost salvate.";
@@ -238,6 +243,11 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
                 <div class="form-group">
                     <label>Cheie API OpenWeatherMap (Pentru Vremea Live)</label>
                     <input type="text" name="weather_api_key" value="<?= htmlspecialchars($settings['weather_api_key'] ?? '') ?>" placeholder="ex: 12345abcde...">
+                </div>
+
+                <div class="form-group">
+                    <label>Cod HTML pentru Harta Metrou (Opțional - înlocuiește imaginea standard dacă este setat)</label>
+                    <textarea name="metro_map_html" rows="5" placeholder="Exemplu: <iframe src='...'></iframe>"><?= htmlspecialchars($settings['metro_map_html'] ?? '') ?></textarea>
                 </div>
 
                 <div class="form-group">
