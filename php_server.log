@@ -1,0 +1,40 @@
+[Tue Aug 25 13:41:46 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
+[Tue Aug 25 13:42:22 2026] [::1]:35920 Accepted
+[Tue Aug 25 13:42:22 2026] [::1]:35920 [200]: GET /schedules.php
+[Tue Aug 25 13:42:22 2026] [::1]:35920 Closing
+[Tue Aug 25 13:42:22 2026] [::1]:35922 Accepted
+[Tue Aug 25 13:42:22 2026] [::1]:35922 [200]: GET /css/style.css?v=1787665342
+[Tue Aug 25 13:42:22 2026] [::1]:35922 Closing
+[Tue Aug 25 13:42:23 2026] [::1]:35932 Accepted
+[Tue Aug 25 13:42:23 2026] [::1]:35932 [200]: GET /api/proxy_routes.php
+[Tue Aug 25 13:42:23 2026] [::1]:35932 Closing
+[Tue Aug 25 13:43:38 2026] [::1]:43648 Accepted
+[Tue Aug 25 13:43:38 2026] [::1]:43648 [200]: GET /schedules.php
+[Tue Aug 25 13:43:38 2026] [::1]:43648 Closing
+[Tue Aug 25 13:43:38 2026] [::1]:43662 Accepted
+[Tue Aug 25 13:43:38 2026] [::1]:43662 [200]: GET /css/style.css?v=1787665418
+[Tue Aug 25 13:43:38 2026] [::1]:43662 Closing
+[Tue Aug 25 13:43:38 2026] [::1]:43678 Accepted
+[Tue Aug 25 13:43:38 2026] [::1]:43678 [200]: GET /api/proxy_routes.php
+[Tue Aug 25 13:43:38 2026] [::1]:43678 Closing
+[Tue Aug 25 13:43:40 2026] [::1]:43694 Accepted
+[Tue Aug 25 13:43:40 2026] [::1]:43694 [200]: GET /index.php?search=Linia%201&admin_id=1
+[Tue Aug 25 13:43:40 2026] [::1]:43694 Closing
+[Tue Aug 25 13:43:40 2026] [::1]:43698 Accepted
+[Tue Aug 25 13:43:40 2026] [::1]:43710 Accepted
+[Tue Aug 25 13:43:40 2026] [::1]:43698 [200]: GET /css/style.css?v=1787665420
+[Tue Aug 25 13:43:40 2026] [::1]:43698 Closing
+[Tue Aug 25 13:43:40 2026] [::1]:43710 [200]: GET /js/app.js?v=1787665420
+[Tue Aug 25 13:43:40 2026] [::1]:43710 Closing
+[Tue Aug 25 13:43:40 2026] [::1]:43726 Accepted
+[Tue Aug 25 13:43:40 2026] [::1]:43726 [200]: GET /api/stations.php
+[Tue Aug 25 13:43:40 2026] [::1]:43726 Closing
+[Tue Aug 25 13:43:40 2026] [::1]:43732 Accepted
+[Tue Aug 25 13:43:40 2026] [::1]:43732 [200]: GET /api/vehicles.php
+[Tue Aug 25 13:43:40 2026] [::1]:43732 Closing
+[Tue Aug 25 13:43:41 2026] [::1]:43734 Accepted
+[Tue Aug 25 13:43:41 2026] [::1]:43734 [200]: GET /api/lines.php?search=Linia%201&admin_id=1
+[Tue Aug 25 13:43:41 2026] [::1]:43734 Closing
+[Tue Aug 25 13:43:41 2026] [::1]:43736 Accepted
+[Tue Aug 25 13:43:41 2026] [::1]:43736 [200]: GET /api/lines.php?shape=admin_1_dus
+[Tue Aug 25 13:43:41 2026] [::1]:43736 Closing

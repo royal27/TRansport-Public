@@ -330,7 +330,40 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
             container.style.display = 'none';
             document.getElementById('routing-ui-container').appendChild(container);
 
+            // Adăugare Marker Locație GPS Utilizator, ca și în index.php (Live location on all maps)
+            let userMarker;
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    if (!userMarker) {
+                        const userIcon = L.divIcon({
+                            className: 'user-location-marker',
+                            html: '<div style="width: 15px; height: 15px; background: #3498db; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(52, 152, 219, 0.8); animation: pulse 2s infinite;"></div>',
+                            iconSize: [15, 15],
+                            iconAnchor: [7.5, 7.5]
+                        });
+                        userMarker = L.marker([lat, lng], {icon: userIcon}).addTo(map);
+                    } else {
+                        userMarker.setLatLng([lat, lng]);
+                    }
+                }, (err) => {
+                    console.log('GPS Error (route map):', err);
+                }, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+                });
+            }
         });
     </script>
+    <style>
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(52, 152, 219, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+        }
+    </style>
 </body>
 </html>

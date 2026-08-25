@@ -13,12 +13,13 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] == 'add_schedule') {
         $line_name = trim($_POST['line_name'] ?? '');
+        $category = $_POST['category'] ?? 'BUS';
         $schedule_details = trim($_POST['schedule_details'] ?? '');
 
         if (!empty($line_name) && !empty($schedule_details)) {
-            $stmt = $db->prepare("INSERT INTO schedules (line_name, schedule_details) VALUES (?, ?)");
-            $stmt->execute([$line_name, $schedule_details]);
-            $success = "Orarul a fost adăugat cu succes.";
+            $stmt = $db->prepare("INSERT INTO schedules (line_name, category, schedule_details) VALUES (?, ?, ?)");
+            $stmt->execute([$line_name, $category, $schedule_details]);
+            $success = "Linia a fost adăugată cu succes.";
         }
     } elseif ($_POST['action'] == 'delete_schedule') {
         $id = $_POST['id'] ?? 0;
@@ -103,8 +104,16 @@ $logo_path = $logo_row ? $logo_row['setting_value'] : '';
             <form method="POST" action="">
                 <input type="hidden" name="action" value="add_schedule">
                 <div class="form-group">
-                    <label>Nume Linie (ex: Autobuz 335)</label>
+                    <label>Nume Linie (ex: 335)</label>
                     <input type="text" name="line_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Categorie Linie</label>
+                    <select name="category" required>
+                        <option value="BUS">Autobuz</option>
+                        <option value="TRAM">Tramvai</option>
+                        <option value="TROLLEYBUS">Troleibuz</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Detalii Orar (ex: Luni-Vineri 05:00 - 23:00 din 10 în 10 min)</label>
@@ -121,6 +130,7 @@ $logo_path = $logo_row ? $logo_row['setting_value'] : '';
                     <thead>
                         <tr>
                             <th>Linie</th>
+                            <th>Categorie</th>
                             <th>Detalii Orar</th>
                             <th>Acțiuni</th>
                         </tr>
@@ -129,9 +139,11 @@ $logo_path = $logo_row ? $logo_row['setting_value'] : '';
                         <?php foreach($schedules as $s): ?>
                         <tr>
                             <td><strong><?= htmlspecialchars($s['line_name']) ?></strong></td>
+                            <td><?= htmlspecialchars($s['category'] ?? 'BUS') ?></td>
                             <td><?= nl2br(htmlspecialchars($s['schedule_details'])) ?></td>
                             <td>
-                                <form method="POST" action="" onsubmit="return confirm('Sigur dorești să ștergi?');">
+                                <a href="manage_schedule_stations.php?id=<?= $s['id'] ?>" class="btn-edit" style="text-decoration:none; display:inline-block; margin-bottom:5px;"><i class="fas fa-map-marked-alt"></i> Traseu & Stații</a>
+                                <form method="POST" action="" style="display:inline-block;" onsubmit="return confirm('Sigur dorești să ștergi?');">
                                     <input type="hidden" name="action" value="delete_schedule">
                                     <input type="hidden" name="id" value="<?= $s['id'] ?>">
                                     <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Șterge</button>

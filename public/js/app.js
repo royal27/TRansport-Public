@@ -61,7 +61,7 @@ document.querySelectorAll('.cat-btn').forEach(btn => {
     });
 });
 
-async function searchLine(line) {
+async function searchLine(line, adminId = null) {
     if (!line) return;
 
     welcomeInfo.classList.add('hidden');
@@ -70,9 +70,11 @@ async function searchLine(line) {
     bottomPanel.classList.remove('hidden'); // Show floating panel
 
     timelineList.innerHTML = `<div class="loading">${i18n.loading}</div>`;
-
     try {
-        const response = await fetch(`api/lines.php?search=${encodeURIComponent(line)}`);
+        let url = `api/lines.php?search=${encodeURIComponent(line)}`;
+        if (adminId) url += `&admin_id=${adminId}`;
+        const response = await fetch(url);
+
         const result = await response.json();
 
         if (result.status !== 'success' || !result.data || result.data.length === 0) {
@@ -401,14 +403,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Default TPBI line search
     const lineToSearch = urlParams.get('search');
+    const adminId = urlParams.get('admin_id');
+
     if (lineToSearch) {
         if (lineSearchInput) {
             lineSearchInput.value = lineToSearch;
         }
         setTimeout(() => {
-            searchLine(lineToSearch);
+            searchLine(lineToSearch, adminId);
         }, 500); // Give map time to init
     }
+
 
     // Custom line from DB
     const customLineId = urlParams.get('custom_line_id');
@@ -536,4 +541,44 @@ async function loadCustomLine(id) {
     } catch (e) {
         timelineList.innerHTML = `<div class="loading" style="color:red">Eroare: ${e.message}</div>`;
     }
+}
+
+
+// GPS Live User Location
+let userMarker = null;
+let userAccuracyCircle = null;
+
+if ("geolocation" in navigator) {
+    navigator.geolocation.watchPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            if (!userMarker) {
+                // Initialize user marker
+                const userIcon = L.divIcon({
+                    className: 'user-gps-marker',
+                    html: '<div style="background-color: #3498db; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
+                    iconSize: [22, 22],
+                    iconAnchor: [11, 11]
+                });
+                userMarker = L.marker([lat, lng], {icon: userIcon, zIndexOffset: 1000}).addTo(map);
+                userAccuracyCircle = L.circle([lat, lng], {radius: accuracy, color: '#3498db', fillColor: '#3498db', fillOpacity: 0.15, weight: 1}).addTo(map);
+            } else {
+                // Update position
+                userMarker.setLatLng([lat, lng]);
+                userAccuracyCircle.setLatLng([lat, lng]);
+                userAccuracyCircle.setRadius(accuracy);
+            }
+        },
+        function(error) {
+            console.log("Geolocation error: ", error.message);
+        },
+        {
+            enableHighAccuracy: true,
+            maximumAge: 10000,
+            timeout: 5000
+        }
+    );
 }

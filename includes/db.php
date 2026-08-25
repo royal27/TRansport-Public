@@ -280,6 +280,23 @@ EOT;
             )
         ");
 
+        try {
+            $pdo->exec("ALTER TABLE schedules ADD COLUMN category VARCHAR(20) DEFAULT 'BUS'");
+        } catch (PDOException $e) {}
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS schedule_stations (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                schedule_id INT NOT NULL,
+                name VARCHAR(100) NOT NULL,
+                direction VARCHAR(10) NOT NULL DEFAULT 'dus',
+                latitude DECIMAL(10, 8) NOT NULL,
+                longitude DECIMAL(11, 8) NOT NULL,
+                order_idx INT NOT NULL,
+                FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE
+            )
+        ");
+
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS custom_lines (
                 id INT AUTO_INCREMENT PRIMARY KEY,

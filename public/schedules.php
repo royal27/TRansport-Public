@@ -137,17 +137,43 @@ $current_date = date('d.m.Y');
         <?= getTranslation('footer_text', $lang) ?>
     </footer>
 
+
     <script>
     document.addEventListener("DOMContentLoaded", async function() {
+        const gridTram = document.getElementById('grid-tram');
+        const gridTrolley = document.getElementById('grid-trolley');
+        const gridBus = document.getElementById('grid-bus');
+
+        // Custom Admin Schedules
+        const adminSchedules = <?= json_encode($schedules) ?>;
+        if (adminSchedules && adminSchedules.length > 0) {
+            adminSchedules.forEach(s => {
+                const el = document.createElement('a');
+                el.className = 'line-pill';
+                // Direct them to the line detail page passing schedule_id or just search
+                el.href = `lines.php?search=${encodeURIComponent(s.line_name)}&lang=<?= $lang ?>&admin_id=${s.id}`;
+
+                let icon = '<i class="fas fa-bus"></i>';
+                if (s.category === 'TRAM') {
+                    icon = '<i class="fas fa-train-tram"></i>';
+                    el.innerHTML = `${icon} ${s.line_name} (Admin)`;
+                    gridTram.appendChild(el);
+                } else if (s.category === 'TROLLEYBUS') {
+                    icon = '<i class="fas fa-bus-simple"></i>';
+                    el.innerHTML = `${icon} ${s.line_name} (Admin)`;
+                    gridTrolley.appendChild(el);
+                } else {
+                    el.innerHTML = `${icon} ${s.line_name} (Admin)`;
+                    gridBus.appendChild(el);
+                }
+            });
+        }
+
         try {
             const res = await fetch('api/proxy_routes.php');
             const result = await res.json();
 
             if (result && result.data) {
-                const gridTram = document.getElementById('grid-tram');
-                const gridTrolley = document.getElementById('grid-trolley');
-                const gridBus = document.getElementById('grid-bus');
-
                 // Sortam alfabetic/numeric
                 result.data.sort((a, b) => a.route_short_name.localeCompare(b.route_short_name, undefined, {numeric: true}));
 
@@ -162,15 +188,16 @@ $current_date = date('d.m.Y');
                         gridBus.innerHTML += pill;
                     }
                 });
-
-                document.getElementById('dynamic-schedules').style.display = 'none';
-                document.getElementById('schedules-content').style.display = 'block';
             }
         } catch (e) {
-            document.getElementById('dynamic-schedules').innerHTML = '<p style="color:red;">Eroare la încărcarea liniilor STB.</p>';
+            console.error(e);
         }
+
+        document.getElementById('dynamic-schedules').style.display = 'none';
+        document.getElementById('schedules-content').style.display = 'block';
     });
     </script>
+
 </div>
 </body>
 </html>
