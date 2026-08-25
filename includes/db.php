@@ -77,7 +77,7 @@ function getDB() {
 <meta name="google-site-verification" content="9Cx7PD6SqCQRb_R9zg6LHEudw4TsWXPeU6UuK6QFQaM" />
 
 <meta name="theme-color" content="#649B1C">
-<base href="https://www.ghidbucurestean.ro/">
+
 <link rel="canonical" href="https://www.ghidbucurestean.ro/harta-metrou-bucurti">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Harta Metrou Bucuresti 2026 - schema retelei Metrorex">

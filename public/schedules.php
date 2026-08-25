@@ -87,9 +87,10 @@ $current_date = date('d.m.Y');
         </div>
         <div class="nav-bottom">
             <div class="lang-selector-nav">
-                <a href="?lang=ro" class="<?= $lang=='ro'?'active':'' ?>">RO</a>
-                <a href="?lang=en" class="<?= $lang=='en'?'active':'' ?>">EN</a>
-                <a href="?lang=fr" class="<?= $lang=='fr'?'active':'' ?>">FR</a>
+                <a href="?lang=ro" class="<?= $lang=='ro'?'active':'' ?>">🇷🇴</a>
+                <a href="?lang=en" class="<?= $lang=='en'?'active':'' ?>">🇬🇧</a>
+                <a href="?lang=fr" class="<?= $lang=='fr'?'active':'' ?>">🇫🇷</a>
+                <a href="?lang=es" class="<?= $lang=='es'?'active':'' ?>">🇪🇸</a>
             </div>
             <a href="account.php?lang=<?= $lang ?>" class="nav-item" title="Contul meu"><i class="fas fa-user-circle"></i></a>
             <a href="/admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>

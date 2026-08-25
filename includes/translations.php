@@ -96,6 +96,38 @@ $translations = [
         'select_station_schedule' => 'Sélectionnez une station pour voir les horaires',
         'next_arrivals' => 'Prochaines arrivées',
         'other_arrivals' => 'Autres arrivées prévues : '
+    ],
+    'es' => [
+        'app_name' => 'Transporte en vivo de Bucarest',
+        'subtitle' => 'Mira al instante lo que llega a tu estación.',
+        'btn_schedules' => 'Ver horarios y líneas',
+        'btn_flights' => 'Encontrar vuelos',
+        'btn_map' => 'Mapa en vivo',
+        'weather' => 'Clima',
+        'footer_text' => 'CopyRight Transport 2026 By Stoian rudolf',
+        'click_station' => 'Haz clic en una estación en el mapa para ver las próximas llegadas.',
+        'loading' => 'Cargando...',
+        'no_vehicles' => 'No hay vehículos programados próximamente.',
+        'estimated_arrival' => 'Llegada estimada',
+        'min' => 'min',
+        'station_name' => 'Nombre de la estación',
+        'flights_title' => 'Vuelos desde Bucarest (Otopeni)',
+        'flight_number' => 'Número de vuelo',
+        'destination' => 'Destino',
+        'departure_time' => 'Hora de salida',
+        'status' => 'Estado',
+        'schedules_title' => 'Horarios y líneas actuales',
+        'line' => 'Línea',
+        'schedule_details' => 'Detalles del horario',
+        'filter_bus' => 'Autobuses',
+        'filter_tram' => 'Tranvías',
+        'filter_trolley' => 'Trolebuses',
+        'btn_metro' => 'Metro',
+        'search_line' => 'Buscar línea de tranvía, autobús...',
+        'switch_direction' => 'Cambiar dirección',
+        'select_station_schedule' => 'Selecciona una estación para ver el horario',
+        'next_arrivals' => 'Próximas llegadas',
+        'other_arrivals' => 'Otras llegadas programadas: '
     ]
 ];
 
