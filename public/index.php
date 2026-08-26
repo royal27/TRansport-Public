@@ -100,6 +100,17 @@ $current_date = date('d.m.Y');
             <button class="cat-btn trolley-btn active" data-type="trolley"><i class="fas fa-bus-simple"></i></button>
         </div>
 
+        <!-- Popup Menu pt selectarea liniilor -->
+        <div id="lines-popup" class="lines-popup hidden">
+            <div class="lines-popup-header">
+                <span id="lines-popup-title">Linii</span>
+                <button id="close-lines-popup" class="btn-icon"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="lines-popup-list" class="lines-popup-list">
+                <!-- Se populeaza dinamic din JS -->
+            </div>
+        </div>
+
         <div class="search-box-container">
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>

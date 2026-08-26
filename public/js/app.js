@@ -41,7 +41,18 @@ if (btnBackLine) btnBackLine.addEventListener('click', () => {
     if (currentRoutePolyline) map.removeLayer(currentRoutePolyline);
 });
 
-// Setup Category Tabs
+// Setup Category Tabs & Popup
+const linesPopup = document.getElementById('lines-popup');
+const linesPopupTitle = document.getElementById('lines-popup-title');
+const linesPopupList = document.getElementById('lines-popup-list');
+const closeLinesPopup = document.getElementById('close-lines-popup');
+
+if (closeLinesPopup) {
+    closeLinesPopup.addEventListener('click', () => {
+        linesPopup.classList.add('hidden');
+    });
+}
+
 document.querySelectorAll('.cat-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
         document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -58,8 +69,45 @@ document.querySelectorAll('.cat-btn').forEach(btn => {
         filters['TROLLEYBUS'] = type === 'trolley';
 
         loadVehicles(); // refresh map
+
+        // Open the popup to select a specific line
+        openLinesPopup(currentLineType);
     });
 });
+
+function openLinesPopup(type) {
+    if (!linesPopup) return;
+
+    // Extract available lines of this type from allVehicles
+    const linesOfType = [...new Set(allVehicles.filter(v => v.type === type).map(v => v.line))].sort((a,b) => parseInt(a) - parseInt(b));
+
+    let title = 'Linii';
+    if (type === 'BUS') title = 'Linii Autobuz';
+    if (type === 'TRAM') title = 'Linii Tramvai';
+    if (type === 'TROLLEYBUS') title = 'Linii Troleibuz';
+    linesPopupTitle.innerText = title;
+
+    linesPopupList.innerHTML = '';
+
+    if (linesOfType.length === 0) {
+        linesPopupList.innerHTML = '<div style="padding: 10px;">Nicio linie activă găsită momentan.</div>';
+    } else {
+        linesOfType.forEach(line => {
+            const btn = document.createElement('button');
+            btn.className = 'line-item-btn line-item';
+            btn.setAttribute('data-line', line);
+            btn.innerText = line;
+            btn.addEventListener('click', () => {
+                linesPopup.classList.add('hidden');
+                document.getElementById('line-search').value = line;
+                searchLine(line);
+            });
+            linesPopupList.appendChild(btn);
+        });
+    }
+
+    linesPopup.classList.remove('hidden');
+}
 
 async function searchLine(line, adminId = null) {
     if (!line) return;
@@ -227,13 +275,22 @@ function renderVehiclesOnMap(dataList) {
     });
 }
 
+let allVehicles = []; // Store globally for the popup menu
+
 async function loadVehicles() {
     try {
         const response = await fetch('api/vehicles.php');
         const result = await response.json();
 
         if (result.status === 'success') {
+            allVehicles = result.data;
             renderVehiclesOnMap(result.data);
+
+            // If popup is open, refresh its content to show updated active lines
+            const popupEl = document.getElementById('lines-popup');
+            if (popupEl && !popupEl.classList.contains('hidden') && currentLineType) {
+                openLinesPopup(currentLineType);
+            }
         }
     } catch (e) {}
 }

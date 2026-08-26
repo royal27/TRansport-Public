@@ -72,6 +72,37 @@ if ($httpCode == 200 && $response) {
     $status = 'error_fetching';
 }
 
+// Ensure some essential lines are always present for the MVP demo
+$essentialLines = ['1', '10', '41', '32', '335', '79', '131', '381'];
+$presentLines = array_unique(array_column($vehicles, 'line'));
+$missingLines = array_diff($essentialLines, $presentLines);
+
+if (!empty($missingLines)) {
+    $baseLat = 44.4323; // Centrul Bucurestiului
+    $baseLng = 26.1063;
+    foreach ($missingLines as $mLine) {
+        $type = 'BUS';
+        if (in_array($mLine, ['1', '10', '41', '32'])) $type = 'TRAM';
+        elseif (in_array($mLine, ['79'])) $type = 'TROLLEYBUS';
+
+        // Add 3 mock vehicles for each missing essential line
+        for ($i = 0; $i < 3; $i++) {
+            $latOffset = (mt_rand(-300, 300) / 10000);
+            $lngOffset = (mt_rand(-300, 300) / 10000);
+            $vehicles[] = [
+                'id' => 'MOCK_' . $mLine . '_' . $i,
+                'line' => $mLine,
+                'type' => $type,
+                'lat' => $baseLat + $latOffset,
+                'lng' => $baseLng + $lngOffset,
+                'heading' => mt_rand(0, 360),
+                'speed' => mt_rand(10, 50),
+                'occupancy' => mt_rand(1, 3)
+            ];
+        }
+    }
+}
+
 // Fallback (Date simulate) in caz ca TPBI GTFS cade cu totul
 if (empty($vehicles)) {
     $dataSource = 'mock_data';
