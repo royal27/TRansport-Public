@@ -55,17 +55,6 @@ function getDB() {
             )
         ");
 
-        // Auto-seed active STB tram lines if missing
-        $trams = ['1', '3', '5', '7', '10', '11', '14', '16', '19', '21', '23', '24', '25', '27', '32', '36', '40', '41', '44', '45', '47', '55'];
-        foreach ($trams as $line) {
-            $check = $pdo->prepare("SELECT id FROM schedules WHERE category = 'TRAM' AND line_name = ?");
-            $check->execute([$line]);
-            if (!$check->fetch()) {
-                $insert = $pdo->prepare("INSERT INTO schedules (category, line_name, schedule_details) VALUES ('TRAM', ?, 'Orarele nu sunt setate')");
-                $insert->execute([$line]);
-            }
-        }
-
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS settings (
                 setting_key VARCHAR(50) PRIMARY KEY,
@@ -307,6 +296,17 @@ EOT;
                 FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE
             )
         ");
+
+        // Auto-seed active STB tram lines if missing (must be done after 'schedules' table is created)
+        $trams = ['1', '3', '5', '7', '10', '11', '14', '16', '19', '21', '23', '24', '25', '27', '32', '36', '40', '41', '44', '45', '47', '55'];
+        foreach ($trams as $line) {
+            $check = $pdo->prepare("SELECT id FROM schedules WHERE category = 'TRAM' AND line_name = ?");
+            $check->execute([$line]);
+            if (!$check->fetch()) {
+                $insert = $pdo->prepare("INSERT INTO schedules (category, line_name, schedule_details) VALUES ('TRAM', ?, 'Orarele nu sunt setate')");
+                $insert->execute([$line]);
+            }
+        }
 
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS custom_lines (
