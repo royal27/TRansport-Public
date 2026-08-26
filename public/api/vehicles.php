@@ -73,7 +73,7 @@ if ($httpCode == 200 && $response) {
 }
 
 // Ensure some essential lines are always present for the MVP demo
-$essentialLines = ['1', '10', '41', '32', '335', '79', '131', '381'];
+$essentialLines = ['1', '3', '5', '7', '10', '11', '14', '16', '19', '21', '23', '24', '25', '27', '32', '36', '40', '41', '44', '45', '47', '55', '335', '79', '131', '381'];
 $presentLines = array_unique(array_column($vehicles, 'line'));
 $missingLines = array_diff($essentialLines, $presentLines);
 
@@ -85,18 +85,56 @@ if (!empty($missingLines)) {
         if (in_array($mLine, ['1', '10', '41', '32'])) $type = 'TRAM';
         elseif (in_array($mLine, ['79'])) $type = 'TROLLEYBUS';
 
-        // Make mock vehicles move predictably by using time-based progression
-        $timeOffset = time() % 3600; // 1 hour loop
+        // Mock vehicles strictly on the exact polyline for the line
+        $timeOffset = time() % 3600;
+
+        // Let's try to get the cached shape if it exists
+        $cacheFileMain = sys_get_temp_dir() . '/overpass_route_' . md5($mLine . 'dus') . '.json';
+        $shapeCoords = [];
+        if (file_exists($cacheFileMain)) {
+            $r = json_decode(file_get_contents($cacheFileMain), true);
+            $shapeId = $r['shape_id'] ?? '';
+            $shapeFile = sys_get_temp_dir() . '/' . $shapeId . '.json';
+            if (file_exists($shapeFile)) {
+                $shapeCoords = json_decode(file_get_contents($shapeFile), true);
+            }
+        }
 
         for ($i = 0; $i < 3; $i++) {
-            // Predictable moving logic simulating a loop around the center
-            $radius = 0.02 + ($i * 0.01);
-            $speedFactor = 0.005;
-            $angle = ($timeOffset * $speedFactor) + ($i * 2);
+            if (!empty($shapeCoords) && count($shapeCoords) > 10) {
+                // Snap to route
+                $numCoords = count($shapeCoords);
 
-            $lat = $baseLat + ($radius * sin($angle));
-            $lng = $baseLng + ($radius * cos($angle));
-            $heading = (rad2deg($angle) + 90) % 360;
+                // Vehicle 0 is at 10% of route, Vehicle 1 is at 40%, etc.
+                // We make them move by advancing their index based on time.
+                $baseIdx = (int)($numCoords * ($i * 0.3));
+
+                // Move 1 coord index every 3 seconds
+                $progression = (int)($timeOffset / 3);
+
+                $currentIdx = ($baseIdx + $progression) % $numCoords;
+
+                $lat = $shapeCoords[$currentIdx]['lat'];
+                $lng = $shapeCoords[$currentIdx]['lng'];
+
+                // approximate heading
+                $nextIdx = ($currentIdx + 1) % $numCoords;
+                $heading = 0;
+                if (isset($shapeCoords[$nextIdx])) {
+                    $dLon = ($shapeCoords[$nextIdx]['lng'] - $lng);
+                    $y = sin($dLon) * cos($shapeCoords[$nextIdx]['lat']);
+                    $x = cos($lat) * sin($shapeCoords[$nextIdx]['lat']) - sin($lat) * cos($shapeCoords[$nextIdx]['lat']) * cos($dLon);
+                    $heading = (rad2deg(atan2($y, $x)) + 360) % 360;
+                }
+            } else {
+                // Fallback loop
+                $radius = 0.02 + ($i * 0.01);
+                $speedFactor = 0.005;
+                $angle = ($timeOffset * $speedFactor) + ($i * 2);
+                $lat = $baseLat + ($radius * sin($angle));
+                $lng = $baseLng + ($radius * cos($angle));
+                $heading = (rad2deg($angle) + 90) % 360;
+            }
 
             $vehicles[] = [
                 'id' => 'MOCK_' . $mLine . '_' . $i,

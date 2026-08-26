@@ -109,8 +109,25 @@ function openLinesPopup(type) {
     linesPopup.classList.remove('hidden');
 }
 
+let globalCurrentLine = null;
+let globalCurrentAdminId = null;
+let currentDirection = 'dus';
+
+const switchDirBtn = document.getElementById('bp-switch-dir');
+if (switchDirBtn) {
+    switchDirBtn.addEventListener('click', () => {
+        currentDirection = currentDirection === 'dus' ? 'intors' : 'dus';
+        if (globalCurrentLine) {
+            searchLine(globalCurrentLine, globalCurrentAdminId);
+        }
+    });
+}
+
 async function searchLine(line, adminId = null) {
     if (!line) return;
+
+    globalCurrentLine = line;
+    globalCurrentAdminId = adminId;
 
     welcomeInfo.classList.add('hidden');
     stationInfo.classList.add('hidden');
@@ -119,7 +136,7 @@ async function searchLine(line, adminId = null) {
 
     timelineList.innerHTML = `<div class="loading">${i18n.loading}</div>`;
     try {
-        let url = `api/lines.php?search=${encodeURIComponent(line)}`;
+        let url = `api/lines.php?search=${encodeURIComponent(line)}&direction=${currentDirection}`;
         if (adminId) url += `&admin_id=${adminId}`;
         const response = await fetch(url);
 

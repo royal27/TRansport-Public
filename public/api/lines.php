@@ -26,7 +26,7 @@ if (!empty($shape_id)) {
     } elseif (strpos($shape_id, 'overpass_') === 0) {
         // Retrieve cached shape from session or temporary cache file
         $safe_shape_id = basename($shape_id);
-        $cacheFile = '/tmp/' . $safe_shape_id . '.json';
+        $cacheFile = sys_get_temp_dir() . '/' . $safe_shape_id . '.json';
         if (file_exists($cacheFile)) {
             $coords = json_decode(file_get_contents($cacheFile), true);
             echo json_encode(['status' => 'success', 'data' => $coords]);
@@ -97,7 +97,7 @@ if ($line == '32' || $line == '1' || $line == '41' || (intval($line) > 0 && intv
 }
 
 // Fetch real route from Overpass API
-$cacheFileMain = '/tmp/overpass_route_' . md5($line . $direction) . '.json';
+$cacheFileMain = sys_get_temp_dir() . '/overpass_route_' . md5($line . $direction) . '.json';
 $shapeId = 'overpass_' . md5($line . $direction);
 
 if (file_exists($cacheFileMain) && filemtime($cacheFileMain) > time() - 86400) {
@@ -185,7 +185,7 @@ if (empty($stationsData)) {
 }
 
 // Save shape for shape endpoint
-file_put_contents('/tmp/' . $shapeId . '.json', json_encode($shapeData));
+file_put_contents(sys_get_temp_dir() . '/' . $shapeId . '.json', json_encode($shapeData));
 
 $resultData = [
     'route_short_name' => $line,
