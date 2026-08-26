@@ -74,6 +74,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $settings['responsive_mode'] = $responsive_mode;
 
         $success = "Setările generale au fost salvate.";
+    } elseif ($_POST['action'] == 'upload_splash') {
+        if (isset($_FILES['splash_file']) && $_FILES['splash_file']['error'] == 0) {
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'webm'];
+            $filename = $_FILES['splash_file']['name'];
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+            if (in_array($ext, $allowed)) {
+                $new_filename = 'splash_' . time() . '.' . $ext;
+                $upload_path = __DIR__ . '/../public/uploads/' . $new_filename;
+
+                if (!is_dir(__DIR__ . '/../public/uploads')) {
+                    mkdir(__DIR__ . '/../public/uploads', 0777, true);
+                }
+
+                if (move_uploaded_file($_FILES['splash_file']['tmp_name'], $upload_path)) {
+                    $splash_url = 'uploads/' . $new_filename;
+                    $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('splash_screen_media', ?)");
+                    $stmt->execute([$splash_url]);
+                    $settings['splash_screen_media'] = $splash_url;
+                    $success = "Splash screen a fost încărcat cu succes.";
+                } else {
+                    $error = "Eroare la mutarea fișierului de splash.";
+                }
+            } else {
+                $error = "Extensie nepermisă pentru splash screen.";
+            }
+        }
+    } elseif ($_POST['action'] == 'remove_splash') {
+        $stmt = $db->prepare("DELETE FROM settings WHERE setting_key = 'splash_screen_media'");
+        $stmt->execute();
+        $settings['splash_screen_media'] = '';
+        $success = "Splash screen a fost șters.";
     } elseif ($_POST['action'] == 'upload_logo') {
         if (isset($_FILES['logo_file']) && $_FILES['logo_file']['error'] == 0) {
 
@@ -180,6 +212,35 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
         <?php endif; ?>
 
         <div class="card">
+            <hr style="margin: 20px 0; border: 1px solid #ddd;">
+
+            <h2>Intro / Splash Screen</h2>
+            <p style="color: #7f8c8d; font-size: 14px;">Încarcă un video scurt (mp4) sau o poză (gif/png) ce va fi afișat ca Intro timp de 5 secunde la prima vizitare a site-ului.</p>
+            <?php if (!empty($settings['splash_screen_media'])): ?>
+                <div style="margin-top: 10px; margin-bottom: 20px;">
+                    <p><strong>Splash curent:</strong></p>
+                    <?php if(in_array(strtolower(pathinfo($settings['splash_screen_media'], PATHINFO_EXTENSION)), ['mp4','webm'])): ?>
+                        <video src="../public/<?= htmlspecialchars($settings['splash_screen_media']) ?>" style="max-height: 100px;" autoplay muted loop></video>
+                    <?php else: ?>
+                        <img src="../public/<?= htmlspecialchars($settings['splash_screen_media']) ?>" style="max-height: 100px;">
+                    <?php endif; ?>
+                    <form method="POST" action="" style="margin-top:10px;">
+                        <input type="hidden" name="action" value="remove_splash">
+                        <button type="submit" class="btn" style="background:#e74c3c;">Șterge Splash Screen</button>
+                    </form>
+                </div>
+            <?php endif; ?>
+            <form method="POST" action="" enctype="multipart/form-data" style="margin-bottom: 20px;">
+                <input type="hidden" name="action" value="upload_splash">
+                <div class="form-group">
+                    <label>Alege fișier Splash (MP4, GIF, PNG, JPG)</label>
+                    <input type="file" name="splash_file" accept=".png, .jpg, .jpeg, .gif, .mp4, .webm" required>
+                </div>
+                <button type="submit" class="btn">Încarcă Splash</button>
+            </form>
+
+            <hr style="margin: 20px 0; border: 1px solid #ddd;">
+
             <h2>Logo Site</h2>
             <form method="POST" action="" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="upload_logo">

@@ -89,6 +89,14 @@ function openLinesPopup(type) {
 
     linesPopupList.innerHTML = '';
 
+    if (type === 'TRAM') {
+        const allTramLines = ['1', '3', '5', '7', '10', '11', '14', '16', '19', '21', '23', '24', '25', '27', '32', '36', '40', '41', '44', '45', '47', '55'];
+        allTramLines.forEach(l => {
+            if (!linesOfType.includes(l)) linesOfType.push(l);
+        });
+        linesOfType.sort((a,b) => parseInt(a) - parseInt(b));
+    }
+
     if (linesOfType.length === 0) {
         linesPopupList.innerHTML = '<div style="padding: 10px;">Nicio linie activă găsită momentan.</div>';
     } else {

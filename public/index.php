@@ -13,7 +13,7 @@ $logo_row = $stmt->fetch(PDO::FETCH_ASSOC);
 $logo_path = $logo_row ? $logo_row['setting_value'] : '';
 
 // Get theme and announcement settings
-$stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('theme_color', 'announcement_text', 'announcement_speed', 'app_name', 'app_version', 'app_author', 'weather_api_key')");
+$stmt = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('theme_color', 'announcement_text', 'announcement_speed', 'app_name', 'app_version', 'app_author', 'weather_api_key', 'splash_screen_media')");
 $settings = [];
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $settings[$row['setting_key']] = $row['setting_value'];
@@ -25,6 +25,7 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
 $app_version = $settings['app_version'] ?? '1.0.0';
 $app_author = $settings['app_author'] ?? 'Admin';
 $weather_api_key = $settings['weather_api_key'] ?? '';
+$splash_screen_media = $settings['splash_screen_media'] ?? '';
 
 // Vreme si Data pt header (PHP variables pt initializare)
 $current_date = date('d.m.Y');
@@ -88,6 +89,34 @@ $current_date = date('d.m.Y');
             <a href="/admin/index.php" class="nav-item" title="Admin"><i class="fas fa-cog"></i></a>
         </div>
     </nav>
+
+<?php if (!empty($splash_screen_media)): ?>
+<div id="splash-screen-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:9999; display:none; justify-content:center; align-items:center;">
+    <?php if(in_array(strtolower(pathinfo($splash_screen_media, PATHINFO_EXTENSION)), ['mp4','webm'])): ?>
+        <video src="<?= htmlspecialchars($splash_screen_media) ?>" style="width:100%; height:100%; object-fit:cover;" autoplay muted playsinline></video>
+    <?php else: ?>
+        <img src="<?= htmlspecialchars($splash_screen_media) ?>" style="width:100%; height:100%; object-fit:cover;">
+    <?php endif; ?>
+</div>
+<script>
+    // Execute immediately to prevent flash
+    if (!sessionStorage.getItem('splash_shown')) {
+        document.getElementById('splash-screen-overlay').style.display = 'flex';
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen-overlay');
+                splash.style.transition = 'opacity 0.5s ease';
+                splash.style.opacity = '0';
+                setTimeout(() => splash.remove(), 500);
+                sessionStorage.setItem('splash_shown', 'true');
+            }, 5000);
+        });
+    } else {
+        const splash = document.getElementById('splash-screen-overlay');
+        if (splash) splash.remove();
+    }
+</script>
+<?php endif; ?>
 
 <div id="app-wrapper">
 
