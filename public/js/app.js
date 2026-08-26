@@ -191,10 +191,42 @@ function renderTimelineUI(result, shapeCoordinates) {
     bpBadge.style.backgroundColor = result.color;
     document.getElementById('bp-direction-text').innerHTML = result.direction;
 
-    // Build timeline
+    // Build timeline - now we calculate progression based on live vehicles on this line
+    let activeVehicles = allVehicles.filter(v => v.line === result.line);
+
+    // Sort stations by order (they are already sorted from the API/Overpass)
+    // Find the furthest vehicle on the path to mark stations as "passed"
+    // For simplicity, we just use the first active vehicle for demonstration of progression
+    let vehicleToTrack = activeVehicles.length > 0 ? activeVehicles[0] : null;
+
+    // In a real app we'd use turf.js to find nearest point on line.
+    // Here we'll do a simple distance check to find closest station to the vehicle.
+    let closestStationIdx = -1;
+    let minDistance = 999999;
+
+    if (vehicleToTrack) {
+        result.stations.forEach((station, idx) => {
+            if (station.lat && station.lng) {
+                let d = Math.sqrt(Math.pow(station.lat - vehicleToTrack.lat, 2) + Math.pow(station.lng - vehicleToTrack.lng, 2));
+                if (d < minDistance) {
+                    minDistance = d;
+                    closestStationIdx = idx;
+                }
+            }
+        });
+    }
+
     let html = '';
-    result.stations.forEach((station) => {
-        let activeClass = station.has_arrivals ? 'active' : '';
+    result.stations.forEach((station, idx) => {
+        let stateClass = '';
+        if (closestStationIdx !== -1) {
+            if (idx < closestStationIdx) stateClass = 'passed';
+            else if (idx === closestStationIdx) stateClass = 'active'; // Currently at
+            else stateClass = 'upcoming';
+        } else {
+            stateClass = station.has_arrivals ? 'active' : 'upcoming';
+        }
+
         let arrivalsHtml = '';
         if (station.has_arrivals) {
             arrivalsHtml = `
@@ -205,7 +237,7 @@ function renderTimelineUI(result, shapeCoordinates) {
         }
 
         html += `
-            <div class="timeline-item ${activeClass}">
+            <div class="timeline-item ${stateClass}" data-idx="${idx}">
                 <div class="timeline-marker"></div>
                 <div class="timeline-content" style="margin-left:30px; width:100%; display:flex; justify-content:space-between;">
                     <div class="timeline-station">${station.name}</div>
@@ -215,6 +247,17 @@ function renderTimelineUI(result, shapeCoordinates) {
         `;
     });
     timelineList.innerHTML = html;
+
+    // Attach click event to timeline items to snap map to station
+    document.querySelectorAll('.timeline-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            let idx = item.getAttribute('data-idx');
+            let st = result.stations[idx];
+            if (st && st.lat) {
+                map.setView([st.lat, st.lng], 16);
+            }
+        });
+    });
 
     if (currentRoutePolyline) map.removeLayer(currentRoutePolyline);
 

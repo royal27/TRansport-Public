@@ -761,3 +761,20 @@ html.dark-mode .mbb-ticker-text {
     background: var(--stb-green);
     color: white;
 }
+
+.timeline-item.passed .timeline-marker {
+    background: #555;
+    border-color: #333;
+}
+.timeline-item.passed .timeline-station {
+    color: #999;
+}
+
+.timeline-item.upcoming .timeline-marker {
+    background: white;
+    border-color: var(--tram-red);
+}
+.timeline-item.upcoming .timeline-station {
+    color: #333;
+    font-weight: bold;
+}

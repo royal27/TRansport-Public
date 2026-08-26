@@ -85,18 +85,27 @@ if (!empty($missingLines)) {
         if (in_array($mLine, ['1', '10', '41', '32'])) $type = 'TRAM';
         elseif (in_array($mLine, ['79'])) $type = 'TROLLEYBUS';
 
-        // Add 3 mock vehicles for each missing essential line
+        // Make mock vehicles move predictably by using time-based progression
+        $timeOffset = time() % 3600; // 1 hour loop
+
         for ($i = 0; $i < 3; $i++) {
-            $latOffset = (mt_rand(-300, 300) / 10000);
-            $lngOffset = (mt_rand(-300, 300) / 10000);
+            // Predictable moving logic simulating a loop around the center
+            $radius = 0.02 + ($i * 0.01);
+            $speedFactor = 0.005;
+            $angle = ($timeOffset * $speedFactor) + ($i * 2);
+
+            $lat = $baseLat + ($radius * sin($angle));
+            $lng = $baseLng + ($radius * cos($angle));
+            $heading = (rad2deg($angle) + 90) % 360;
+
             $vehicles[] = [
                 'id' => 'MOCK_' . $mLine . '_' . $i,
                 'line' => $mLine,
                 'type' => $type,
-                'lat' => $baseLat + $latOffset,
-                'lng' => $baseLng + $lngOffset,
-                'heading' => mt_rand(0, 360),
-                'speed' => mt_rand(10, 50),
+                'lat' => $lat,
+                'lng' => $lng,
+                'heading' => $heading,
+                'speed' => 20 + mt_rand(0, 10),
                 'occupancy' => mt_rand(1, 3)
             ];
         }
