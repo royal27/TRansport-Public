@@ -96,8 +96,8 @@ $current_date = date('d.m.Y');
         <!-- 3-column grid for line categories -->
         <div class="transport-categories">
             <button class="cat-btn bus-btn active" data-type="bus"><i class="fas fa-bus"></i></button>
-            <button class="cat-btn tram-btn" data-type="tram"><i class="fas fa-train-tram"></i></button>
-            <button class="cat-btn trolley-btn" data-type="trolley"><i class="fas fa-bus-simple"></i></button>
+            <button class="cat-btn tram-btn active" data-type="tram"><i class="fas fa-train-tram"></i></button>
+            <button class="cat-btn trolley-btn active" data-type="trolley"><i class="fas fa-bus-simple"></i></button>
         </div>
 
         <div class="search-box-container">

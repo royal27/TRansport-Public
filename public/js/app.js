@@ -192,21 +192,37 @@ function getColorByType(type) {
     return 'var(--bus-blue)';
 }
 
+function getIconByType(type) {
+    if (type === 'TRAM') return 'fas fa-train-tram'; // Tramvai
+    if (type === 'TROLLEYBUS') return 'fas fa-bus-simple'; // Troleibuz (same as the tabs)
+    return 'fas fa-bus'; // Autobuz
+}
+
 function renderVehiclesOnMap(dataList) {
     vehiclesLayer.clearLayers();
     dataList.forEach(v => {
         if (!filters[v.type]) return;
 
         const color = getColorByType(v.type);
+        const faIcon = getIconByType(v.type);
+
         const icon = L.divIcon({
             className: 'custom-div-icon',
-            html: `<div class="vehicle-marker" style="background-color: ${color}">${v.line}</div>`,
-            iconSize: [30, 30],
-            iconAnchor: [15, 15]
+            html: `<div class="vehicle-marker" style="background-color: ${color}; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12px;">
+                        <i class="${faIcon}" style="font-size:10px; margin-bottom:1px;"></i>
+                        <span style="line-height:1;">${v.line}</span>
+                   </div>`,
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
         });
 
         const marker = L.marker([v.lat, v.lng], { icon: icon });
-        marker.bindPopup(`<b>Linia ${v.line}</b>`);
+
+        // La click pe vehicul, simulăm căutarea/selecția liniei respective
+        marker.on('click', () => {
+            searchLine(v.line);
+        });
+
         vehiclesLayer.addLayer(marker);
     });
 }
@@ -216,35 +232,9 @@ async function loadVehicles() {
         const response = await fetch('api/vehicles.php');
         const result = await response.json();
 
-        if (result.status === 'success' && result.data_source !== 'mock_data') {
+        if (result.status === 'success') {
             renderVehiclesOnMap(result.data);
-            return;
         }
-
-        if (result.try_frontend_fetch) {
-            try {
-                let headers = { 'Accept': 'application/json' };
-                if (result.tpbi_api_key) headers['Authorization'] = 'Bearer ' + result.tpbi_api_key;
-
-                const mobiResponse = await fetch('https://mo-bi.ro/api/v1/vehicles', { headers: headers });
-
-                if (mobiResponse.ok) {
-                    const realData = await mobiResponse.json();
-                    if (realData.data) {
-                        const parsedVehicles = realData.data.map(v => {
-                            let type = 'BUS';
-                            if (v.route_type == 0) type = 'TRAM';
-                            else if (v.route_type == 11) type = 'TROLLEYBUS';
-                            return { id: v.vehicle_id, line: v.route_short_name || '?', type: type, lat: v.latitude, lng: v.longitude };
-                        });
-                        renderVehiclesOnMap(parsedVehicles);
-                        return;
-                    }
-                }
-            } catch (err) {}
-        }
-
-        if (result.status === 'success') renderVehiclesOnMap(result.data);
     } catch (e) {}
 }
 
