@@ -120,14 +120,14 @@ $current_date = date('d.m.Y');
         <p style="color: #555; margin-bottom: 20px; text-align: center;">
             Harta generală a rețelei de metrou din București (Metrorex).
         </p>
-        <?php if (!empty(trim($metro_map_html))): ?>
-            <div class="metro-map-html-container">
-                <?= $metro_map_html ?>
-            </div>
-        <?php else: ?>
-            <!-- Harta oficială Metrorex / Harta generică actualizată -->
-            <img src="img/metro_map.png" alt="Metrorex Map" class="metro-map-img">
-        <?php endif; ?>
+        <div class="metro-svg-container" style="width: 100%; height: 60vh; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; position: relative;">
+            <!-- Added viewBox calculation logic in JS to handle responsiveness -->
+            <svg id="metroSvg" style="width:100%; height:100%;"></svg>
+        </div>
+
+        <div class="legend-container" id="metroLegend" style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <!-- Legenda generată live -->
+        </div>
     </div>
 
     <footer class="front-footer">
@@ -135,5 +135,187 @@ $current_date = date('d.m.Y');
     </footer>
 
 </div>
+
+<script>
+    // Live Metro Simulation Logic
+    async function loadMetroData() {
+        try {
+            const res = await fetch('api/metro.php');
+            const data = await res.json();
+            if (data.success) {
+                renderMetroMap(data.lines);
+                renderLegend(data.lines);
+                startSimulation(data.lines);
+            }
+        } catch (e) {
+            console.error("Failed to load metro data", e);
+        }
+    }
+
+    function renderMetroMap(lines) {
+        const svg = document.getElementById('metroSvg');
+        svg.innerHTML = '';
+
+        // Calculate bounds for viewBox to make it responsive
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        lines.forEach(line => {
+            if (!line.stations) return;
+            line.stations.forEach(st => {
+                if (st.x < minX) minX = st.x;
+                if (st.y < minY) minY = st.y;
+                if (st.x > maxX) maxX = st.x;
+                if (st.y > maxY) maxY = st.y;
+            });
+        });
+
+        if (minX !== Infinity) {
+            // Add padding
+            const padding = 50;
+            const width = Math.max(100, maxX - minX + padding * 2);
+            const height = Math.max(100, maxY - minY + padding * 2);
+            svg.setAttribute("viewBox", `${minX - padding} ${minY - padding} ${width} ${height}`);
+        } else {
+             svg.setAttribute("viewBox", `0 0 800 600`); // fallback
+        }
+
+        // Render Paths
+        lines.forEach(line => {
+            if (!line.stations || line.stations.length < 2) return;
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            let d = `M ${line.stations[0].x} ${line.stations[0].y} `;
+            for (let i = 1; i < line.stations.length; i++) {
+                d += `L ${line.stations[i].x} ${line.stations[i].y} `;
+            }
+            path.setAttribute("d", d);
+            path.setAttribute("stroke", line.color);
+            path.setAttribute("stroke-width", "6");
+            path.setAttribute("fill", "none");
+            path.setAttribute("stroke-linejoin", "round");
+            svg.appendChild(path);
+        });
+
+        // Render Stations
+        lines.forEach(line => {
+            if (!line.stations) return;
+            line.stations.forEach(st => {
+                const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", st.x);
+                circle.setAttribute("cy", st.y);
+                circle.setAttribute("r", 5);
+                circle.setAttribute("fill", "#fff");
+                circle.setAttribute("stroke", line.color);
+                circle.setAttribute("stroke-width", "3");
+
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", parseInt(st.x) + 10);
+                text.setAttribute("y", parseInt(st.y) + 4);
+                text.textContent = st.name;
+                text.setAttribute("font-family", "sans-serif");
+                text.setAttribute("font-size", "12px");
+                text.setAttribute("font-weight", "bold");
+                text.setAttribute("fill", "#333");
+
+                // Dark mode text color adjustment inline hack
+                if(document.documentElement.classList.contains('dark-mode')) {
+                     text.setAttribute("fill", "#eee");
+                }
+
+                group.appendChild(circle);
+                group.appendChild(text);
+                svg.appendChild(group);
+            });
+        });
+    }
+
+    function renderLegend(lines) {
+        const legend = document.getElementById('metroLegend');
+        legend.innerHTML = '';
+        lines.forEach(line => {
+            if(!line.stations || line.stations.length === 0) return;
+            const first = line.stations[0].name;
+            const last = line.stations[line.stations.length - 1].name;
+
+            const item = document.createElement('div');
+            item.style.display = 'flex';
+            item.style.alignItems = 'center';
+            item.style.gap = '8px';
+            item.style.fontWeight = 'bold';
+
+            const safeName = document.createTextNode(line.name).textContent;
+            const safeFirst = document.createTextNode(first).textContent;
+            const safeLast = document.createTextNode(last).textContent;
+
+            item.innerHTML = `
+                <span style="display:inline-block; width:15px; height:15px; border-radius:50%; background:${line.color}"></span>
+                ${safeName}: ${safeFirst} — ${safeLast}
+            `;
+            legend.appendChild(item);
+        });
+    }
+
+    // Very basic simulation to satisfy "trains moving on lines"
+    function startSimulation(lines) {
+        const svg = document.getElementById('metroSvg');
+
+        lines.forEach(line => {
+            if (!line.stations || line.stations.length < 2) return;
+
+            // Create a train element
+            const trainGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            const trainBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            trainBg.setAttribute("width", "30");
+            trainBg.setAttribute("height", "16");
+            trainBg.setAttribute("rx", "4");
+            trainBg.setAttribute("fill", "#333");
+            trainBg.setAttribute("x", "-15");
+            trainBg.setAttribute("y", "-8");
+
+            const trainIcon = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            trainIcon.textContent = "🚇";
+            trainIcon.setAttribute("font-size", "10px");
+            trainIcon.setAttribute("x", "-6");
+            trainIcon.setAttribute("y", "3");
+
+            trainGroup.appendChild(trainBg);
+            trainGroup.appendChild(trainIcon);
+            svg.appendChild(trainGroup);
+
+            // Animation logic
+            let currentStIdx = 0;
+            let direction = 1;
+            let progress = 0; // 0 to 1 between stations
+            const speed = 0.02;
+
+            function animate() {
+                if (!line.stations[currentStIdx + direction]) {
+                    direction *= -1; // reverse
+                }
+
+                const st1 = line.stations[currentStIdx];
+                const st2 = line.stations[currentStIdx + direction];
+
+                progress += speed;
+                if (progress >= 1) {
+                    progress = 0;
+                    currentStIdx += direction;
+                } else {
+                    const x = parseFloat(st1.x) + (parseFloat(st2.x) - parseFloat(st1.x)) * progress;
+                    const y = parseFloat(st1.y) + (parseFloat(st2.y) - parseFloat(st1.y)) * progress;
+                    trainGroup.setAttribute("transform", `translate(${x}, ${y})`);
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            // Stagger start times
+            setTimeout(() => requestAnimationFrame(animate), Math.random() * 2000);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadMetroData();
+    });
+</script>
 </body>
 </html>

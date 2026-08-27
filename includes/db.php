@@ -353,6 +353,28 @@ EOT;
             )
         ");
 
+        // Metro Editor Tables
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS metro_lines (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(50) NOT NULL,
+                color VARCHAR(20) DEFAULT '#ff0000',
+                active TINYINT(1) DEFAULT 1
+            )
+        ");
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS metro_stations (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                line_id INT NOT NULL,
+                name VARCHAR(100) NOT NULL,
+                x INT NOT NULL,
+                y INT NOT NULL,
+                order_idx INT NOT NULL,
+                FOREIGN KEY (line_id) REFERENCES metro_lines(id) ON DELETE CASCADE
+            )
+        ");
+
         return $pdo;
     } catch (PDOException $e) {
         die("Eroare conexiune: " . $e->getMessage());
