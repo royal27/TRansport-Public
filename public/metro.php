@@ -130,6 +130,17 @@ $current_date = date('d.m.Y');
         </div>
     </div>
 
+    <!-- Live Station Modal -->
+    <div id="liveStationModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position:relative;">
+            <button onclick="document.getElementById('liveStationModal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#777;">&times;</button>
+            <h2 id="lsName" style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Nume Stație</h2>
+            <div id="lsContent" style="margin-top:15px;">
+                <!-- Live departures will be injected here -->
+            </div>
+        </div>
+    </div>
+
     <footer class="front-footer">
         <?= getTranslation('footer_text', $lang) ?>
     </footer>
@@ -197,8 +208,16 @@ $current_date = date('d.m.Y');
         // Render Stations
         lines.forEach(line => {
             if (!line.stations) return;
-            line.stations.forEach(st => {
+            line.stations.forEach((st, idx) => {
                 const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                group.setAttribute("class", "station-group");
+                group.setAttribute("data-line", line.id);
+                group.setAttribute("data-idx", idx);
+                group.style.cursor = "pointer";
+
+                // Interactivity for "Live Station" logic
+                group.onclick = () => showLiveStation(line, idx);
+
                 const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 circle.setAttribute("cx", st.x);
                 circle.setAttribute("cy", st.y);
@@ -208,15 +227,17 @@ $current_date = date('d.m.Y');
                 circle.setAttribute("stroke-width", "3");
 
                 const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", parseInt(st.x) + 10);
-                text.setAttribute("y", parseInt(st.y) + 4);
+                const ox = st.text_offset_x !== null ? parseInt(st.text_offset_x) : 12;
+                const oy = st.text_offset_y !== null ? parseInt(st.text_offset_y) : 4;
+
+                text.setAttribute("x", parseInt(st.x) + ox);
+                text.setAttribute("y", parseInt(st.y) + oy);
                 text.textContent = st.name;
                 text.setAttribute("font-family", "sans-serif");
                 text.setAttribute("font-size", "12px");
                 text.setAttribute("font-weight", "bold");
                 text.setAttribute("fill", "#333");
 
-                // Dark mode text color adjustment inline hack
                 if(document.documentElement.classList.contains('dark-mode')) {
                      text.setAttribute("fill", "#eee");
                 }
@@ -254,63 +275,191 @@ $current_date = date('d.m.Y');
         });
     }
 
-    // Very basic simulation to satisfy "trains moving on lines"
+    // Live Real-Time Engine based on Clock & Intervals
+    const TRAIN_TRAVEL_SEC = 120; // 2 minutes between stations
+    const TRAIN_STOP_SEC = 30;    // 30 seconds wait at station
+    let activeTrains = [];
+
     function startSimulation(lines) {
         const svg = document.getElementById('metroSvg');
 
         lines.forEach(line => {
             if (!line.stations || line.stations.length < 2) return;
 
-            // Create a train element
-            const trainGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            const trainBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            trainBg.setAttribute("width", "30");
-            trainBg.setAttribute("height", "16");
-            trainBg.setAttribute("rx", "4");
-            trainBg.setAttribute("fill", "#333");
-            trainBg.setAttribute("x", "-15");
-            trainBg.setAttribute("y", "-8");
+            const startH = parseInt(line.start_time.split(':')[0]);
+            const startM = parseInt(line.start_time.split(':')[1]);
+            const endH = parseInt(line.end_time.split(':')[0]);
+            const endM = parseInt(line.end_time.split(':')[1]);
+            const intervalSec = (parseInt(line.interval_minutes) || 6) * 60;
 
-            const trainIcon = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            trainIcon.textContent = "🚇";
-            trainIcon.setAttribute("font-size", "10px");
-            trainIcon.setAttribute("x", "-6");
-            trainIcon.setAttribute("y", "3");
+            const now = new Date();
+            const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM, 0);
+            const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM, 0);
 
-            trainGroup.appendChild(trainBg);
-            trainGroup.appendChild(trainIcon);
-            svg.appendChild(trainGroup);
+            // If outside operating hours, skip generating trains
+            if (now < startToday || now > endToday) return;
 
-            // Animation logic
-            let currentStIdx = 0;
-            let direction = 1;
-            let progress = 0; // 0 to 1 between stations
-            const speed = 0.02;
+            const secondsSinceStart = Math.floor((now - startToday) / 1000);
 
-            function animate() {
-                if (!line.stations[currentStIdx + direction]) {
-                    direction *= -1; // reverse
+            // Generate active trains for both directions based on interval
+            // Total round trip time
+            const oneWayTime = (line.stations.length - 1) * (TRAIN_TRAVEL_SEC + TRAIN_STOP_SEC);
+
+            // Generate trains in direction 1 (Tur)
+            for(let s = 0; s < secondsSinceStart; s += intervalSec) {
+                const trainAge = secondsSinceStart - s;
+                if (trainAge < oneWayTime) {
+                     spawnTrain(svg, line, 1, trainAge);
                 }
-
-                const st1 = line.stations[currentStIdx];
-                const st2 = line.stations[currentStIdx + direction];
-
-                progress += speed;
-                if (progress >= 1) {
-                    progress = 0;
-                    currentStIdx += direction;
-                } else {
-                    const x = parseFloat(st1.x) + (parseFloat(st2.x) - parseFloat(st1.x)) * progress;
-                    const y = parseFloat(st1.y) + (parseFloat(st2.y) - parseFloat(st1.y)) * progress;
-                    trainGroup.setAttribute("transform", `translate(${x}, ${y})`);
-                }
-
-                requestAnimationFrame(animate);
             }
 
-            // Stagger start times
-            setTimeout(() => requestAnimationFrame(animate), Math.random() * 2000);
+            // Generate trains in direction -1 (Retur)
+            for(let s = 0; s < secondsSinceStart; s += intervalSec) {
+                const trainAge = secondsSinceStart - s;
+                if (trainAge < oneWayTime) {
+                     spawnTrain(svg, line, -1, trainAge);
+                }
+            }
         });
+
+        // Start render loop
+        requestAnimationFrame(renderEngine);
+    }
+
+    function spawnTrain(svg, line, direction, ageSeconds) {
+        const trainGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const trainBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        trainBg.setAttribute("width", "30");
+        trainBg.setAttribute("height", "16");
+        trainBg.setAttribute("rx", "4");
+        trainBg.setAttribute("fill", "#333");
+        trainBg.setAttribute("x", "-15");
+        trainBg.setAttribute("y", "-8");
+
+        const trainIcon = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        trainIcon.textContent = "🚇";
+        trainIcon.setAttribute("font-size", "10px");
+        trainIcon.setAttribute("x", "-6");
+        trainIcon.setAttribute("y", "3");
+
+        trainGroup.appendChild(trainBg);
+        trainGroup.appendChild(trainIcon);
+        svg.appendChild(trainGroup);
+
+        activeTrains.push({
+            el: trainGroup,
+            line: line,
+            direction: direction, // 1 or -1
+            age: ageSeconds // how many seconds this train has been running
+        });
+    }
+
+    let lastTick = performance.now();
+    function renderEngine(now) {
+        const dt = (now - lastTick) / 1000; // delta time in seconds
+        lastTick = now;
+
+        activeTrains.forEach(t => {
+            t.age += dt;
+            const cycleTime = TRAIN_TRAVEL_SEC + TRAIN_STOP_SEC;
+
+            let stIdx = Math.floor(t.age / cycleTime);
+            let timeInCycle = t.age % cycleTime;
+
+            // Handle direction
+            let actualStIdx = t.direction === 1 ? stIdx : (t.line.stations.length - 1 - stIdx);
+            let nextStIdx = actualStIdx + t.direction;
+
+            // If train reached the end, hide it (or we could loop it, but we let spawnTrain handle frequency)
+            if (stIdx >= t.line.stations.length - 1) {
+                t.el.style.display = 'none';
+                return;
+            } else {
+                t.el.style.display = 'block';
+            }
+
+            const st1 = t.line.stations[actualStIdx];
+            const st2 = t.line.stations[nextStIdx];
+
+            if (timeInCycle < TRAIN_TRAVEL_SEC) {
+                // Moving
+                let progress = timeInCycle / TRAIN_TRAVEL_SEC;
+                const x = parseFloat(st1.x) + (parseFloat(st2.x) - parseFloat(st1.x)) * progress;
+                const y = parseFloat(st1.y) + (parseFloat(st2.y) - parseFloat(st1.y)) * progress;
+                t.el.setAttribute("transform", `translate(${x}, ${y})`);
+            } else {
+                // Stopped at next station
+                t.el.setAttribute("transform", `translate(${st2.x}, ${st2.y})`);
+            }
+        });
+
+        requestAnimationFrame(renderEngine);
+    }
+
+    function showLiveStation(line, stIdx) {
+        const modal = document.getElementById('liveStationModal');
+        const stNameEl = document.getElementById('lsName');
+        const contentEl = document.getElementById('lsContent');
+
+        const stName = line.stations[stIdx].name;
+        stNameEl.innerHTML = `<span style="display:inline-block; width:15px; height:15px; border-radius:50%; background:${line.color}; margin-right:8px;"></span> ${document.createTextNode(stName).textContent}`;
+
+        let html = '';
+        const now = new Date();
+        const startH = parseInt(line.start_time.split(':')[0]);
+        const startM = parseInt(line.start_time.split(':')[1]);
+        const intervalSec = (parseInt(line.interval_minutes) || 6) * 60;
+
+        const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM, 0);
+        const secondsSinceStart = Math.floor((now - startToday) / 1000);
+
+        const cycleTime = TRAIN_TRAVEL_SEC + TRAIN_STOP_SEC;
+
+        function getNextArrival(direction, stationIndex) {
+            const timeToReachStation = stationIndex * cycleTime;
+
+            // Find the next train departure time from origin that will reach this station in the future
+            let nextArrivalTime = -1;
+            for (let s = 0; s < secondsSinceStart + (24 * 3600); s += intervalSec) {
+                const arrival = s + timeToReachStation;
+                if (arrival > secondsSinceStart) {
+                    nextArrivalTime = arrival;
+                    break;
+                }
+            }
+
+            if (nextArrivalTime === -1) return null;
+
+            const waitSeconds = nextArrivalTime - secondsSinceStart;
+            return Math.ceil(waitSeconds / 60);
+        }
+
+        // Tur (Direction 1) -> To last station
+        if (stIdx < line.stations.length - 1) {
+            const dirName = line.stations[line.stations.length - 1].name;
+            const eta = getNextArrival(1, stIdx);
+            html += `<div style="margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:8px; border-left:4px solid ${line.color};">
+                <div style="font-size:0.85rem; color:#777; text-transform:uppercase; font-weight:bold;">Direcția</div>
+                <div style="font-size:1.1rem; font-weight:bold; margin-bottom:5px;">${document.createTextNode(dirName).textContent}</div>
+                <div style="font-size:1.5rem; color:#27ae60; font-weight:bold;"><i class="fas fa-clock"></i> ${eta !== null ? eta + ' min' : '--'}</div>
+            </div>`;
+        }
+
+        // Retur (Direction -1) -> To first station
+        if (stIdx > 0) {
+            const dirName = line.stations[0].name;
+            // For retur, distance is from end of line backwards
+            const stIdxFromEnd = line.stations.length - 1 - stIdx;
+            const eta = getNextArrival(-1, stIdxFromEnd);
+            html += `<div style="padding:10px; background:#f8f9fa; border-radius:8px; border-left:4px solid ${line.color};">
+                <div style="font-size:0.85rem; color:#777; text-transform:uppercase; font-weight:bold;">Direcția</div>
+                <div style="font-size:1.1rem; font-weight:bold; margin-bottom:5px;">${document.createTextNode(dirName).textContent}</div>
+                <div style="font-size:1.5rem; color:#27ae60; font-weight:bold;"><i class="fas fa-clock"></i> ${eta !== null ? eta + ' min' : '--'}</div>
+            </div>`;
+        }
+
+        contentEl.innerHTML = html;
+        modal.style.display = 'flex';
     }
 
     document.addEventListener("DOMContentLoaded", () => {

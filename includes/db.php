@@ -363,6 +363,11 @@ EOT;
             )
         ");
 
+        // Ensure new columns exist for existing deployments
+        try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN start_time VARCHAR(10) DEFAULT '05:00'"); } catch (PDOException $e) {}
+        try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN end_time VARCHAR(10) DEFAULT '23:30'"); } catch (PDOException $e) {}
+        try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN interval_minutes INT DEFAULT 6"); } catch (PDOException $e) {}
+
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS metro_stations (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -374,6 +379,9 @@ EOT;
                 FOREIGN KEY (line_id) REFERENCES metro_lines(id) ON DELETE CASCADE
             )
         ");
+
+        try { $pdo->exec("ALTER TABLE metro_stations ADD COLUMN text_offset_x INT DEFAULT 12"); } catch (PDOException $e) {}
+        try { $pdo->exec("ALTER TABLE metro_stations ADD COLUMN text_offset_y INT DEFAULT 4"); } catch (PDOException $e) {}
 
         return $pdo;
     } catch (PDOException $e) {

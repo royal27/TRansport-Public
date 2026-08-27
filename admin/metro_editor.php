@@ -131,6 +131,22 @@ try {
                 <label>Culoare (Hex)</label>
                 <input type="color" id="lineColorInput" value="#e74c3c" style="height:40px; padding:0;">
             </div>
+            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+            <p style="font-size:0.8rem; margin:0 0 10px 0; font-weight:bold;">Orar Trenuri (Generare Automată)</p>
+            <div style="display:flex; gap:10px;">
+                <div class="form-group" style="flex:1;">
+                    <label>Ora Început</label>
+                    <input type="time" id="lineStartInput" value="05:00">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>Ora Final</label>
+                    <input type="time" id="lineEndInput" value="23:30">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Interval (minute)</label>
+                <input type="number" id="lineIntervalInput" value="6" min="1">
+            </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('lineModal')">Anulare</button>
                 <button class="btn btn-primary" onclick="saveLine()">Salvează</button>
@@ -230,17 +246,30 @@ try {
                     circle.setAttribute("stroke", line.color);
                     circle.setAttribute("stroke-width", "3");
 
-                    // Drag functionality
+                    // Drag functionality for Station
                     circle.onmousedown = (e) => {
                         if (mode === 'select') {
-                            draggedStation = { lineId: line.id, stationIdx: idx };
+                            draggedStation = { type: 'station', lineId: line.id, stationIdx: idx };
                         }
                     };
 
                     const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", parseInt(st.x) + 12);
-                    text.setAttribute("y", parseInt(st.y) + 4);
+                    const ox = st.text_offset_x !== undefined ? parseInt(st.text_offset_x) : 12;
+                    const oy = st.text_offset_y !== undefined ? parseInt(st.text_offset_y) : 4;
+
+                    text.setAttribute("x", parseInt(st.x) + ox);
+                    text.setAttribute("y", parseInt(st.y) + oy);
                     text.textContent = st.name;
+                    text.style.pointerEvents = 'all'; // Allow clicking text
+                    text.style.cursor = 'move';
+
+                    // Drag functionality for Text
+                    text.onmousedown = (e) => {
+                        if (mode === 'select') {
+                            e.stopPropagation(); // prevent triggering svg drag
+                            draggedStation = { type: 'text', lineId: line.id, stationIdx: idx, startX: e.clientX, startY: e.clientY, startOx: ox, startOy: oy };
+                        }
+                    };
 
                     group.appendChild(circle);
                     group.appendChild(text);
@@ -269,13 +298,21 @@ try {
 
         svgElement.addEventListener('mousemove', (e) => {
             if (draggedStation && mode === 'select') {
-                const rect = svgElement.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
                 const line = linesData.find(l => l.id === draggedStation.lineId);
-                line.stations[draggedStation.stationIdx].x = x;
-                line.stations[draggedStation.stationIdx].y = y;
+                const st = line.stations[draggedStation.stationIdx];
+
+                if (draggedStation.type === 'station') {
+                    const rect = svgElement.getBoundingClientRect();
+                    st.x = e.clientX - rect.left;
+                    st.y = e.clientY - rect.top;
+                } else if (draggedStation.type === 'text') {
+                    // Update offset based on drag distance
+                    const dx = e.clientX - draggedStation.startX;
+                    const dy = e.clientY - draggedStation.startY;
+                    st.text_offset_x = draggedStation.startOx + dx;
+                    st.text_offset_y = draggedStation.startOy + dy;
+                }
+
                 renderMap();
             }
         });
@@ -326,6 +363,9 @@ try {
             document.getElementById('lineIdInput').value = '';
             document.getElementById('lineNameInput').value = '';
             document.getElementById('lineColorInput').value = '#e74c3c';
+            document.getElementById('lineStartInput').value = '05:00';
+            document.getElementById('lineEndInput').value = '23:30';
+            document.getElementById('lineIntervalInput').value = '6';
             document.getElementById('lineModalTitle').innerText = 'Linie Nouă';
             document.getElementById('lineModal').style.display = 'flex';
         }
@@ -336,6 +376,9 @@ try {
             document.getElementById('lineIdInput').value = line.id;
             document.getElementById('lineNameInput').value = line.name;
             document.getElementById('lineColorInput').value = line.color;
+            document.getElementById('lineStartInput').value = line.start_time || '05:00';
+            document.getElementById('lineEndInput').value = line.end_time || '23:30';
+            document.getElementById('lineIntervalInput').value = line.interval_minutes || 6;
             document.getElementById('lineModalTitle').innerText = 'Editare Linie';
             document.getElementById('lineModal').style.display = 'flex';
         }
@@ -344,10 +387,13 @@ try {
             const id = document.getElementById('lineIdInput').value;
             const name = document.getElementById('lineNameInput').value;
             const color = document.getElementById('lineColorInput').value;
+            const start_time = document.getElementById('lineStartInput').value;
+            const end_time = document.getElementById('lineEndInput').value;
+            const interval_minutes = document.getElementById('lineIntervalInput').value;
 
             if (!name) return alert('Nume invalid');
 
-            const payload = { name, color };
+            const payload = { name, color, start_time, end_time, interval_minutes };
             if (id) payload.id = id;
 
             const res = await fetch('api_metro.php?action=save_line', {
