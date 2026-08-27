@@ -460,6 +460,28 @@ html[data-theme="live-color"] {
     --nav-hover: #0a143c;
 }
 
+/* Romania Animated Theme */
+html[data-theme="romania"] {
+    --primary-color: #fcd116; /* Yellow as fallback/accent */
+    --nav-bg: #002b7f; /* Blue as fallback */
+    --nav-hover: #ce1126; /* Red as fallback */
+}
+
+@keyframes romania-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+html[data-theme="romania"] .left-nav,
+html[data-theme="romania"] #announcement-footer,
+html.dark-mode[data-theme="romania"] .cat-btn.active {
+    background: linear-gradient(45deg, #002b7f, #fcd116, #ce1126) !important;
+    background-size: 200% 200% !important;
+    animation: romania-gradient 5s ease infinite !important;
+    border-color: #fcd116 !important;
+}
+
 /* Base Nav CSS overrides to use variables */
 .left-nav {
     background-color: var(--nav-bg, #27ae60) !important;

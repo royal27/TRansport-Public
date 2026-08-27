@@ -274,6 +274,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
                         <option value="green" <?= (!isset($settings['theme_color']) || $settings['theme_color'] === 'green') ? 'selected' : '' ?>>Verde (Green) - Implicit</option>
                         <option value="red" <?= (isset($settings['theme_color']) && $settings['theme_color'] === 'red') ? 'selected' : '' ?>>Roșu (Red)</option>
                         <option value="live-color" <?= (isset($settings['theme_color']) && $settings['theme_color'] === 'live-color') ? 'selected' : '' ?>>Live Color (Din Logo)</option>
+                        <option value="romania" <?= (isset($settings['theme_color']) && $settings['theme_color'] === 'romania') ? 'selected' : '' ?>>ROMANIA (Animat)</option>
                     </select>
                 </div>
 
