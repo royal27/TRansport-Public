@@ -9,9 +9,12 @@ $db = getDB();
 $stmt = $db->query("SELECT * FROM custom_lines ORDER BY name ASC");
 $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+$stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'theme_color'");
+$theme_res = $stmt->fetch(PDO::FETCH_ASSOC);
+$theme_color = $theme_res ? $theme_res['setting_value'] : 'green';
 ?>
 <!DOCTYPE html>
-<html lang="<?= $lang ?>" data-theme="green">
+<html lang="<?= $lang ?>" data-theme="<?= htmlspecialchars($theme_color) ?>">
 <head>
     <meta charset="UTF-8">
     <?php

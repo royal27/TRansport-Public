@@ -454,6 +454,11 @@ html[data-theme="red"] {
     --nav-bg: #c0392b;
     --nav-hover: #e74c3c;
 }
+html[data-theme="live-color"] {
+    --primary-color: #dc0a1e;
+    --nav-bg: #102458;
+    --nav-hover: #0a143c;
+}
 
 /* Base Nav CSS overrides to use variables */
 .left-nav {

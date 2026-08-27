@@ -17,10 +17,14 @@ $stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'metr
 $metro_map_html_row = $stmt->fetch(PDO::FETCH_ASSOC);
 $metro_map_html = $metro_map_html_row ? $metro_map_html_row['setting_value'] : '';
 
+$stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'theme_color'");
+$theme_res = $stmt->fetch(PDO::FETCH_ASSOC);
+$theme_color = $theme_res ? $theme_res['setting_value'] : 'green';
+
 $current_date = date('d.m.Y');
 ?>
 <!DOCTYPE html>
-<html lang="<?= $lang ?>">
+<html lang="<?= $lang ?>" data-theme="<?= htmlspecialchars($theme_color) ?>">
 <head>
     <meta charset="UTF-8">
     <?php
