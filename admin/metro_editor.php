@@ -303,7 +303,8 @@ try {
                     pz = Panzoom(svgEl, {
                         maxScale: 10,
                         minScale: 0.1,
-                        canvas: true
+                        canvas: true,
+                        excludeClass: 'draggable'
                     });
                     wrapper.addEventListener('wheel', pz.zoomWithWheel);
 
