@@ -368,8 +368,7 @@ try {
                     el.setAttribute("y", dec.y);
                 } else if (dec.type === 'image') {
                     el = document.createElementNS("http://www.w3.org/2000/svg", "image");
-                    // Fix relative path for admin view
-                    el.setAttribute("href", '../public/' + dec.content);
+                    el.setAttribute("href", dec.content);
                     el.setAttribute("x", dec.x);
                     el.setAttribute("y", dec.y);
                     el.setAttribute("width", dec.width || 100);

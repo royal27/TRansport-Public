@@ -91,5 +91,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => true]);
         die();
     }
+
+    if ($action == 'import_map') {
+        try {
+            $db->beginTransaction();
+            $db->exec("DELETE FROM metro_stations");
+            $db->exec("DELETE FROM metro_lines");
+            $db->exec("DELETE FROM metro_decorations");
+
+            if (isset($data['lines']) && is_array($data['lines'])) {
+                $stmtLine = $db->prepare("INSERT INTO metro_lines (id, name, color, active, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, 1, ?, ?, ?, ?)");
+                $stmtStation = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+                foreach ($data['lines'] as $line) {
+                    $stmtLine->execute([
+                        $line['id'], $line['name'], $line['color'],
+                        $line['start_time'] ?? '05:00', $line['end_time'] ?? '23:30',
+                        $line['interval_minutes'] ?? 6, $line['is_dashed'] ?? 0
+                    ]);
+
+                    if (isset($line['stations']) && is_array($line['stations'])) {
+                        foreach ($line['stations'] as $idx => $st) {
+                            $stmtStation->execute([
+                                $line['id'], $st['name'], $st['x'], $st['y'], $idx,
+                                $st['text_offset_x'] ?? 12, $st['text_offset_y'] ?? 4,
+                                $st['is_waypoint'] ?? 0, $st['font_weight'] ?? 'bold'
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            if (isset($data['decorations']) && is_array($data['decorations'])) {
+                $stmtDec = $db->prepare("INSERT INTO metro_decorations (type, x, y, width, height, content, color, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                foreach ($data['decorations'] as $d) {
+                    $stmtDec->execute([
+                        $d['type'], $d['x'], $d['y'],
+                        $d['width'] ?? 0, $d['height'] ?? 0,
+                        $d['content'] ?? '', $d['color'] ?? '#000000',
+                        $d['font_weight'] ?? 'normal'
+                    ]);
+                }
+            }
+
+            $db->commit();
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            $db->rollBack();
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        die();
+    }
+
+    if ($action == 'upload_image') {
+        if (!isset($_FILES['image'])) {
+            echo json_encode(['success' => false, 'error' => 'No file uploaded']);
+            die();
+        }
+        $file = $_FILES['image'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+
+        if (!in_array($ext, $allowed)) {
+            echo json_encode(['success' => false, 'error' => 'Invalid file type']);
+            die();
+        }
+
+        if (!getimagesize($file['tmp_name']) && $ext !== 'svg') {
+            echo json_encode(['success' => false, 'error' => 'Invalid image content']);
+            die();
+        }
+
+        $upload_dir = __DIR__ . '/../public/uploads/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
+
+        $filename = 'metro_' . uniqid() . '.' . $ext;
+        $target = $upload_dir . $filename;
+
+        if (move_uploaded_file($file['tmp_name'], $target)) {
+            $url = 'uploads/' . $filename; // Relative to public/
+            echo json_encode(['success' => true, 'url' => $url]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Failed to save file']);
+        }
+        die();
+    }
 }
 echo json_encode(['success' => false, 'error' => 'Invalid action']);

@@ -220,6 +220,13 @@ $current_date = date('d.m.Y');
                 if(document.documentElement.classList.contains('dark-mode')) {
                      el.setAttribute("fill", "#eee");
                 }
+            } else if (dec.type === 'image') {
+                el = document.createElementNS("http://www.w3.org/2000/svg", "image");
+                el.setAttribute("href", dec.content);
+                el.setAttribute("x", dec.x);
+                el.setAttribute("y", dec.y);
+                el.setAttribute("width", dec.width || 100);
+                el.setAttribute("height", dec.height || 100);
             } else if (dec.type === 'rect') {
                 el = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                 el.setAttribute("x", dec.x);
