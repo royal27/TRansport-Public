@@ -67,7 +67,7 @@ $current_date = date('d.m.Y');
         .front-footer { background-color: #2c3e50; color: white; text-align: center; padding: 10px; margin-top: auto; font-size: 13px; }
 
         #app-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
+        .page-content { max-width: 1400px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
         .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; text-align: center; width: 100%; }
 
         .metro-map-img { margin: 0 auto; display: block;
@@ -131,7 +131,7 @@ $current_date = date('d.m.Y');
             Harta generală a rețelei de metrou din București (Metrorex).
         </p>
         <?php if (empty(trim($metro_map_html))): ?>
-        <div class="metro-svg-container" style="width: 100%; flex: 1; min-height: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; position: relative;">
+        <div class="metro-svg-container" style="width: 100%; flex: 1; min-height: 70vh; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; position: relative;">
             <!-- Added viewBox calculation logic in JS to handle responsiveness -->
             <div id="panzoom-wrapper" style="width: 100%; height: 100%;">
                 <svg id="metroSvg" style="width:100%; height:100%; cursor: grab;"></svg>
