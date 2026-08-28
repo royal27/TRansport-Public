@@ -27,6 +27,7 @@ try {
     <?php endif; ?>
     <title>Editor Harta Metrou</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/panzoom.min.js"></script>
     <style>
         :root {
             --primary: #3498db;
@@ -110,6 +111,12 @@ try {
             <input type="file" id="imgUploadInput" style="display:none;" accept="image/*" onchange="handleImageUpload(event)">
 
             <div style="border-top: 1px solid var(--border); padding-top: 10px; margin-top: 5px;">
+                <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px;">Zoom Inițial Frontend:</label>
+                <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 10px;">
+                    <input type="number" id="initialZoomInput" value="1" step="0.1" min="0.1" max="10" style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+                    <button class="btn btn-outline" title="Folosește zoom-ul curent" onclick="setZoomFromCurrent()"><i class="fas fa-eye"></i></button>
+                </div>
+
                 <button class="btn btn-outline" style="width:100%; padding:8px; border:2px dashed var(--primary); color:var(--primary);" onclick="exportMap()"><i class="fas fa-file-export"></i> Export Hartă</button>
                 <button class="btn btn-outline" style="width:100%; padding:8px; margin-top:5px; border:2px dashed #2ecc71; color:#2ecc71;" onclick="document.getElementById('importMapInput').click()"><i class="fas fa-file-import"></i> Import Hartă</button>
                 <input type="file" id="importMapInput" style="display:none;" accept=".json" onchange="importMap(event)">
@@ -119,15 +126,30 @@ try {
             <p style="font-size: 0.8rem; color: #777; margin:0; text-align: center;">Click pe hartă în modul "Desenează" pentru a adăuga o stație la linia activă.</p>
         </div>
 
+        <div style="padding: 10px; border-bottom: 1px solid var(--border); background: #f9f9f9;">
+            <button class="btn btn-outline" style="width: 100%; margin-bottom: 5px; font-size: 0.85rem;" onclick="openVariantsModal()"><i class="fas fa-layer-group"></i> Variante Hărți</button>
+        </div>
+
         <div class="lines-list" id="linesList">
             <!-- Lines will be injected here -->
         </div>
     </div>
 
-    <div class="map-container mode-select" id="mapContainer">
-        <svg id="metroSvg">
-            <!-- Paths and circles will be drawn here -->
-        </svg>
+    <div class="map-container mode-select" id="mapContainer" style="display: flex; flex-direction: column;">
+        <div style="padding: 10px; background: white; border-bottom: 1px solid var(--border); display: flex; gap: 10px; z-index: 10;">
+            <button class="btn btn-outline" id="zoomInBtn" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+            <button class="btn btn-outline" id="zoomOutBtn" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+            <button class="btn btn-outline" id="zoomResetBtn" title="Reset Zoom"><i class="fas fa-compress"></i></button>
+            <input type="file" id="bgGuideUpload" style="display:none;" accept="image/*" onchange="handleBgGuideUpload(event)">
+            <button class="btn btn-outline" title="Ghidaj din Poză (Fundal)" onclick="document.getElementById('bgGuideUpload').click()"><i class="fas fa-image"></i> Ghidaj</button>
+            <span style="display:flex; align-items:center; font-size:12px; color:#555;">Folosiți Scroll pentru zoom. Click pe rotiță (sau țineți spațiu) pt Pan.</span>
+        </div>
+        <div id="panzoom-wrapper" style="flex:1; overflow:hidden; position:relative;">
+            <div id="guideOverlay" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; background-size: contain; background-repeat: no-repeat; opacity:0.3; transform-origin: 0 0;"></div>
+            <svg id="metroSvg" style="width: 100%; height: 100%; position:relative; z-index:1;">
+                <!-- Paths and circles will be drawn here -->
+            </svg>
+        </div>
     </div>
 
     <!-- Station Name Modal -->
@@ -215,11 +237,31 @@ try {
         </div>
     </div>
 
+    <!-- Variants Modal -->
+    <div class="modal-overlay" id="variantsModal">
+        <div class="modal" style="width: 500px;">
+            <h3>Variante Hărți</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="newVariantName" placeholder="Nume variantă nouă..." style="flex:1; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                <button class="btn btn-success" onclick="saveAsNewVariant()"><i class="fas fa-plus"></i> Salvează Curenta</button>
+            </div>
+
+            <div id="variantsList" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; padding: 10px; background: var(--bg-light);">
+                <!-- Variants injected here -->
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('variantsModal')">Închide</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast">Modificări salvate!</div>
 
     <script>
         let linesData = [];
         let decorationsData = [];
+        let variantsData = [];
         let activeLineId = null;
         let mode = 'select'; // 'draw' or 'select'
         let draggedStation = null;
@@ -228,6 +270,8 @@ try {
 
         let pendingStationPos = null;
 
+        let pz;
+
         // Initialize
         async function loadData() {
             const res = await fetch('api_metro.php?action=load');
@@ -235,8 +279,38 @@ try {
             if (data.success) {
                 linesData = data.lines;
                 decorationsData = data.decorations || [];
+                variantsData = data.variants || [];
+
+                if (data.zoom) {
+                    document.getElementById('initialZoomInput').value = data.zoom;
+                }
+
                 renderLinesList();
                 renderMap();
+                renderVariantsList();
+
+                if (!pz) {
+                    const svgEl = document.getElementById('metroSvg');
+                    const wrapper = document.getElementById('panzoom-wrapper');
+                    pz = Panzoom(svgEl, {
+                        maxScale: 10,
+                        minScale: 0.1,
+                        canvas: true
+                    });
+                    wrapper.addEventListener('wheel', pz.zoomWithWheel);
+
+                    // Sync guide overlay with panzoom transform
+                    svgEl.addEventListener('panzoomchange', (e) => {
+                        const guide = document.getElementById('guideOverlay');
+                        if (guide) {
+                            guide.style.transform = `matrix(${e.detail.scale}, 0, 0, ${e.detail.scale}, ${e.detail.x}, ${e.detail.y})`;
+                        }
+                    });
+
+                    document.getElementById('zoomInBtn').addEventListener('click', pz.zoomIn);
+                    document.getElementById('zoomOutBtn').addEventListener('click', pz.zoomOut);
+                    document.getElementById('zoomResetBtn').addEventListener('click', pz.reset);
+                }
             }
         }
 
@@ -245,6 +319,13 @@ try {
             document.getElementById('modeDraw').style.background = mode === 'draw' ? '#e0e0e0' : 'white';
             document.getElementById('modeSelect').style.background = mode === 'select' ? '#e0e0e0' : 'white';
             document.getElementById('mapContainer').className = 'map-container mode-' + mode;
+            if (pz) {
+                if (mode === 'draw') {
+                    pz.setOptions({ cursor: 'crosshair', disablePan: true });
+                } else {
+                    pz.setOptions({ cursor: 'default', disablePan: false });
+                }
+            }
         }
 
         function renderLinesList() {
@@ -583,8 +664,10 @@ try {
         svgElement.addEventListener('mousemove', (e) => {
             if (mode === 'select') {
                 const rect = svgElement.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
+                let scale = 1;
+                if (pz) scale = pz.getScale();
+                const mouseX = (e.clientX - rect.left) / scale;
+                const mouseY = (e.clientY - rect.top) / scale;
 
                 if (draggedStation) {
                     const line = linesData.find(l => l.id === draggedStation.lineId);
@@ -594,16 +677,16 @@ try {
                         st.x = mouseX;
                         st.y = mouseY;
                     } else if (draggedStation.type === 'text') {
-                        const dx = e.clientX - draggedStation.startX;
-                        const dy = e.clientY - draggedStation.startY;
+                        const dx = (e.clientX - draggedStation.startX) / scale;
+                        const dy = (e.clientY - draggedStation.startY) / scale;
                         st.text_offset_x = draggedStation.startOx + dx;
                         st.text_offset_y = draggedStation.startOy + dy;
                     }
                     renderMap();
                 } else if (resizingDecoration !== null) {
                     const dec = decorationsData[resizingDecoration.idx];
-                    const dx = e.clientX - resizingDecoration.startX;
-                    const dy = e.clientY - resizingDecoration.startY;
+                    const dx = (e.clientX - resizingDecoration.startX) / scale;
+                    const dy = (e.clientY - resizingDecoration.startY) / scale;
                     // Maintain aspect ratio logic loosely or just free resize
                     dec.width = Math.max(20, resizingDecoration.startW + dx);
                     dec.height = Math.max(20, resizingDecoration.startH + dy);
@@ -626,8 +709,10 @@ try {
         svgElement.addEventListener('click', (e) => {
             if (mode === 'draw' && activeLineId) {
                 const rect = svgElement.getBoundingClientRect();
-                let x = Math.round(e.clientX - rect.left);
-                let y = Math.round(e.clientY - rect.top);
+                let scale = 1;
+                if (pz) scale = pz.getScale();
+                let x = Math.round((e.clientX - rect.left) / scale);
+                let y = Math.round((e.clientY - rect.top) / scale);
 
                 // If clicked on circle directly or very close, snap to it
                 const snapped = snapToExistingStation(x, y);
@@ -765,6 +850,17 @@ try {
             }
         }
 
+        function handleBgGuideUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const guide = document.getElementById('guideOverlay');
+                guide.style.backgroundImage = `url('${evt.target.result}')`;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function exportMap() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
                 lines: linesData,
@@ -812,6 +908,110 @@ try {
         }
 
         // Save All Stations & Decorations
+        function setZoomFromCurrent() {
+            if (pz) {
+                const currentZoom = pz.getScale().toFixed(2);
+                document.getElementById('initialZoomInput').value = currentZoom;
+            }
+        }
+
+        function openVariantsModal() {
+            document.getElementById('variantsModal').style.display = 'flex';
+        }
+
+        function renderVariantsList() {
+            const list = document.getElementById('variantsList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            if (variantsData.length === 0) {
+                list.innerHTML = '<p style="color:#777; text-align:center; font-size:0.9rem;">Nicio variantă salvată.</p>';
+                return;
+            }
+
+            variantsData.forEach(v => {
+                const div = document.createElement('div');
+                div.style = "display:flex; justify-content:space-between; align-items:center; padding:10px; background:white; margin-bottom:10px; border-radius:4px; border:1px solid #ccc;";
+
+                const title = document.createElement('span');
+                title.style = "font-weight:bold;";
+                title.textContent = v.name;
+
+                const actions = document.createElement('div');
+                actions.style = "display:flex; gap:5px;";
+
+                const activateBtn = document.createElement('button');
+                activateBtn.className = "btn btn-outline";
+                activateBtn.style = "font-size:0.8rem; padding:4px 8px; color:var(--primary);";
+                activateBtn.innerHTML = "<i class='fas fa-check'></i> Activează";
+                activateBtn.onclick = () => activateVariant(v.id);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = "btn btn-outline";
+                deleteBtn.style = "font-size:0.8rem; padding:4px 8px; color:#e74c3c;";
+                deleteBtn.innerHTML = "<i class='fas fa-trash'></i>";
+                deleteBtn.onclick = () => deleteVariant(v.id);
+
+                actions.appendChild(activateBtn);
+                actions.appendChild(deleteBtn);
+
+                div.appendChild(title);
+                div.appendChild(actions);
+                list.appendChild(div);
+            });
+        }
+
+        async function saveAsNewVariant() {
+            const name = document.getElementById('newVariantName').value.trim();
+            if (!name) return alert('Introdu un nume pentru variantă.');
+
+            const mapData = {
+                lines: linesData,
+                decorations: decorationsData
+            };
+
+            const res = await fetch('api_metro.php?action=save_variant', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ variant_name: name, map_data: mapData })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('newVariantName').value = '';
+                loadData();
+            } else {
+                alert('Eroare la salvare.');
+            }
+        }
+
+        async function activateVariant(id) {
+            if (!confirm('Ești sigur? Harta curentă (dacă nu e salvată ca variantă) va fi pierdută și suprascrisă de varianta selectată.')) return;
+
+            const res = await fetch(`api_metro.php?action=load_variant&id=${id}`);
+            const data = await res.json();
+
+            if (data.lines) {
+                const importRes = await fetch('api_metro.php?action=import_map', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const importData = await importRes.json();
+                if (importData.success) {
+                    alert('Varianta a fost activată cu succes!');
+                    closeModal('variantsModal');
+                    loadData();
+                }
+            }
+        }
+
+        async function deleteVariant(id) {
+            if (!confirm('Ștergi această variantă?')) return;
+            const res = await fetch(`api_metro.php?action=delete_variant&id=${id}`);
+            const data = await res.json();
+            if (data.success) loadData();
+        }
+
         async function saveAll() {
             for (const line of linesData) {
                 if (line.stations) {
@@ -830,6 +1030,13 @@ try {
                     body: JSON.stringify({ decorations: decorationsData })
                 });
             }
+
+            const zoomVal = document.getElementById('initialZoomInput').value;
+            await fetch('api_metro.php?action=save_zoom', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ zoom: zoomVal })
+            });
 
             const toast = document.getElementById('toast');
             toast.style.display = 'block';

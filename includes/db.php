@@ -270,6 +270,8 @@ EOT;
         $stmt_metro = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('metro_map_html', :html)");
         $stmt_metro->execute(['html' => $default_metro_html]);
 
+        $pdo->exec("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('metro_map_zoom', '1')");
+
 
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS schedules (
@@ -397,6 +399,15 @@ EOT;
                 content TEXT,
                 color VARCHAR(50) DEFAULT '#000000',
                 font_weight VARCHAR(20) DEFAULT 'normal'
+            )
+        ");
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS metro_map_variants (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                data_json LONGTEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ");
 

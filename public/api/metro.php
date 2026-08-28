@@ -15,4 +15,8 @@ foreach ($lines as &$line) {
 $stmt = $db->query("SELECT * FROM metro_decorations ORDER BY id ASC");
 $decorations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-echo json_encode(['success' => true, 'lines' => $lines, 'decorations' => $decorations]);
+$zoom_stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'metro_map_zoom'");
+$zoom_row = $zoom_stmt->fetch(PDO::FETCH_ASSOC);
+$zoom = $zoom_row ? $zoom_row['setting_value'] : '1';
+
+echo json_encode(['success' => true, 'lines' => $lines, 'decorations' => $decorations, 'zoom' => $zoom]);

@@ -24,7 +24,33 @@ if ($action == 'load') {
     $stmt = $db->query("SELECT * FROM metro_decorations ORDER BY id ASC");
     $decorations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo json_encode(['success' => true, 'lines' => $lines, 'decorations' => $decorations]);
+    $zoom_stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'metro_map_zoom'");
+    $zoom_row = $zoom_stmt->fetch(PDO::FETCH_ASSOC);
+    $zoom = $zoom_row ? $zoom_row['setting_value'] : '1';
+
+    $var_stmt = $db->query("SELECT id, name, created_at FROM metro_map_variants ORDER BY created_at DESC");
+    $variants = $var_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode(['success' => true, 'lines' => $lines, 'decorations' => $decorations, 'zoom' => $zoom, 'variants' => $variants]);
+    die();
+}
+
+if ($action == 'load_variant' && isset($_GET['id'])) {
+    $stmt = $db->prepare("SELECT data_json FROM metro_map_variants WHERE id = ?");
+    $stmt->execute([$_GET['id']]);
+    $variant = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($variant) {
+        echo $variant['data_json'];
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Variant not found']);
+    }
+    die();
+}
+
+if ($action == 'delete_variant' && isset($_GET['id'])) {
+    $stmt = $db->prepare("DELETE FROM metro_map_variants WHERE id = ?");
+    $stmt->execute([$_GET['id']]);
+    echo json_encode(['success' => true]);
     die();
 }
 
@@ -75,6 +101,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die();
     }
 
+    if ($action == 'save_zoom') {
+        $zoom = $data['zoom'] ?? '1';
+        $stmt = $db->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'metro_map_zoom'");
+        $stmt->execute([$zoom]);
+        echo json_encode(['success' => true]);
+        die();
+    }
+
     if ($action == 'save_decorations') {
         $decorations = $data['decorations'];
         $db->exec("DELETE FROM metro_decorations");
@@ -88,6 +122,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $d['font_weight'] ?? 'normal'
             ]);
         }
+        echo json_encode(['success' => true]);
+        die();
+    }
+
+    if ($action == 'save_variant') {
+        $variant_name = $data['variant_name'] ?? 'Varianta Noua';
+        $data_json = json_encode($data['map_data']);
+        $stmt = $db->prepare("INSERT INTO metro_map_variants (name, data_json) VALUES (?, ?)");
+        $stmt->execute([$variant_name, $data_json]);
+        echo json_encode(['success' => true]);
+        die();
+    }
+
+    if ($action == 'rename_variant') {
+        $stmt = $db->prepare("UPDATE metro_map_variants SET name = ? WHERE id = ?");
+        $stmt->execute([$data['name'], $data['id']]);
         echo json_encode(['success' => true]);
         die();
     }

@@ -45,6 +45,7 @@ $current_date = date('d.m.Y');
     <title><?= getTranslation('btn_metro', $lang) ?> - <?= getTranslation('app_name', $lang) ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=<?= time() ?>">
+    <script src="js/panzoom.min.js"></script>
     <style>
         body { display: flex; flex-direction: row; height: 100vh; overflow-y: hidden; background-color: #f4f7f6; }
         .front-header {
@@ -85,6 +86,15 @@ $current_date = date('d.m.Y');
             max-width: 100%;
         }
 
+        .draw-animation {
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            animation: drawPath 3s ease forwards;
+        }
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+
         @media (max-width: 768px) {
             .front-header { flex-direction: column; gap: 10px; }
         }
@@ -121,12 +131,20 @@ $current_date = date('d.m.Y');
             Harta generală a rețelei de metrou din București (Metrorex).
         </p>
         <?php if (empty(trim($metro_map_html))): ?>
-        <div class="metro-svg-container" style="width: 100%; height: 60vh; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; position: relative;">
+        <div class="metro-svg-container" style="width: 100%; flex: 1; min-height: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; position: relative;">
             <!-- Added viewBox calculation logic in JS to handle responsiveness -->
-            <svg id="metroSvg" style="width:100%; height:100%;"></svg>
+            <div id="panzoom-wrapper" style="width: 100%; height: 100%;">
+                <svg id="metroSvg" style="width:100%; height:100%; cursor: grab;"></svg>
+            </div>
+
+            <div style="position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000;">
+                <button id="zoomIn" style="width:40px; height:40px; border-radius:50%; border:none; background:var(--primary); color:white; font-size:18px; cursor:pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><i class="fas fa-plus"></i></button>
+                <button id="zoomOut" style="width:40px; height:40px; border-radius:50%; border:none; background:var(--primary); color:white; font-size:18px; cursor:pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><i class="fas fa-minus"></i></button>
+                <button id="zoomReset" style="width:40px; height:40px; border-radius:50%; border:none; background:#7f8c8d; color:white; font-size:18px; cursor:pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><i class="fas fa-compress"></i></button>
+            </div>
         </div>
 
-        <div class="legend-container" id="metroLegend" style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <div class="legend-container" id="metroLegend" style="margin-top: 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
             <!-- Legenda generată live -->
         </div>
         <?php else: ?>
@@ -163,6 +181,11 @@ $current_date = date('d.m.Y');
                 renderMetroMap(data.lines, data.decorations || []);
                 renderLegend(data.lines);
                 startSimulation(data.lines);
+                if (data.zoom && pz) {
+                    setTimeout(() => {
+                        pz.zoom(parseFloat(data.zoom), { animate: true });
+                    }, 100);
+                }
             }
         } catch (e) {
             console.error("Failed to load metro data", e);
@@ -275,6 +298,8 @@ $current_date = date('d.m.Y');
             path.setAttribute("stroke-linejoin", "round");
             if (line.is_dashed == 1) {
                 path.setAttribute("stroke-dasharray", "10,10");
+            } else {
+                path.classList.add("draw-animation");
             }
             svg.appendChild(path);
         });
@@ -565,8 +590,28 @@ $current_date = date('d.m.Y');
         modal.style.display = 'flex';
     }
 
+    let pz;
     document.addEventListener("DOMContentLoaded", () => {
         loadMetroData();
+
+        const svgEl = document.getElementById('metroSvg');
+        const wrapper = document.getElementById('panzoom-wrapper');
+        if (svgEl && wrapper && typeof Panzoom !== 'undefined') {
+            pz = Panzoom(svgEl, {
+                maxScale: 10,
+                minScale: 0.1,
+                canvas: true,
+                cursor: 'grab'
+            });
+            wrapper.addEventListener('wheel', pz.zoomWithWheel);
+
+            document.getElementById('zoomIn')?.addEventListener('click', pz.zoomIn);
+            document.getElementById('zoomOut')?.addEventListener('click', pz.zoomOut);
+            document.getElementById('zoomReset')?.addEventListener('click', () => pz.reset());
+
+            svgEl.addEventListener('panzoomstart', () => { svgEl.style.cursor = 'grabbing'; });
+            svgEl.addEventListener('panzoomend', () => { svgEl.style.cursor = 'grab'; });
+        }
     });
 </script>
 </body>
