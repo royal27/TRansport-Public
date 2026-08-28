@@ -508,6 +508,7 @@ try {
                     el.onmousedown = (e) => {
                         if (mode === 'select') {
                             e.stopPropagation();
+                            if (pz) pz.setOptions({ disablePan: true });
                             draggedDecoration = idx;
 
                             // To prevent text selection during drag
@@ -544,6 +545,7 @@ try {
                         handle.onmousedown = (e) => {
                             if (mode === 'select') {
                                 e.stopPropagation();
+                                if (pz) pz.setOptions({ disablePan: true });
                                 resizingDecoration = {
                                     idx: idx,
                                     startX: e.clientX,
@@ -607,7 +609,11 @@ try {
                         hiddenHitbox.setAttribute("r", 10);
                         hiddenHitbox.setAttribute("fill", "transparent");
                         hiddenHitbox.onmousedown = (e) => {
-                            if (mode === 'select') draggedStation = { type: 'station', lineId: line.id, stationIdx: idx };
+                            if (mode === 'select') {
+                                e.stopPropagation();
+                                if (pz) pz.setOptions({ disablePan: true });
+                                draggedStation = { type: 'station', lineId: line.id, stationIdx: idx };
+                            }
                         };
                         hiddenHitbox.ondblclick = (e) => openStationEdit(line.id, idx);
                         group.appendChild(hiddenHitbox);
@@ -616,6 +622,8 @@ try {
                     // Drag functionality for Station
                     circle.onmousedown = (e) => {
                         if (mode === 'select') {
+                            e.stopPropagation();
+                            if (pz) pz.setOptions({ disablePan: true });
                             draggedStation = { type: 'station', lineId: line.id, stationIdx: idx };
                         }
                     };
@@ -643,6 +651,7 @@ try {
                     text.onmousedown = (e) => {
                         if (mode === 'select') {
                             e.stopPropagation(); // prevent triggering svg drag
+                            if (pz) pz.setOptions({ disablePan: true });
                             draggedStation = { type: 'text', lineId: line.id, stationIdx: idx, startX: e.clientX, startY: e.clientY, startOx: ox, startOy: oy };
                         }
                     };
@@ -714,10 +723,13 @@ try {
             }
         });
 
-        svgElement.addEventListener('mouseup', () => {
+        window.addEventListener('mouseup', () => {
             draggedStation = null;
             draggedDecoration = null;
             resizingDecoration = null;
+            if (pz && mode === 'select') {
+                pz.setOptions({ disablePan: false });
+            }
         });
 
         svgElement.addEventListener('click', (e) => {
