@@ -367,6 +367,7 @@ EOT;
         try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN start_time VARCHAR(10) DEFAULT '05:00'"); } catch (PDOException $e) {}
         try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN end_time VARCHAR(10) DEFAULT '23:30'"); } catch (PDOException $e) {}
         try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN interval_minutes INT DEFAULT 6"); } catch (PDOException $e) {}
+        try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN is_dashed TINYINT(1) DEFAULT 0"); } catch (PDOException $e) {}
 
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS metro_stations (
@@ -382,6 +383,22 @@ EOT;
 
         try { $pdo->exec("ALTER TABLE metro_stations ADD COLUMN text_offset_x INT DEFAULT 12"); } catch (PDOException $e) {}
         try { $pdo->exec("ALTER TABLE metro_stations ADD COLUMN text_offset_y INT DEFAULT 4"); } catch (PDOException $e) {}
+        try { $pdo->exec("ALTER TABLE metro_stations ADD COLUMN is_waypoint TINYINT(1) DEFAULT 0"); } catch (PDOException $e) {}
+        try { $pdo->exec("ALTER TABLE metro_stations ADD COLUMN font_weight VARCHAR(20) DEFAULT 'bold'"); } catch (PDOException $e) {}
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS metro_decorations (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                type VARCHAR(50) NOT NULL,
+                x INT NOT NULL,
+                y INT NOT NULL,
+                width INT DEFAULT 0,
+                height INT DEFAULT 0,
+                content TEXT,
+                color VARCHAR(50) DEFAULT '#000000',
+                font_weight VARCHAR(20) DEFAULT 'normal'
+            )
+        ");
 
         return $pdo;
     } catch (PDOException $e) {

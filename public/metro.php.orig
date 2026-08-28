@@ -326,7 +326,6 @@ $current_date = date('d.m.Y');
 
     function renderLegend(lines) {
         const legend = document.getElementById('metroLegend');
-        if (!legend) return;
         legend.innerHTML = '';
         lines.forEach(line => {
             if(!line.stations || line.stations.length === 0) return;
@@ -366,7 +365,6 @@ $current_date = date('d.m.Y');
 
     function startSimulation(lines) {
         const svg = document.getElementById('metroSvg');
-        if (!svg) return;
 
         lines.forEach(line => {
             if (!line.stations || line.stations.length < 2) return;

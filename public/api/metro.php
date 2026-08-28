@@ -12,4 +12,7 @@ foreach ($lines as &$line) {
     $line['stations'] = $st->fetchAll(PDO::FETCH_ASSOC);
 }
 
-echo json_encode(['success' => true, 'lines' => $lines]);
+$stmt = $db->query("SELECT * FROM metro_decorations ORDER BY id ASC");
+$decorations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+echo json_encode(['success' => true, 'lines' => $lines, 'decorations' => $decorations]);

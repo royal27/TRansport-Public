@@ -89,6 +89,23 @@ try {
                 <button class="btn btn-outline" id="modeDraw" onclick="setMode('draw')" style="flex:1" title="Adaugă Stații"><i class="fas fa-pen"></i> Desenează</button>
                 <button class="btn btn-outline" id="modeSelect" onclick="setMode('select')" style="flex:1" title="Selectează/Mută"><i class="fas fa-mouse-pointer"></i> Selectează</button>
             </div>
+
+            <div style="border-top: 1px solid var(--border); padding-top: 10px; margin-top: 5px;">
+                <p style="font-size:0.8rem; font-weight:bold; margin:0 0 5px 0;">Adaugă Elemente (Decoruri):</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('text')"><i class="fas fa-font"></i> Text Legenda</button>
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('rect')"><i class="far fa-square"></i> Pătrat</button>
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('circle')"><i class="far fa-circle"></i> Cerc</button>
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_plane')"><i class="fas fa-plane"></i> Avion</button>
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_train')"><i class="fas fa-train"></i> CFR</button>
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_road')"><i class="fas fa-road"></i> Autostradă</button>
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_soldier')"><i class="fas fa-person-military-rifle"></i> Militar</button>
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_water')"><i class="fas fa-water"></i> Râu</button>
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_cone')"><i class="fas fa-traffic-cone"></i> Șantier</button>
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_tree')"><i class="fas fa-tree"></i> Parc</button>
+                </div>
+            </div>
+
             <button class="btn btn-success" onclick="saveAll()"><i class="fas fa-save"></i> Salvează Modificări</button>
             <p style="font-size: 0.8rem; color: #777; margin:0; text-align: center;">Click pe hartă în modul "Desenează" pentru a adăuga o stație la linia activă.</p>
         </div>
@@ -118,6 +135,37 @@ try {
         </div>
     </div>
 
+    <!-- Station Edit Modal -->
+    <div class="modal-overlay" id="stationEditModal">
+        <div class="modal">
+            <h3>Editare Stație</h3>
+            <input type="hidden" id="stationEditLineId">
+            <input type="hidden" id="stationEditIdx">
+            <div class="form-group">
+                <label>Nume Stație</label>
+                <input type="text" id="stationEditName">
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="stationEditWaypoint" style="width:auto;">
+                <label style="margin:0;">Punct de control (ascunde cerc/text)</label>
+            </div>
+            <div class="form-group">
+                <label>Grosime Font</label>
+                <select id="stationEditFontWeight" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                    <option value="normal">Normal</option>
+                    <option value="bold">Bold (Îngroșat)</option>
+                </select>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button class="btn btn-danger" onclick="deleteStation()">Șterge Stația</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-outline" onclick="closeModal('stationEditModal')">Anulare</button>
+                    <button class="btn btn-primary" onclick="saveStationEdit()">Salvează</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Line Modal -->
     <div class="modal-overlay" id="lineModal">
         <div class="modal">
@@ -130,6 +178,10 @@ try {
             <div class="form-group">
                 <label>Culoare (Hex)</label>
                 <input type="color" id="lineColorInput" value="#e74c3c" style="height:40px; padding:0;">
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="lineDashedInput" style="width:auto;">
+                <label style="margin:0;">Linie în construcție (Întreruptă)</label>
             </div>
             <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
             <p style="font-size:0.8rem; margin:0 0 10px 0; font-weight:bold;">Orar Trenuri (Generare Automată)</p>
@@ -158,9 +210,11 @@ try {
 
     <script>
         let linesData = [];
+        let decorationsData = [];
         let activeLineId = null;
         let mode = 'select'; // 'draw' or 'select'
         let draggedStation = null;
+        let draggedDecoration = null;
 
         let pendingStationPos = null;
 
@@ -170,6 +224,7 @@ try {
             const data = await res.json();
             if (data.success) {
                 linesData = data.lines;
+                decorationsData = data.decorations || [];
                 renderLinesList();
                 renderMap();
             }
@@ -212,11 +267,113 @@ try {
             });
         }
 
+        function addDecoration(type) {
+            let content = '';
+            let color = '#333333';
+            let width = 50;
+            let height = 50;
+
+            if (type === 'text') {
+                content = prompt("Introduceți textul pentru legendă:", "Text Legenda");
+                if (!content) return;
+                color = prompt("Culoare Hex (opțional):", "#000000") || '#000000';
+            } else if (type === 'rect' || type === 'circle') {
+                color = prompt("Culoare Hex (opțional):", "#3498db") || '#3498db';
+                width = parseInt(prompt("Lățime/Rază:", "50")) || 50;
+                if(type === 'rect') height = parseInt(prompt("Înălțime:", "50")) || 50;
+            } else if (type.startsWith('icon_')) {
+                // Determine icon content
+                const icons = {
+                    'icon_plane': '\uf072', 'icon_train': '\uf238', 'icon_road': '\uf018',
+                    'icon_soldier': '\ufe4b', 'icon_water': '\uf773', 'icon_cone': '\uf243', 'icon_tree': '\uf1bb'
+                };
+                content = icons[type];
+            }
+
+            decorationsData.push({
+                id: 'new_' + Date.now(),
+                type: type,
+                x: 100,
+                y: 100,
+                width: width,
+                height: height,
+                content: content,
+                color: color,
+                font_weight: 'normal'
+            });
+            renderMap();
+        }
+
         function renderMap() {
             const svg = document.getElementById('metroSvg');
             svg.innerHTML = ''; // Clear
 
-            // Draw lines first (paths)
+            // Draw decorations first so they are behind paths
+            decorationsData.forEach((dec, idx) => {
+                const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                let el;
+
+                if (dec.type === 'text') {
+                    el = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    el.textContent = dec.content;
+                    el.setAttribute("fill", dec.color);
+                    el.setAttribute("font-size", "14px");
+                    el.setAttribute("font-weight", dec.font_weight);
+                    el.setAttribute("x", dec.x);
+                    el.setAttribute("y", dec.y);
+                } else if (dec.type === 'rect') {
+                    el = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    el.setAttribute("x", dec.x);
+                    el.setAttribute("y", dec.y);
+                    el.setAttribute("width", dec.width);
+                    el.setAttribute("height", dec.height);
+                    el.setAttribute("fill", dec.color);
+                    el.setAttribute("opacity", "0.5");
+                } else if (dec.type === 'circle') {
+                    el = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    el.setAttribute("cx", dec.x);
+                    el.setAttribute("cy", dec.y);
+                    el.setAttribute("r", dec.width);
+                    el.setAttribute("fill", dec.color);
+                    el.setAttribute("opacity", "0.5");
+                } else if (dec.type.startsWith('icon_')) {
+                    el = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    el.setAttribute("class", "fa");
+                    el.textContent = dec.content;
+                    el.setAttribute("fill", dec.color);
+                    el.setAttribute("font-size", "24px");
+                    el.setAttribute("x", dec.x);
+                    el.setAttribute("y", dec.y);
+                    el.style.fontFamily = '"Font Awesome 6 Free"';
+                    el.style.fontWeight = '900';
+                }
+
+                if (el) {
+                    el.style.cursor = 'move';
+                    el.onmousedown = (e) => {
+                        if (mode === 'select') {
+                            e.stopPropagation();
+                            draggedDecoration = idx;
+                        }
+                    };
+
+                    // Double click to delete
+                    el.ondblclick = (e) => {
+                        if (mode === 'select') {
+                            e.stopPropagation();
+                            if(confirm('Ștergi acest element?')) {
+                                decorationsData.splice(idx, 1);
+                                renderMap();
+                            }
+                        }
+                    };
+
+                    group.appendChild(el);
+                    svg.appendChild(group);
+                }
+            });
+
+            // Draw lines (paths)
             linesData.forEach(line => {
                 if (!line.stations || line.stations.length < 2) return;
 
@@ -227,6 +384,9 @@ try {
                 }
                 path.setAttribute("d", d);
                 path.setAttribute("stroke", line.color);
+                if (line.is_dashed == 1) {
+                    path.setAttribute("stroke-dasharray", "10,10");
+                }
 
                 svg.appendChild(path);
             });
@@ -246,11 +406,29 @@ try {
                     circle.setAttribute("stroke", line.color);
                     circle.setAttribute("stroke-width", "3");
 
+                    if (st.is_waypoint == 1) {
+                        circle.style.display = 'none'; // Hide visual circle for waypoints
+                        // Add an invisible slightly larger circle to allow dragging the waypoint
+                        const hiddenHitbox = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        hiddenHitbox.setAttribute("cx", st.x);
+                        hiddenHitbox.setAttribute("cy", st.y);
+                        hiddenHitbox.setAttribute("r", 10);
+                        hiddenHitbox.setAttribute("fill", "transparent");
+                        hiddenHitbox.onmousedown = (e) => {
+                            if (mode === 'select') draggedStation = { type: 'station', lineId: line.id, stationIdx: idx };
+                        };
+                        hiddenHitbox.ondblclick = (e) => openStationEdit(line.id, idx);
+                        group.appendChild(hiddenHitbox);
+                    }
+
                     // Drag functionality for Station
                     circle.onmousedown = (e) => {
                         if (mode === 'select') {
                             draggedStation = { type: 'station', lineId: line.id, stationIdx: idx };
                         }
+                    };
+                    circle.ondblclick = (e) => {
+                        if (mode === 'select') openStationEdit(line.id, idx);
                     };
 
                     const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -260,8 +438,13 @@ try {
                     text.setAttribute("x", parseInt(st.x) + ox);
                     text.setAttribute("y", parseInt(st.y) + oy);
                     text.textContent = st.name;
+                    text.setAttribute("font-weight", st.font_weight || 'bold');
                     text.style.pointerEvents = 'all'; // Allow clicking text
                     text.style.cursor = 'move';
+
+                    if (st.is_waypoint == 1) {
+                        text.style.display = 'none'; // Hide text for waypoints
+                    }
 
                     // Drag functionality for Text
                     text.onmousedown = (e) => {
@@ -269,6 +452,9 @@ try {
                             e.stopPropagation(); // prevent triggering svg drag
                             draggedStation = { type: 'text', lineId: line.id, stationIdx: idx, startX: e.clientX, startY: e.clientY, startOx: ox, startOy: oy };
                         }
+                    };
+                    text.ondblclick = (e) => {
+                        if (mode === 'select') openStationEdit(line.id, idx);
                     };
 
                     group.appendChild(circle);
@@ -297,28 +483,37 @@ try {
         }
 
         svgElement.addEventListener('mousemove', (e) => {
-            if (draggedStation && mode === 'select') {
-                const line = linesData.find(l => l.id === draggedStation.lineId);
-                const st = line.stations[draggedStation.stationIdx];
+            if (mode === 'select') {
+                const rect = svgElement.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
 
-                if (draggedStation.type === 'station') {
-                    const rect = svgElement.getBoundingClientRect();
-                    st.x = e.clientX - rect.left;
-                    st.y = e.clientY - rect.top;
-                } else if (draggedStation.type === 'text') {
-                    // Update offset based on drag distance
-                    const dx = e.clientX - draggedStation.startX;
-                    const dy = e.clientY - draggedStation.startY;
-                    st.text_offset_x = draggedStation.startOx + dx;
-                    st.text_offset_y = draggedStation.startOy + dy;
+                if (draggedStation) {
+                    const line = linesData.find(l => l.id === draggedStation.lineId);
+                    const st = line.stations[draggedStation.stationIdx];
+
+                    if (draggedStation.type === 'station') {
+                        st.x = mouseX;
+                        st.y = mouseY;
+                    } else if (draggedStation.type === 'text') {
+                        const dx = e.clientX - draggedStation.startX;
+                        const dy = e.clientY - draggedStation.startY;
+                        st.text_offset_x = draggedStation.startOx + dx;
+                        st.text_offset_y = draggedStation.startOy + dy;
+                    }
+                    renderMap();
+                } else if (draggedDecoration !== null) {
+                    const dec = decorationsData[draggedDecoration];
+                    dec.x = mouseX;
+                    dec.y = mouseY;
+                    renderMap();
                 }
-
-                renderMap();
             }
         });
 
         svgElement.addEventListener('mouseup', () => {
             draggedStation = null;
+            draggedDecoration = null;
         });
 
         svgElement.addEventListener('click', (e) => {
@@ -363,6 +558,7 @@ try {
             document.getElementById('lineIdInput').value = '';
             document.getElementById('lineNameInput').value = '';
             document.getElementById('lineColorInput').value = '#e74c3c';
+            document.getElementById('lineDashedInput').checked = false;
             document.getElementById('lineStartInput').value = '05:00';
             document.getElementById('lineEndInput').value = '23:30';
             document.getElementById('lineIntervalInput').value = '6';
@@ -376,6 +572,7 @@ try {
             document.getElementById('lineIdInput').value = line.id;
             document.getElementById('lineNameInput').value = line.name;
             document.getElementById('lineColorInput').value = line.color;
+            document.getElementById('lineDashedInput').checked = (line.is_dashed == 1);
             document.getElementById('lineStartInput').value = line.start_time || '05:00';
             document.getElementById('lineEndInput').value = line.end_time || '23:30';
             document.getElementById('lineIntervalInput').value = line.interval_minutes || 6;
@@ -387,13 +584,14 @@ try {
             const id = document.getElementById('lineIdInput').value;
             const name = document.getElementById('lineNameInput').value;
             const color = document.getElementById('lineColorInput').value;
+            const is_dashed = document.getElementById('lineDashedInput').checked ? 1 : 0;
             const start_time = document.getElementById('lineStartInput').value;
             const end_time = document.getElementById('lineEndInput').value;
             const interval_minutes = document.getElementById('lineIntervalInput').value;
 
             if (!name) return alert('Nume invalid');
 
-            const payload = { name, color, start_time, end_time, interval_minutes };
+            const payload = { name, color, is_dashed, start_time, end_time, interval_minutes };
             if (id) payload.id = id;
 
             const res = await fetch('api_metro.php?action=save_line', {
@@ -423,7 +621,44 @@ try {
             }
         }
 
-        // Save All Stations
+        // Station Edit Functions
+        function openStationEdit(lineId, idx) {
+            const line = linesData.find(l => l.id === lineId);
+            const st = line.stations[idx];
+            document.getElementById('stationEditLineId').value = lineId;
+            document.getElementById('stationEditIdx').value = idx;
+            document.getElementById('stationEditName').value = st.name;
+            document.getElementById('stationEditWaypoint').checked = (st.is_waypoint == 1);
+            document.getElementById('stationEditFontWeight').value = st.font_weight || 'bold';
+            document.getElementById('stationEditModal').style.display = 'flex';
+        }
+
+        function saveStationEdit() {
+            const lineId = parseInt(document.getElementById('stationEditLineId').value);
+            const idx = parseInt(document.getElementById('stationEditIdx').value);
+            const line = linesData.find(l => l.id === lineId);
+            const st = line.stations[idx];
+
+            st.name = document.getElementById('stationEditName').value;
+            st.is_waypoint = document.getElementById('stationEditWaypoint').checked ? 1 : 0;
+            st.font_weight = document.getElementById('stationEditFontWeight').value;
+
+            closeModal('stationEditModal');
+            renderMap();
+        }
+
+        function deleteStation() {
+            if(confirm("Ești sigur că vrei să ștergi acest punct/stație?")) {
+                const lineId = parseInt(document.getElementById('stationEditLineId').value);
+                const idx = parseInt(document.getElementById('stationEditIdx').value);
+                const line = linesData.find(l => l.id === lineId);
+                line.stations.splice(idx, 1);
+                closeModal('stationEditModal');
+                renderMap();
+            }
+        }
+
+        // Save All Stations & Decorations
         async function saveAll() {
             for (const line of linesData) {
                 if (line.stations) {
@@ -433,6 +668,15 @@ try {
                         body: JSON.stringify({ line_id: line.id, stations: line.stations })
                     });
                 }
+            }
+
+            // Save decorations (placeholder for now, will implement in next step)
+            if (typeof decorationsData !== 'undefined') {
+                await fetch('api_metro.php?action=save_decorations', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ decorations: decorationsData })
+                });
             }
 
             const toast = document.getElementById('toast');
