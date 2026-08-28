@@ -841,8 +841,8 @@ try {
         }
 
         async function activateBucharestMap() {
-            if (confirm("Atenție! Această acțiune va șterge harta curentă și va încărca structura M1-M6 (fără stații complete, doar puncte de start/end pentru a fi editate). Ești sigur?")) {
-                const res = await fetch('api_metro.php?action=activate_bucharest_map');
+            if (confirm("Atenție! Această acțiune va șterge harta curentă și va încărca structura M1-M7 cu toate stațiile. Ești sigur?")) {
+                const res = await fetch('api_metro.php?action=activate_bucharest_map', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
                     alert('Harta Metrou București a fost activată cu succes!');

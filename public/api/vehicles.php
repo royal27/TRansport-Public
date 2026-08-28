@@ -16,9 +16,9 @@ $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-// Ignoram verificarea certificatului SSL deoarece pe tpbi.ro expira frecvent / e self-signed pe acest domeniu
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+// Verificare stricta SSL pentru securitate in productie
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 curl_setopt($ch, CURLOPT_USERAGENT, "BucurestiTransportLive/1.0");
 
 $response = curl_exec($ch);
