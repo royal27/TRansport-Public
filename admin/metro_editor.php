@@ -83,6 +83,7 @@ try {
             <a href="index.php"><i class="fas fa-times"></i></a>
         </div>
 
+        <div style="padding: 10px; border-bottom: 1px solid var(--border);"><button class="btn btn-primary" onclick="activateBucharestMap()" style="width: 100%; font-size: 0.9rem; background: #e67e22;"><i class="fas fa-map"></i> Activează Harta Metrou București</button></div>
         <div class="tools-panel">
             <button class="btn btn-primary" onclick="showLineModal()"><i class="fas fa-plus"></i> Linie Nouă</button>
             <div style="display: flex; gap: 5px;">
@@ -837,6 +838,19 @@ try {
 
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
+        }
+
+        async function activateBucharestMap() {
+            if (confirm("Atenție! Această acțiune va șterge harta curentă și va încărca structura M1-M6 (fără stații complete, doar puncte de start/end pentru a fi editate). Ești sigur?")) {
+                const res = await fetch('api_metro.php?action=activate_bucharest_map');
+                const data = await res.json();
+                if (data.success) {
+                    alert('Harta Metrou București a fost activată cu succes!');
+                    loadData();
+                } else {
+                    alert('Eroare: ' + (data.error || 'Necunoscută'));
+                }
+            }
         }
 
         // Initial setup
