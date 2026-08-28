@@ -194,12 +194,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die();
     }
 
+
     if ($action == 'activate_bucharest_map') {
+        $mapType = $_POST['map_type'] ?? 'default';
+
         try {
             $db->beginTransaction();
 $db->exec("DELETE FROM metro_stations");
 $db->exec("DELETE FROM metro_lines");
 $db->exec("DELETE FROM metro_decorations");
+
+if ($mapType == 'future') {
+    // A simplified or modified version of the map
+    $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->execute(['M1', '#ffe100', '05:00', '23:30', 6, 0]);
+    $lineId = $db->lastInsertId();
+    $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmtSt->execute([$lineId, 'Pantelimon Nou', 750, 430, 0, 15, -5, 0, 'bold']);
+    $stmtSt->execute([$lineId, 'Dristor Nou', 550, 490, 1, -20, 20, 0, 'bold']);
+    $stmtSt->execute([$lineId, 'Piața Unirii', 400, 450, 2, 15, -5, 0, 'bold']);
+    $stmtSt->execute([$lineId, 'Gara de Nord Noua', 360, 310, 3, -80, 15, 0, 'bold']);
+} else if ($mapType == 'minimal') {
+    $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->execute(['M2', '#3b5998', '05:00', '23:30', 6, 0]);
+    $lineId = $db->lastInsertId();
+    $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmtSt->execute([$lineId, 'Pipera', 450, 150, 0, 10, -5, 0, 'bold']);
+    $stmtSt->execute([$lineId, 'Piața Unirii', 400, 450, 1, 15, 15, 0, 'bold']);
+    $stmtSt->execute([$lineId, 'Berceni', 600, 770, 2, 15, 5, 0, 'bold']);
+} else {
+    // Default Bucharest M1-M7 Map
+
 
 $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
 $stmt->execute(['M2', '#3b5998', '05:00', '23:30', 6, 0]);
@@ -355,7 +380,7 @@ $stmtSt->execute([$lineId, 'Piața Rahova', 280, 630, 15, -80, 5, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Autogara Rahova', 240, 670, 16, -110, 5, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Alaska', 200, 710, 17, -50, 5, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Independenței 1877', 160, 750, 18, 15, 5, 0, 'bold']);
-
+}
 
             $db->commit();
             echo json_encode(['success' => true]);

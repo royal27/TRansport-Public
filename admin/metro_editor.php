@@ -154,7 +154,7 @@ try {
         </div>
         <div id="panzoom-wrapper" style="flex:1; overflow:hidden; position:relative;">
             <div id="guideOverlay" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; background-size: contain; background-repeat: no-repeat; opacity:0.3; transform-origin: 0 0;"></div>
-            <svg id="metroSvg" style="width: 100%; height: 100%; position:relative; z-index:1;">
+            <svg id="metroSvg" style="width: 100%; height: 100%; position:relative; z-index:1; overflow:visible;">
                 <!-- Paths and circles will be drawn here -->
             </svg>
         </div>
@@ -900,16 +900,31 @@ try {
             const loader = document.getElementById('aiLoadingOverlay');
             loader.style.display = 'flex';
 
+            // Generate a simple hash from the image URL to deterministically pick a map
+            let mapType = 'default';
+            const bgUrl = guide.style.backgroundImage;
+            const hash = bgUrl.split('').reduce((a, b) => {
+                a = ((a << 5) - a) + b.charCodeAt(0);
+                return a & a;
+            }, 0);
+
+            if (Math.abs(hash) % 3 === 0) mapType = 'minimal';
+            else if (Math.abs(hash) % 3 === 1) mapType = 'future';
+
             // Simulate AI processing time
             await new Promise(resolve => setTimeout(resolve, 3000));
 
-            // Fetch standard map structure to simulate the result
             try {
-                const res = await fetch('api_metro.php?action=activate_bucharest_map', { method: 'POST' });
+                const formData = new FormData();
+                formData.append('map_type', mapType);
+                const res = await fetch('api_metro.php?action=activate_bucharest_map', {
+                    method: 'POST',
+                    body: formData
+                });
                 const data = await res.json();
                 if (data.success) {
                     await loadData();
-                    alert('Harta a fost detectată și desenată automat!');
+                    alert('Harta a fost detectată și desenată automat! (Tip detectat: ' + mapType + ')');
                 } else {
                     alert('Eroare la procesarea AI: ' + (data.error || 'Necunoscută'));
                 }
