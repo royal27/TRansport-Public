@@ -512,33 +512,35 @@ $current_date = date('d.m.Y');
 
         const cycleTime = TRAIN_TRAVEL_SEC + TRAIN_STOP_SEC;
 
-        function getNextArrival(direction, stationIndex) {
+        function getNextArrivals(direction, stationIndex, count = 3) {
             const timeToReachStation = stationIndex * cycleTime;
+            let arrivals = [];
 
-            // Find the next train departure time from origin that will reach this station in the future
-            let nextArrivalTime = -1;
+            // Find upcoming departures that will reach this station
             for (let s = 0; s < secondsSinceStart + (24 * 3600); s += intervalSec) {
                 const arrival = s + timeToReachStation;
                 if (arrival > secondsSinceStart) {
-                    nextArrivalTime = arrival;
-                    break;
+                    const waitSeconds = arrival - secondsSinceStart;
+                    arrivals.push(Math.ceil(waitSeconds / 60));
+                    if (arrivals.length >= count) break;
                 }
             }
 
-            if (nextArrivalTime === -1) return null;
-
-            const waitSeconds = nextArrivalTime - secondsSinceStart;
-            return Math.ceil(waitSeconds / 60);
+            return arrivals;
         }
 
         // Tur (Direction 1) -> To last station
         if (stIdx < line.stations.length - 1) {
             const dirName = line.stations[line.stations.length - 1].name;
-            const eta = getNextArrival(1, stIdx);
+            const etas = getNextArrivals(1, stIdx);
+            const etaHtml = etas.length > 0
+                ? etas.map((e, i) => `<span style="${i===0 ? 'font-size:1.5rem; color:#27ae60;' : 'font-size:1.1rem; color:#7f8c8d; margin-left:10px;'}"><i class="fas fa-clock"></i> ${e} min</span>`).join('')
+                : '<span style="font-size:1.5rem; color:#777;">--</span>';
+
             html += `<div style="margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:8px; border-left:4px solid ${line.color};">
                 <div style="font-size:0.85rem; color:#777; text-transform:uppercase; font-weight:bold;">Direcția</div>
                 <div style="font-size:1.1rem; font-weight:bold; margin-bottom:5px;">${document.createTextNode(dirName).textContent}</div>
-                <div style="font-size:1.5rem; color:#27ae60; font-weight:bold;"><i class="fas fa-clock"></i> ${eta !== null ? eta + ' min' : '--'}</div>
+                <div style="font-weight:bold; display:flex; align-items:baseline;">${etaHtml}</div>
             </div>`;
         }
 
@@ -547,11 +549,15 @@ $current_date = date('d.m.Y');
             const dirName = line.stations[0].name;
             // For retur, distance is from end of line backwards
             const stIdxFromEnd = line.stations.length - 1 - stIdx;
-            const eta = getNextArrival(-1, stIdxFromEnd);
+            const etas = getNextArrivals(-1, stIdxFromEnd);
+            const etaHtml = etas.length > 0
+                ? etas.map((e, i) => `<span style="${i===0 ? 'font-size:1.5rem; color:#27ae60;' : 'font-size:1.1rem; color:#7f8c8d; margin-left:10px;'}"><i class="fas fa-clock"></i> ${e} min</span>`).join('')
+                : '<span style="font-size:1.5rem; color:#777;">--</span>';
+
             html += `<div style="padding:10px; background:#f8f9fa; border-radius:8px; border-left:4px solid ${line.color};">
                 <div style="font-size:0.85rem; color:#777; text-transform:uppercase; font-weight:bold;">Direcția</div>
                 <div style="font-size:1.1rem; font-weight:bold; margin-bottom:5px;">${document.createTextNode(dirName).textContent}</div>
-                <div style="font-size:1.5rem; color:#27ae60; font-weight:bold;"><i class="fas fa-clock"></i> ${eta !== null ? eta + ' min' : '--'}</div>
+                <div style="font-weight:bold; display:flex; align-items:baseline;">${etaHtml}</div>
             </div>`;
         }
 

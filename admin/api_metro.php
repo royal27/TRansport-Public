@@ -145,20 +145,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action == 'upload_image') {
         if (!isset($_FILES['image'])) {
-            echo json_encode(['success' => false, 'error' => 'No file uploaded']);
+            echo json_encode(['success' => false, 'error' => 'Niciun fișier încărcat']);
             die();
         }
         $file = $_FILES['image'];
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+        $allowed = ['png']; // Forced PNG as requested
 
         if (!in_array($ext, $allowed)) {
-            echo json_encode(['success' => false, 'error' => 'Invalid file type']);
+            echo json_encode(['success' => false, 'error' => 'Te rog să încarci doar imagini cu formatul .png']);
             die();
         }
 
-        if (!getimagesize($file['tmp_name']) && $ext !== 'svg') {
-            echo json_encode(['success' => false, 'error' => 'Invalid image content']);
+        if (!getimagesize($file['tmp_name'])) {
+            echo json_encode(['success' => false, 'error' => 'Fișierul nu este o imagine validă']);
             die();
         }
 
@@ -174,7 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $url = 'uploads/' . $filename; // Relative to public/
             echo json_encode(['success' => true, 'url' => $url]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Failed to save file']);
+            $err = error_get_last();
+            echo json_encode(['success' => false, 'error' => 'A apărut o eroare la salvarea fișierului pe server. Verificați permisiunile folderului public/uploads/. Detalii: ' . ($err ? $err['message'] : '')]);
         }
         die();
     }

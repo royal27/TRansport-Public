@@ -223,6 +223,7 @@ try {
         let mode = 'select'; // 'draw' or 'select'
         let draggedStation = null;
         let draggedDecoration = null;
+        let resizingDecoration = null; // Store { idx, startX, startY, startW, startH }
 
         let pendingStationPos = null;
 
@@ -404,6 +405,12 @@ try {
                 if (el) {
                     el.style.cursor = 'move';
                     el.style.pointerEvents = 'all'; // Required to capture mouse events on SVGs
+
+                    // Tooltip text explaining double-click
+                    const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+                    title.textContent = "Dublu-click pentru a șterge acest element.";
+                    el.appendChild(title);
+
                     el.onmousedown = (e) => {
                         if (mode === 'select') {
                             e.stopPropagation();
@@ -426,6 +433,36 @@ try {
                     };
 
                     group.appendChild(el);
+
+                    // Add Resize Handle if it is an image
+                    if (dec.type === 'image' || dec.type === 'rect') {
+                        const handle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        handle.setAttribute("x", dec.x + (dec.width || 100) - 5);
+                        handle.setAttribute("y", dec.y + (dec.height || 100) - 5);
+                        handle.setAttribute("width", 10);
+                        handle.setAttribute("height", 10);
+                        handle.setAttribute("fill", "white");
+                        handle.setAttribute("stroke", "#3498db");
+                        handle.setAttribute("stroke-width", "2");
+                        handle.style.cursor = "se-resize";
+                        handle.style.pointerEvents = "all";
+
+                        handle.onmousedown = (e) => {
+                            if (mode === 'select') {
+                                e.stopPropagation();
+                                resizingDecoration = {
+                                    idx: idx,
+                                    startX: e.clientX,
+                                    startY: e.clientY,
+                                    startW: dec.width || 100,
+                                    startH: dec.height || 100
+                                };
+                                e.preventDefault();
+                            }
+                        };
+                        group.appendChild(handle);
+                    }
+
                     svg.appendChild(group);
                 }
             });
@@ -441,6 +478,9 @@ try {
                 }
                 path.setAttribute("d", d);
                 path.setAttribute("stroke", line.color);
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke-width", "6");
+                path.setAttribute("stroke-linejoin", "round");
                 if (line.is_dashed == 1) {
                     path.setAttribute("stroke-dasharray", "10,10");
                 }
@@ -559,6 +599,14 @@ try {
                         st.text_offset_y = draggedStation.startOy + dy;
                     }
                     renderMap();
+                } else if (resizingDecoration !== null) {
+                    const dec = decorationsData[resizingDecoration.idx];
+                    const dx = e.clientX - resizingDecoration.startX;
+                    const dy = e.clientY - resizingDecoration.startY;
+                    // Maintain aspect ratio logic loosely or just free resize
+                    dec.width = Math.max(20, resizingDecoration.startW + dx);
+                    dec.height = Math.max(20, resizingDecoration.startH + dy);
+                    renderMap();
                 } else if (draggedDecoration !== null) {
                     const dec = decorationsData[draggedDecoration];
                     dec.x = mouseX;
@@ -571,6 +619,7 @@ try {
         svgElement.addEventListener('mouseup', () => {
             draggedStation = null;
             draggedDecoration = null;
+            resizingDecoration = null;
         });
 
         svgElement.addEventListener('click', (e) => {
