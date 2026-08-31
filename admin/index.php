@@ -73,6 +73,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $settings['metro_map_html'] = $metro_map_html;
         $settings['responsive_mode'] = $responsive_mode;
 
+        $openai_api_key = $_POST['openai_api_key'] ?? '';
+        $openai_model = $_POST['openai_model'] ?? 'gpt-4o';
+
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('openai_api_key', ?)");
+        $stmt->execute([$openai_api_key]);
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('openai_model', ?)");
+        $stmt->execute([$openai_model]);
+
+        $settings['openai_api_key'] = $openai_api_key;
+        $settings['openai_model'] = $openai_model;
+
+
         $success = "Setările generale au fost salvate.";
     } elseif ($_POST['action'] == 'upload_splash') {
         if (isset($_FILES['splash_file']) && $_FILES['splash_file']['error'] == 0) {
@@ -307,6 +319,22 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
                 <div class="form-group">
                     <label>Cheie API OpenWeatherMap (Pentru Vremea Live)</label>
                     <input type="text" name="weather_api_key" value="<?= htmlspecialchars($settings['weather_api_key'] ?? '') ?>" placeholder="ex: 12345abcde...">
+                </div>
+
+
+                <div class="settings-group" style="margin-bottom: 20px; padding: 15px; border: 1px solid var(--border); border-radius: 8px; background: #fdfdfd;">
+                    <h3 style="margin-top:0;"><i class="fas fa-robot"></i> Integrări AI</h3>
+                    <div class="form-group">
+                        <label>OpenAI API Key (Pentru auto-desenare Harta Metrou din poze)</label>
+                        <input type="text" name="openai_api_key" value="<?= htmlspecialchars($settings['openai_api_key'] ?? '') ?>" placeholder="sk-proj-...">
+                    </div>
+                    <div class="form-group">
+                        <label>OpenAI Model (Vision)</label>
+                        <select name="openai_model">
+                            <option value="gpt-4o" <?= (isset($settings['openai_model']) && $settings['openai_model'] === 'gpt-4o') ? 'selected' : '' ?>>GPT-4o (Recomandat)</option>
+                            <option value="gpt-4-turbo" <?= (isset($settings['openai_model']) && $settings['openai_model'] === 'gpt-4-turbo') ? 'selected' : '' ?>>GPT-4 Turbo</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-group">

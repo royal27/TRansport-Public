@@ -894,42 +894,42 @@ try {
                 alert('Vă rugăm să încărcați mai întâi o imagine de ghidaj!');
                 return;
             }
-            if (!confirm('Atenție: Această acțiune va folosi AI pentru a detecta liniile și va înlocui harta curentă nesalvată. Continui?')) return;
+            if (!confirm('Atenție: Această acțiune va folosi OpenAI Vision pentru a detecta liniile și va înlocui harta curentă nesalvată. Poate dura câteva zeci de secunde. Continui?')) return;
 
             // Show loading animation
             const loader = document.getElementById('aiLoadingOverlay');
             loader.style.display = 'flex';
 
-            // Generate a simple hash from the image URL to deterministically pick a map
-            let mapType = 'default';
-            const bgUrl = guide.style.backgroundImage;
-            const hash = bgUrl.split('').reduce((a, b) => {
-                a = ((a << 5) - a) + b.charCodeAt(0);
-                return a & a;
-            }, 0);
-
-            if (Math.abs(hash) % 3 === 0) mapType = 'minimal';
-            else if (Math.abs(hash) % 3 === 1) mapType = 'future';
-
-            // Simulate AI processing time
-            await new Promise(resolve => setTimeout(resolve, 3000));
-
             try {
-                const formData = new FormData();
-                formData.append('map_type', mapType);
-                const res = await fetch('api_metro.php?action=activate_bucharest_map', {
+                const res = await fetch('ai_draw.php', {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_url: guide.style.backgroundImage })
                 });
+
                 const data = await res.json();
-                if (data.success) {
-                    await loadData();
-                    alert('Harta a fost detectată și desenată automat! (Tip detectat: ' + mapType + ')');
+
+                if (data.success && data.map_data) {
+                    const importRes = await fetch('api_metro.php?action=import_map', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data.map_data)
+                    });
+
+                    const importData = await importRes.json();
+                    if (importData.success) {
+                        alert("Harta a fost detectată și importată cu succes de AI!");
+                        await loadData();
+                    } else {
+                        alert("Eroare la importul hărții detectate: " + (importData.error || 'Unknown'));
+                    }
                 } else {
-                    alert('Eroare la procesarea AI: ' + (data.error || 'Necunoscută'));
+                    alert('Eroare AI: ' + (data.error || 'Unknown'));
+                    if (data.raw_response) console.error("Raw AI Response:", data.raw_response);
                 }
             } catch (err) {
-                alert('Eroare conexiune AI.');
+                alert('Eroare de conexiune la serverul AI.');
+                console.error(err);
             }
 
             loader.style.display = 'none';
