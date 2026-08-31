@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (isset($data['lines']) && is_array($data['lines'])) {
                 $stmtLine = $db->prepare("INSERT INTO metro_lines (id, name, color, active, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, 1, ?, ?, ?, ?)");
-                $stmtStation = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmtStation = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight, is_under_construction) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
                 foreach ($data['lines'] as $line) {
                     $stmtLine->execute([
@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $stmtStation->execute([
                                 $line['id'], $st['name'], $st['x'], $st['y'], $idx,
                                 $st['text_offset_x'] ?? 12, $st['text_offset_y'] ?? 4,
-                                $st['is_waypoint'] ?? 0, $st['font_weight'] ?? 'bold'
+                                $st['is_waypoint'] ?? 0, $st['font_weight'] ?? 'bold', $st['is_under_construction'] ?? 0
                             ]);
                         }
                     }

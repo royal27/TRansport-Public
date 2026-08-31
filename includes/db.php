@@ -387,6 +387,7 @@ EOT;
         try { $pdo->exec("ALTER TABLE metro_stations ADD COLUMN text_offset_y INT DEFAULT 4"); } catch (PDOException $e) {}
         try { $pdo->exec("ALTER TABLE metro_stations ADD COLUMN is_waypoint TINYINT(1) DEFAULT 0"); } catch (PDOException $e) {}
         try { $pdo->exec("ALTER TABLE metro_stations ADD COLUMN font_weight VARCHAR(20) DEFAULT 'bold'"); } catch (PDOException $e) {}
+        try { $pdo->exec("ALTER TABLE metro_stations ADD COLUMN is_under_construction TINYINT(1) DEFAULT 0"); } catch (PDOException $e) {}
 
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS metro_decorations (

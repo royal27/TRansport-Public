@@ -188,6 +188,10 @@ try {
                 <input type="checkbox" id="stationEditWaypoint" style="width:auto;">
                 <label style="margin:0;">Punct de control (ascunde cerc/text)</label>
             </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="stationEditUnderConstruction" style="width:auto;">
+                <label style="margin:0;">Stație în construcție</label>
+            </div>
             <div class="form-group">
                 <label>Grosime Font</label>
                 <select id="stationEditFontWeight" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
@@ -849,6 +853,7 @@ try {
             document.getElementById('stationEditName').value = st.name;
             document.getElementById('stationEditWaypoint').checked = (st.is_waypoint == 1);
             document.getElementById('stationEditFontWeight').value = st.font_weight || 'bold';
+            document.getElementById('stationEditUnderConstruction').checked = (st.is_under_construction == 1);
             document.getElementById('stationEditModal').style.display = 'flex';
         }
 
@@ -861,6 +866,7 @@ try {
             st.name = document.getElementById('stationEditName').value;
             st.is_waypoint = document.getElementById('stationEditWaypoint').checked ? 1 : 0;
             st.font_weight = document.getElementById('stationEditFontWeight').value;
+            st.is_under_construction = document.getElementById('stationEditUnderConstruction').checked ? 1 : 0;
 
             closeModal('stationEditModal');
             renderMap();

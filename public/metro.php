@@ -98,7 +98,102 @@ $current_date = date('d.m.Y');
         @media (max-width: 768px) {
             .front-header { flex-direction: column; gap: 10px; }
         }
-    </style>
+
+        .timetable-sidebar {
+            position: absolute;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100%;
+            background: #111;
+            color: #fff;
+            z-index: 2000;
+            transition: right 0.3s ease;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .timetable-sidebar.open {
+            right: 0;
+        }
+        .timetable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #222;
+            border-bottom: 2px solid #444;
+        }
+        .timetable-header h2 {
+            margin: 0;
+            color: #f1c40f;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+        }
+        .timetable-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .timetable-board {
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .timetable-row {
+            border-bottom: 1px solid #333;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .timetable-row.highlight {
+            border-left: 5px solid #f1c40f;
+        }
+        .timetable-direction {
+            color: #aaa;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .timetable-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .timetable-destination {
+            color: #f1c40f;
+            font-size: 2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 70%;
+        }
+        .timetable-time {
+            color: #fff;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .timetable-footer {
+            background: #008080;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            .timetable-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+        }
+</style>
 </head>
 <body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
@@ -155,15 +250,7 @@ $current_date = date('d.m.Y');
     </div>
 
     <!-- Live Station Modal -->
-    <div id="liveStationModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-        <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position:relative;">
-            <button onclick="document.getElementById('liveStationModal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#777;">&times;</button>
-            <h2 id="lsName" style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Nume Stație</h2>
-            <div id="lsContent" style="margin-top:15px;">
-                <!-- Live departures will be injected here -->
-            </div>
-        </div>
-    </div>
+
 
     <footer class="front-footer">
         <?= getTranslation('footer_text', $lang) ?>
