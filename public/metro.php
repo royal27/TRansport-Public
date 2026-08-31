@@ -226,6 +226,23 @@ $current_date = date('d.m.Y');
             Harta generală a rețelei de metrou din București (Metrorex).
         </p>
         <?php if (empty(trim($metro_map_html))): ?>
+
+        <div id="timetableSidebar" class="timetable-sidebar">
+            <div class="timetable-header">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <span id="ttCurrentTime" style="font-size: 2rem; color: #fff;">--:--</span>
+                    <h2 id="ttStationName">STAȚIE</h2>
+                </div>
+                <button class="timetable-close" onclick="closeTimetable()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="timetable-board" id="ttBoard">
+                <!-- Rows injected here -->
+            </div>
+            <div class="timetable-footer">
+                Stimați călători, atenție la închiderea ușilor.
+            </div>
+        </div>
+
         <div class="metro-svg-container" style="width: 100%; flex: 1; min-height: 70vh; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; position: relative;">
             <!-- Added viewBox calculation logic in JS to handle responsiveness -->
             <div id="panzoom-wrapper" style="width: 100%; height: 100%;">

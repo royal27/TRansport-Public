@@ -900,7 +900,7 @@ try {
                 alert('Vă rugăm să încărcați mai întâi o imagine de ghidaj!');
                 return;
             }
-            if (!confirm('Atenție: Această acțiune va folosi OpenAI Vision pentru a detecta liniile și va înlocui harta curentă nesalvată. Poate dura câteva zeci de secunde. Continui?')) return;
+            if (!confirm('Atenție: Această acțiune va analiza imaginea încărcată și va genera automat harta, înlocuind structura curentă nesalvată. Continui?')) return;
 
             // Show loading animation
             const loader = document.getElementById('aiLoadingOverlay');

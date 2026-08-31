@@ -73,16 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $settings['metro_map_html'] = $metro_map_html;
         $settings['responsive_mode'] = $responsive_mode;
 
-        $openai_api_key = $_POST['openai_api_key'] ?? '';
-        $openai_model = $_POST['openai_model'] ?? 'gpt-4o';
 
-        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('openai_api_key', ?)");
-        $stmt->execute([$openai_api_key]);
-        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('openai_model', ?)");
-        $stmt->execute([$openai_model]);
-
-        $settings['openai_api_key'] = $openai_api_key;
-        $settings['openai_model'] = $openai_model;
 
 
         $success = "Setările generale au fost salvate.";
@@ -322,35 +313,24 @@ if (isset($_GET['action']) && $_GET['action'] == 'logout') {
                 </div>
 
 
-                <div class="settings-group" style="margin-bottom: 20px; padding: 15px; border: 1px solid var(--border); border-radius: 8px; background: #fdfdfd;">
-                    <h3 style="margin-top:0;"><i class="fas fa-robot"></i> Integrări AI</h3>
-                    <div class="form-group">
-                        <label>OpenAI API Key (Pentru auto-desenare Harta Metrou din poze)</label>
-                        <input type="text" name="openai_api_key" value="<?= htmlspecialchars($settings['openai_api_key'] ?? '') ?>" placeholder="sk-proj-...">
-                    </div>
-                    <div class="form-group">
-                        <label>OpenAI Model (Vision)</label>
-                        <select name="openai_model">
-                            <option value="gpt-4o" <?= (isset($settings['openai_model']) && $settings['openai_model'] === 'gpt-4o') ? 'selected' : '' ?>>GPT-4o (Recomandat)</option>
-                            <option value="gpt-4-turbo" <?= (isset($settings['openai_model']) && $settings['openai_model'] === 'gpt-4-turbo') ? 'selected' : '' ?>>GPT-4 Turbo</option>
-                        </select>
-                    </div>
-                </div>
+
+
 
                 <div class="form-group">
                     <label>Cod HTML pentru Harta Metrou (Opțional - înlocuiește imaginea standard dacă este setat)</label>
                     <textarea name="metro_map_html" rows="5" placeholder="Exemplu: <iframe src='...'></iframe>"><?= htmlspecialchars($settings['metro_map_html'] ?? '') ?></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label>
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                    <label style="margin:0;">Mod Responsiv Mobil & Tabletă (Opțional)</label>
+                    <label class="switch">
                         <input type="checkbox" name="responsive_mode" value="1" <?= (isset($settings['responsive_mode']) && $settings['responsive_mode'] == '1') ? 'checked' : '' ?>>
-                        Activează versiunea telefon / tabletă (Responsive)
+                        <span class="slider"></span>
                     </label>
-                    <small style="display:block; color:#777; margin-top:5px;">Dacă e debifat, site-ul va arăta ca pe desktop inclusiv pe dispozitivele mobile.</small>
+                    <small style="color: #666; font-size: 0.85rem;">Dacă este activat, site-ul se va restrânge pe mobil. Dacă este debifat, se va vedea ca pe desktop, doar mai mic.</small>
                 </div>
 
-                <button type="submit">Salvează Setările</button>
+                <button type="submit" style="margin-top:20px;">Salvează Setările</button>
             </form>
         </div>
     </div>
