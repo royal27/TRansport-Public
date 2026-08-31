@@ -117,6 +117,11 @@ try {
                     <button class="btn btn-outline" title="Folosește zoom-ul curent" onclick="setZoomFromCurrent()"><i class="fas fa-eye"></i></button>
                 </div>
 
+                <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px;">Mesaj Subsol Orar:</label>
+                <div style="margin-bottom: 10px;">
+                    <input type="text" id="footerMessageInput" value="Stimați călători, atenție la închiderea ușilor." style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+
                 <button class="btn btn-outline" style="width:100%; padding:8px; border:2px dashed var(--primary); color:var(--primary);" onclick="exportMap()"><i class="fas fa-file-export"></i> Export Hartă</button>
                 <button class="btn btn-outline" style="width:100%; padding:8px; margin-top:5px; border:2px dashed #2ecc71; color:#2ecc71;" onclick="document.getElementById('importMapInput').click()"><i class="fas fa-file-import"></i> Import Hartă</button>
                 <input type="file" id="importMapInput" style="display:none;" accept=".json" onchange="importMap(event)">
@@ -295,6 +300,10 @@ try {
 
                 if (data.zoom) {
                     document.getElementById('initialZoomInput').value = data.zoom;
+                }
+
+                if (data.footer_message) {
+                    document.getElementById('footerMessageInput').value = data.footer_message;
                 }
 
                 renderLinesList();
@@ -1116,6 +1125,13 @@ try {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ zoom: zoomVal })
+            });
+
+            const footerMsg = document.getElementById('footerMessageInput').value;
+            await fetch('api_metro.php?action=save_footer_message', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: footerMsg })
             });
 
             const toast = document.getElementById('toast');

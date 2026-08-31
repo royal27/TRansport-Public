@@ -28,10 +28,14 @@ if ($action == 'load') {
     $zoom_row = $zoom_stmt->fetch(PDO::FETCH_ASSOC);
     $zoom = $zoom_row ? $zoom_row['setting_value'] : '1';
 
+    $footer_stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'metro_footer_message'");
+    $footer_row = $footer_stmt->fetch(PDO::FETCH_ASSOC);
+    $footer_message = $footer_row ? $footer_row['setting_value'] : 'Stimați călători, atenție la închiderea ușilor.';
+
     $var_stmt = $db->query("SELECT id, name, created_at FROM metro_map_variants ORDER BY created_at DESC");
     $variants = $var_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo json_encode(['success' => true, 'lines' => $lines, 'decorations' => $decorations, 'zoom' => $zoom, 'variants' => $variants]);
+    echo json_encode(['lines' => $lines, 'decorations' => $decorations, 'zoom' => $zoom, 'footer_message' => $footer_message, 'variants' => $variants]);
     die();
 }
 
@@ -79,6 +83,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action == 'delete_line') {
         $stmt = $db->prepare("DELETE FROM metro_lines WHERE id = ?");
         $stmt->execute([$data['id']]);
+        echo json_encode(['success' => true]);
+        die();
+    }
+
+    if ($action == 'save_footer_message') {
+        $message = $data['message'] ?? 'Stimați călători, atenție la închiderea ușilor.';
+        $stmt = $db->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES ('metro_footer_message', ?)");
+        $stmt->execute([$message]);
         echo json_encode(['success' => true]);
         die();
     }

@@ -30,12 +30,19 @@ $current_date = date('d.m.Y');
     <?php
     // Get responsive mode setting
     $is_responsive = true; // Default
+    $metro_footer_message = 'Stimați călători, atenție la închiderea ușilor.';
     if (isset($db)) {
         try {
             $resp_stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'responsive_mode'");
             $resp_row = $resp_stmt->fetch(PDO::FETCH_ASSOC);
             if ($resp_row && $resp_row['setting_value'] === '0') {
                 $is_responsive = false;
+            }
+
+            $footer_stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'metro_footer_message'");
+            $footer_row = $footer_stmt->fetch(PDO::FETCH_ASSOC);
+            if ($footer_row) {
+                $metro_footer_message = $footer_row['setting_value'];
             }
         } catch(Exception $e) { }
     }
@@ -239,7 +246,7 @@ $current_date = date('d.m.Y');
                 <!-- Rows injected here -->
             </div>
             <div class="timetable-footer">
-                Stimați călători, atenție la închiderea ușilor.
+                <?= htmlspecialchars($metro_footer_message) ?>
             </div>
         </div>
 
@@ -417,9 +424,6 @@ $current_date = date('d.m.Y');
                 group.setAttribute("data-line", line.id);
                 group.setAttribute("data-idx", idx);
                 group.style.cursor = "pointer";
-
-                // Interactivity for "Live Station" logic
-                group.onclick = () => showLiveStation(line, idx);
 
                 const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 circle.setAttribute("cx", st.x);
@@ -628,83 +632,6 @@ $current_date = date('d.m.Y');
         requestAnimationFrame(renderEngine);
     }
 
-    function showLiveStation(line, stIdx) {
-        if (line.is_dashed == 1) return; // No live info for under construction lines
-        const st = line.stations[stIdx];
-        if (st.is_waypoint == 1) return; // Don't show live info for invisible waypoints
-
-        const modal = document.getElementById('liveStationModal');
-        const stNameEl = document.getElementById('lsName');
-        const contentEl = document.getElementById('lsContent');
-
-        const stName = st.name;
-        stNameEl.innerHTML = `<span style="display:inline-block; width:15px; height:15px; border-radius:50%; background:${line.color}; margin-right:8px;"></span> ${document.createTextNode(stName).textContent}`;
-
-        let html = '';
-        const now = new Date();
-        const startH = parseInt(line.start_time.split(':')[0]);
-        const startM = parseInt(line.start_time.split(':')[1]);
-        const intervalSec = (parseInt(line.interval_minutes) || 6) * 60;
-
-        const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM, 0);
-        const secondsSinceStart = Math.floor((now - startToday) / 1000);
-
-        const cycleTime = TRAIN_TRAVEL_SEC + TRAIN_STOP_SEC;
-
-        function getNextArrivals(direction, stationIndex, count = 3) {
-            const timeToReachStation = stationIndex * cycleTime;
-            let arrivals = [];
-
-            // Find upcoming departures that will reach this station
-            for (let s = 0; s < secondsSinceStart + (24 * 3600); s += intervalSec) {
-                const arrival = s + timeToReachStation;
-                if (arrival > secondsSinceStart) {
-                    const waitSeconds = arrival - secondsSinceStart;
-                    arrivals.push(Math.ceil(waitSeconds / 60));
-                    if (arrivals.length >= count) break;
-                }
-            }
-
-            return arrivals;
-        }
-
-        // Tur (Direction 1) -> To last station
-        if (stIdx < line.stations.length - 1) {
-            const dirName = line.stations[line.stations.length - 1].name;
-            const etas = getNextArrivals(1, stIdx);
-            const etaHtml = etas.length > 0
-                ? etas.map((e, i) => `<span style="${i===0 ? 'font-size:1.5rem; color:#27ae60;' : 'font-size:1.1rem; color:#7f8c8d; margin-left:10px;'}"><i class="fas fa-clock"></i> ${e} min</span>`).join('')
-                : '<span style="font-size:1.5rem; color:#777;">--</span>';
-
-            html += `<div style="margin-bottom:15px; padding:10px; background:#f8f9fa; border-radius:8px; border-left:4px solid ${line.color};">
-                <div style="font-size:0.85rem; color:#777; text-transform:uppercase; font-weight:bold;">Direcția</div>
-                <div style="font-size:1.1rem; font-weight:bold; margin-bottom:5px;">${document.createTextNode(dirName).textContent}</div>
-                <div style="font-weight:bold; display:flex; align-items:baseline;">${etaHtml}</div>
-            </div>`;
-        }
-
-        // Retur (Direction -1) -> To first station
-        if (stIdx > 0) {
-            const dirName = line.stations[0].name;
-            // For retur, distance is from end of line backwards
-            const stIdxFromEnd = line.stations.length - 1 - stIdx;
-            const etas = getNextArrivals(-1, stIdxFromEnd);
-            const etaHtml = etas.length > 0
-                ? etas.map((e, i) => `<span style="${i===0 ? 'font-size:1.5rem; color:#27ae60;' : 'font-size:1.1rem; color:#7f8c8d; margin-left:10px;'}"><i class="fas fa-clock"></i> ${e} min</span>`).join('')
-                : '<span style="font-size:1.5rem; color:#777;">--</span>';
-
-            html += `<div style="padding:10px; background:#f8f9fa; border-radius:8px; border-left:4px solid ${line.color};">
-                <div style="font-size:0.85rem; color:#777; text-transform:uppercase; font-weight:bold;">Direcția</div>
-                <div style="font-size:1.1rem; font-weight:bold; margin-bottom:5px;">${document.createTextNode(dirName).textContent}</div>
-                <div style="font-weight:bold; display:flex; align-items:baseline;">${etaHtml}</div>
-            </div>`;
-        }
-
-        contentEl.innerHTML = html;
-        modal.style.display = 'flex';
-    }
-
-
         // Timetable Logic
         function openTimetable(stationName, line) {
             document.getElementById('timetableSidebar').classList.add('open');
@@ -730,54 +657,55 @@ $current_date = date('d.m.Y');
             const now = new Date();
             const currentMins = now.getHours() * 60 + now.getMinutes();
 
-            // Calculate ETA helper
-            function calculateNextArrival(destStationName) {
-                // Simplified simulation: trains run exactly on interval
-                const interval = line.interval_minutes || 6;
-                const offset = stIdx * 2; // Assume 2 mins between stations
+            // Calculate ETA helper returning multiple upcoming trains
+            function getNextArrivals(destStationName, count = 6, offsetShift = 0) {
+                const interval = parseInt(line.interval_minutes) || 6;
+                const offset = (stIdx * 2) + offsetShift;
 
-                // Find next multiple of interval + offset
                 let nextMins = Math.ceil((currentMins - offset) / interval) * interval + offset;
                 if (nextMins < currentMins) nextMins += interval;
 
-                const h = Math.floor(nextMins / 60) % 24;
-                const m = nextMins % 60;
-                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                let arrivals = [];
+                for (let i = 0; i < count; i++) {
+                    const tMins = nextMins + (i * interval);
+                    const h = Math.floor(tMins / 60) % 24;
+                    const m = tMins % 60;
+                    arrivals.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
+                }
+                return arrivals;
+            }
+
+            // Generate HTML for a list of arrivals
+            function generateArrivalsHTML(destination, arrivals, directionText) {
+                let html = `
+                    <div class="timetable-row highlight">
+                        <div class="timetable-direction">${directionText}</div>
+                        <div class="timetable-main" style="border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 5px;">
+                            <div class="timetable-destination">${destination}</div>
+                            <div class="timetable-time">${arrivals[0]}</div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:5px; color:#aaa; font-size:1.1rem; padding-top:5px;">
+                `;
+                for (let i = 1; i < arrivals.length; i++) {
+                    html += `<span><i class="fas fa-train" style="font-size:0.8em; margin-right:2px;"></i>${arrivals[i]}</span>`;
+                }
+                html += `
+                        </div>
+                    </div>
+                `;
+                return html;
             }
 
             // Direction 1 (Towards last station)
             if (stationName !== lastStation.name) {
-                const arrival = calculateNextArrival(lastStation.name);
-                board.innerHTML += `
-                    <div class="timetable-row highlight">
-                        <div class="timetable-direction">Următorul tren circulă în direcția</div>
-                        <div class="timetable-main">
-                            <div class="timetable-destination">${lastStation.name}</div>
-                            <div class="timetable-time">${arrival}</div>
-                        </div>
-                        <div class="timetable-direction" style="font-size:0.8rem;">Pleacă la ora</div>
-                    </div>
-                `;
+                const arrivals1 = getNextArrivals(lastStation.name, 6, 0);
+                board.innerHTML += generateArrivalsHTML(lastStation.name, arrivals1, "Următoarele trenuri spre");
             }
 
             // Direction 2 (Towards first station)
             if (stationName !== firstStation.name) {
-                let arrival2 = calculateNextArrival(firstStation.name);
-                let [h, m] = arrival2.split(':').map(Number);
-                m = (m + 3) % 60;
-                if (m < 3) h = (h + 1) % 24;
-                arrival2 = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-
-                board.innerHTML += `
-                    <div class="timetable-row highlight">
-                        <div class="timetable-direction">Trenul în direcția</div>
-                        <div class="timetable-main">
-                            <div class="timetable-destination">${firstStation.name}</div>
-                            <div class="timetable-time">${arrival2}</div>
-                        </div>
-                        <div class="timetable-direction" style="font-size:0.8rem;">Pleacă la ora</div>
-                    </div>
-                `;
+                const arrivals2 = getNextArrivals(firstStation.name, 6, 3); // slight offset for opposite direction
+                board.innerHTML += generateArrivalsHTML(firstStation.name, arrivals2, "Următoarele trenuri spre");
             }
         }
 
