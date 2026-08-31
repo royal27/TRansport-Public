@@ -455,6 +455,16 @@ $current_date = date('d.m.Y');
 
                 group.appendChild(circle);
                 group.appendChild(text);
+
+                group.style.cursor = "pointer";
+                group.addEventListener('mousedown', (e) => {
+                     if (pz) pz.setOptions({ disablePan: true });
+                });
+                group.onclick = (e) => {
+                    e.stopPropagation();
+                    openTimetable(st.name, line);
+                };
+
                 svg.appendChild(group);
             });
         });
@@ -693,6 +703,98 @@ $current_date = date('d.m.Y');
         contentEl.innerHTML = html;
         modal.style.display = 'flex';
     }
+
+
+        // Timetable Logic
+        function openTimetable(stationName, line) {
+            document.getElementById('timetableSidebar').classList.add('open');
+            document.getElementById('ttStationName').textContent = stationName;
+
+            // Start clock
+            updateTTClock();
+            if (!window.ttInterval) window.ttInterval = setInterval(updateTTClock, 1000);
+
+            // Generate board data
+            const board = document.getElementById('ttBoard');
+            board.innerHTML = '';
+
+            // Find station index
+            const stIdx = line.stations.findIndex(s => s.name === stationName && !s.is_waypoint);
+            if (stIdx === -1) return;
+
+            // Determine endpoints
+            const validStations = line.stations.filter(s => !s.is_waypoint);
+            const firstStation = validStations[0];
+            const lastStation = validStations[validStations.length - 1];
+
+            const now = new Date();
+            const currentMins = now.getHours() * 60 + now.getMinutes();
+
+            // Calculate ETA helper
+            function calculateNextArrival(destStationName) {
+                // Simplified simulation: trains run exactly on interval
+                const interval = line.interval_minutes || 6;
+                const offset = stIdx * 2; // Assume 2 mins between stations
+
+                // Find next multiple of interval + offset
+                let nextMins = Math.ceil((currentMins - offset) / interval) * interval + offset;
+                if (nextMins < currentMins) nextMins += interval;
+
+                const h = Math.floor(nextMins / 60) % 24;
+                const m = nextMins % 60;
+                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            }
+
+            // Direction 1 (Towards last station)
+            if (stationName !== lastStation.name) {
+                const arrival = calculateNextArrival(lastStation.name);
+                board.innerHTML += `
+                    <div class="timetable-row highlight">
+                        <div class="timetable-direction">Următorul tren circulă în direcția</div>
+                        <div class="timetable-main">
+                            <div class="timetable-destination">${lastStation.name}</div>
+                            <div class="timetable-time">${arrival}</div>
+                        </div>
+                        <div class="timetable-direction" style="font-size:0.8rem;">Pleacă la ora</div>
+                    </div>
+                `;
+            }
+
+            // Direction 2 (Towards first station)
+            if (stationName !== firstStation.name) {
+                let arrival2 = calculateNextArrival(firstStation.name);
+                let [h, m] = arrival2.split(':').map(Number);
+                m = (m + 3) % 60;
+                if (m < 3) h = (h + 1) % 24;
+                arrival2 = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+                board.innerHTML += `
+                    <div class="timetable-row highlight">
+                        <div class="timetable-direction">Trenul în direcția</div>
+                        <div class="timetable-main">
+                            <div class="timetable-destination">${firstStation.name}</div>
+                            <div class="timetable-time">${arrival2}</div>
+                        </div>
+                        <div class="timetable-direction" style="font-size:0.8rem;">Pleacă la ora</div>
+                    </div>
+                `;
+            }
+        }
+
+        function closeTimetable() {
+            document.getElementById('timetableSidebar').classList.remove('open');
+            if (window.ttInterval) {
+                clearInterval(window.ttInterval);
+                window.ttInterval = null;
+            }
+        }
+
+        function updateTTClock() {
+            const now = new Date();
+            const h = now.getHours().toString().padStart(2, '0');
+            const m = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('ttCurrentTime').textContent = `${h}:${m}`;
+        }
 
     let pz;
     document.addEventListener("DOMContentLoaded", () => {
