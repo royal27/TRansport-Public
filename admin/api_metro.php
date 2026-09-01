@@ -163,14 +163,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->exec("DELETE FROM metro_decorations");
 
             if (isset($data['lines']) && is_array($data['lines'])) {
-                $stmtLine = $db->prepare("INSERT INTO metro_lines (id, name, color, active, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, 1, ?, ?, ?, ?)");
+                $stmtLine = $db->prepare("INSERT INTO metro_lines (id, name, color, active, start_time, end_time, interval_minutes, is_dashed, is_hidden) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?)");
                 $stmtStation = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight, is_under_construction) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
                 foreach ($data['lines'] as $line) {
                     $stmtLine->execute([
                         $line['id'], $line['name'], $line['color'],
                         $line['start_time'] ?? '05:00', $line['end_time'] ?? '23:30',
-                        $line['interval_minutes'] ?? 6, $line['is_dashed'] ?? 0
+                        $line['interval_minutes'] ?? 6, $line['is_dashed'] ?? 0, $line['is_hidden'] ?? 0
                     ]);
 
                     if (isset($line['stations']) && is_array($line['stations'])) {
@@ -178,7 +178,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $stmtStation->execute([
                                 $line['id'], $st['name'], $st['x'], $st['y'], $idx,
                                 $st['text_offset_x'] ?? 12, $st['text_offset_y'] ?? 4,
-                                $st['is_waypoint'] ?? 0, $st['font_weight'] ?? 'bold', $st['is_under_construction'] ?? 0
+                                isset($st['is_waypoint']) ? (int)$st['is_waypoint'] : 0,
+                                $st['font_weight'] ?? 'bold',
+                                isset($st['is_under_construction']) ? (int)$st['is_under_construction'] : 0
                             ]);
                         }
                     }

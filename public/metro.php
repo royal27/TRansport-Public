@@ -200,7 +200,17 @@ $current_date = date('d.m.Y');
                 right: -100%;
             }
         }
-</style>
+
+        @keyframes customPulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .blinking-icon {
+            animation: customPulse 1.5s infinite ease-in-out;
+            transform-origin: center;
+        }
+    </style>
 </head>
 <body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
@@ -356,11 +366,14 @@ $current_date = date('d.m.Y');
                 }
             } else if (dec.type === 'image') {
                 el = document.createElementNS("http://www.w3.org/2000/svg", "image");
-                el.setAttribute("href", dec.content);
-                el.setAttribute("x", dec.x);
-                el.setAttribute("y", dec.y);
-                el.setAttribute("width", dec.width || 100);
-                el.setAttribute("height", dec.height || 100);
+                    el.setAttribute("href", dec.content);
+                    el.setAttribute("x", dec.x - dec.width/2);
+                    el.setAttribute("y", dec.y - dec.height/2);
+                    el.setAttribute("width", dec.width);
+                    el.setAttribute("height", dec.height);
+                    el.setAttribute("preserveAspectRatio", "xMidYMid meet");
+                    el.setAttribute("class", "blinking-icon");
+                    el.style.transformOrigin = `${dec.x}px ${dec.y}px`;
             } else if (dec.type === 'rect') {
                 el = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                 el.setAttribute("x", dec.x);

@@ -76,6 +76,16 @@ try {
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
         .toast { position: fixed; bottom: 20px; right: 20px; background: #2ecc71; color: white; padding: 10px 20px; border-radius: 4px; display: none; z-index: 3000; }
+
+        @keyframes customPulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .blinking-icon {
+            animation: customPulse 1.5s infinite ease-in-out;
+            transform-origin: center;
+        }
     </style>
 </head>
 <body>
@@ -96,16 +106,9 @@ try {
                 <p style="font-size:0.8rem; font-weight:bold; margin:0 0 5px 0;">Adaugă Elemente (Decoruri):</p>
                 <div style="display: flex; flex-wrap: wrap; gap: 5px;">
                     <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('text')"><i class="fas fa-font"></i> Text Legenda</button>
-                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('image')"><i class="fas fa-image"></i> Poză (Upload)</button>
+                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="document.getElementById('imgUploadInput').click()"><i class="fas fa-image"></i> Poză (Upload)</button>
                     <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('rect')"><i class="far fa-square"></i> Pătrat</button>
                     <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('circle')"><i class="far fa-circle"></i> Cerc</button>
-                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_plane')"><i class="fas fa-plane"></i> Avion</button>
-                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_train')"><i class="fas fa-train"></i> CFR</button>
-                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_road')"><i class="fas fa-road"></i> Autostradă</button>
-                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_soldier')"><i class="fas fa-person-military-rifle"></i> Militar</button>
-                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_water')"><i class="fas fa-water"></i> Râu</button>
-                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_cone')"><i class="fas fa-traffic-cone"></i> Șantier</button>
-                    <button class="btn btn-outline" style="padding:4px; font-size:0.8rem;" onclick="addDecoration('icon_tree')"><i class="fas fa-tree"></i> Parc</button>
                 </div>
             </div>
             <input type="file" id="imgUploadInput" style="display:none;" accept="image/*" onchange="handleImageUpload(event)">
@@ -369,9 +372,12 @@ try {
                             ${safeName}
                         </div>
                         <div>
-                            <i class="fas fa-edit" style="color:#7f8c8d; margin-right:5px;" onclick="editLine(event, ${line.id})"></i>
-                            <i class="fas fa-trash" style="color:#e74c3c;" onclick="deleteLine(event, ${line.id})"></i>
-                        </div>
+                                <button class="btn btn-outline" style="padding: 2px 6px; font-size:0.8rem; border-color:${line.is_hidden == 1 ? 'gray' : 'var(--primary)'}; color:${line.is_hidden == 1 ? 'gray' : 'var(--primary)'};" onclick="toggleLineVisibility(${line.id}, event)" title="${line.is_hidden == 1 ? 'Arată Linie' : 'Ascunde Linie'}"><i class="fas ${line.is_hidden == 1 ? 'fa-eye-slash' : 'fa-eye'}"></i></button>
+                                <button class="btn btn-outline" style="padding: 2px 6px; font-size:0.8rem;" onclick="activateLineMove(${line.id}, event)" title="Mută Toată Linia"><i class="fas fa-arrows-alt"></i></button>
+                                <button class="btn btn-outline" style="padding: 2px 6px; font-size:0.8rem;" onclick="openLineIcons(${line.id}, event)" title="Adaugă Iconițe"><i class="fas fa-icons"></i></button>
+                                <button class="btn btn-outline" style="padding: 2px 6px; font-size:0.8rem; border-color:var(--danger); color:var(--danger);" onclick="deleteLine(event, ${line.id})" title="Șterge Linie"><i class="fas fa-trash"></i></button>
+                                <button class="btn btn-outline" style="padding: 2px 6px; font-size:0.8rem;" onclick="editLine(event, ${line.id})" title="Editează Linie"><i class="fas fa-edit"></i></button>
+                            </div>
                     </div>
                     <div style="font-size:0.8rem; color:#777;">
                         ${line.stations ? line.stations.length : 0} stații
@@ -475,11 +481,14 @@ try {
                     el.setAttribute("y", dec.y);
                 } else if (dec.type === 'image') {
                     el = document.createElementNS("http://www.w3.org/2000/svg", "image");
-                    el.setAttribute("class", "draggable");
-                    // Fix relative path for admin view
-                    el.setAttribute("href", '../public/' + dec.content);
-                    el.setAttribute("x", dec.x);
-                    el.setAttribute("y", dec.y);
+                    el.setAttribute("href", dec.content);
+                    el.setAttribute("x", dec.x - dec.width/2);
+                    el.setAttribute("y", dec.y - dec.height/2);
+                    el.setAttribute("width", dec.width);
+                    el.setAttribute("height", dec.height);
+                    el.setAttribute("preserveAspectRatio", "xMidYMid meet");
+                    el.setAttribute("class", "draggable blinking-icon");
+                    el.style.transformOrigin = `${dec.x}px ${dec.y}px`;
                     el.setAttribute("width", dec.width || 100);
                     el.setAttribute("height", dec.height || 100);
                 } else if (dec.type === 'rect') {
@@ -580,6 +589,7 @@ try {
 
             // Draw lines (paths)
             linesData.forEach(line => {
+                if (line.is_hidden == 1) return;
                 if (!line.stations || line.stations.length < 2) return;
 
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -593,7 +603,7 @@ try {
                 path.setAttribute("stroke-width", "6");
                 path.setAttribute("stroke-linejoin", "round");
                 if (line.is_dashed == 1) {
-                    path.setAttribute("stroke-dasharray", "10,10");
+                    path.setAttribute("stroke-dasharray", "5,5");
                 }
 
                 svg.appendChild(path);
@@ -729,21 +739,51 @@ try {
                     dec.width = Math.max(20, resizingDecoration.startW + dx);
                     dec.height = Math.max(20, resizingDecoration.startH + dy);
                     renderMap();
+
                 } else if (draggedDecoration !== null) {
                     const dec = decorationsData[draggedDecoration];
                     dec.x = mouseX;
                     dec.y = mouseY;
                     renderMap();
+                } else if (movingLineId && isDraggingLine) {
+                    const line = linesData.find(l => l.id === movingLineId);
+                    if (line) {
+                        const dx = mouseX - dragLineStartX;
+                        const dy = mouseY - dragLineStartY;
+                        line.stations.forEach(st => {
+                            st.x = parseFloat(st.x) + dx;
+                            st.y = parseFloat(st.y) + dy;
+                        });
+                        dragLineStartX = mouseX;
+                        dragLineStartY = mouseY;
+                        renderMap();
+                    }
                 }
             }
         });
+
 
         window.addEventListener('mouseup', () => {
             draggedStation = null;
             draggedDecoration = null;
             resizingDecoration = null;
+            isDraggingLine = false;
             if (pz && mode === 'select') {
                 pz.setOptions({ disablePan: false });
+            }
+        });
+
+
+        svgElement.addEventListener('mousedown', (e) => {
+            if (movingLineId && mode === 'select') {
+                const rect = svgElement.getBoundingClientRect();
+                let scale = 1;
+                if (pz) scale = pz.getScale();
+                dragLineStartX = (e.clientX - rect.left) / scale;
+                dragLineStartY = (e.clientY - rect.top) / scale;
+                isDraggingLine = true;
+                if (pz) pz.setOptions({ disablePan: true });
+                return;
             }
         });
 
@@ -839,6 +879,65 @@ try {
                 loadData();
                 activeLineId = data.id;
             }
+        }
+
+        async function toggleLineVisibility(id, e) {
+            e.stopPropagation();
+            const line = linesData.find(l => l.id === id);
+            if (!line) return;
+            line.is_hidden = line.is_hidden == 1 ? 0 : 1;
+            renderLinesList();
+            renderMap();
+        }
+
+        let movingLineId = null;
+        let isDraggingLine = false;
+        let dragLineStartX = 0;
+        let dragLineStartY = 0;
+
+        function activateLineMove(id, e) {
+            e.stopPropagation();
+            if (movingLineId === id) {
+                movingLineId = null; // deactivate
+                document.body.style.cursor = 'default';
+            } else {
+                movingLineId = id;
+                document.body.style.cursor = 'move';
+            }
+        }
+
+        function openLineIcons(id, e) {
+             e.stopPropagation();
+             document.getElementById('lineIconModal').style.display = 'flex';
+             document.getElementById('lineIconModal').dataset.lineId = id;
+        }
+
+        function addIconToLine(type) {
+            const lineId = parseInt(document.getElementById('lineIconModal').dataset.lineId);
+            const line = linesData.find(l => l.id === lineId);
+            if (!line || !line.stations || line.stations.length === 0) return closeModal('lineIconModal');
+
+            const st = line.stations[0];
+            const icons = {
+                'icon_plane': '\uf072', 'icon_train': '\uf238', 'icon_road': '\uf018',
+                'icon_soldier': '\ufe4b', 'icon_water': '\uf773', 'icon_cone': '\uf243', 'icon_tree': '\uf1bb'
+            };
+            let content = icons[type];
+            let color = line.color;
+
+            decorationsData.push({
+                id: 'new_' + Date.now(),
+                type: type,
+                x: st.x,
+                y: st.y - 20,
+                width: 50,
+                height: 50,
+                content: content,
+                color: color,
+                font_weight: 'normal'
+            });
+            renderMap();
+            closeModal('lineIconModal');
         }
 
         async function deleteLine(e, id) {
@@ -1168,5 +1267,24 @@ try {
         setMode('select');
         loadData();
     </script>
+
+    <!-- Modal Line Icons -->
+    <div id="lineIconModal" class="modal" style="display:none;" data-line-id="">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3>Adaugă Iconiță pe Linie</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0;">
+                <button class="btn btn-outline" style="padding:10px; font-size:1.5rem; color:#3498db;" onclick="addIconToLine('icon_plane')"><i class="fas fa-plane"></i></button>
+                <button class="btn btn-outline" style="padding:10px; font-size:1.5rem; color:#e74c3c;" onclick="addIconToLine('icon_train')"><i class="fas fa-train"></i></button>
+                <button class="btn btn-outline" style="padding:10px; font-size:1.5rem; color:#f1c40f;" onclick="addIconToLine('icon_road')"><i class="fas fa-road"></i></button>
+                <button class="btn btn-outline" style="padding:10px; font-size:1.5rem; color:#2ecc71;" onclick="addIconToLine('icon_soldier')"><i class="fas fa-person-military-rifle"></i></button>
+                <button class="btn btn-outline" style="padding:10px; font-size:1.5rem; color:#2980b9;" onclick="addIconToLine('icon_water')"><i class="fas fa-water"></i></button>
+                <button class="btn btn-outline" style="padding:10px; font-size:1.5rem; color:#e67e22;" onclick="addIconToLine('icon_cone')"><i class="fas fa-traffic-cone"></i></button>
+                <button class="btn btn-outline" style="padding:10px; font-size:1.5rem; color:#27ae60;" onclick="addIconToLine('icon_tree')"><i class="fas fa-tree"></i></button>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-outline" onclick="closeModal('lineIconModal')">Închide</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
