@@ -587,26 +587,48 @@ try {
                 }
             });
 
+
             // Draw lines (paths)
             linesData.forEach(line => {
                 if (line.is_hidden == 1) return;
                 if (!line.stations || line.stations.length < 2) return;
 
-                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                let d = `M ${line.stations[0].x} ${line.stations[0].y} `;
-                for (let i = 1; i < line.stations.length; i++) {
-                    d += `L ${line.stations[i].x} ${line.stations[i].y} `;
-                }
-                path.setAttribute("d", d);
-                path.setAttribute("stroke", line.color);
-                path.setAttribute("fill", "none");
-                path.setAttribute("stroke-width", "6");
-                path.setAttribute("stroke-linejoin", "round");
+                // If the entire line is dashed
                 if (line.is_dashed == 1) {
-                    path.setAttribute("stroke-dasharray", "5,5");
-                }
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    let d = `M ${line.stations[0].x} ${line.stations[0].y} `;
+                    for (let i = 1; i < line.stations.length; i++) {
+                        d += `L ${line.stations[i].x} ${line.stations[i].y} `;
+                    }
+                    path.setAttribute("d", d);
+                    path.setAttribute("stroke", line.color);
+                    path.setAttribute("fill", "none");
+                    path.setAttribute("stroke-width", "4"); // mai subțiri
+                    path.setAttribute("stroke-linejoin", "round");
+                    path.setAttribute("stroke-dasharray", "8,16"); // mai îndepărtate
+                    svg.appendChild(path);
+                } else {
+                    // Draw segment by segment to handle individual under construction stations
+                    for (let i = 1; i < line.stations.length; i++) {
+                        const prevSt = line.stations[i-1];
+                        const currSt = line.stations[i];
 
-                svg.appendChild(path);
+                        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        path.setAttribute("d", `M ${prevSt.x} ${prevSt.y} L ${currSt.x} ${currSt.y}`);
+                        path.setAttribute("stroke", line.color);
+                        path.setAttribute("fill", "none");
+                        path.setAttribute("stroke-linejoin", "round");
+
+                        if (prevSt.is_under_construction == 1 || currSt.is_under_construction == 1) {
+                            path.setAttribute("stroke-width", "4");
+                            path.setAttribute("stroke-dasharray", "8,16");
+                        } else {
+                            path.setAttribute("stroke-width", "6");
+                        }
+
+                        svg.appendChild(path);
+                    }
+                }
             });
 
             // Draw stations (circles & text)
