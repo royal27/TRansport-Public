@@ -133,6 +133,7 @@ try {
 
         <div style="padding: 10px; border-bottom: 1px solid var(--border); background: #f9f9f9;">
             <button class="btn btn-outline" style="width: 100%; margin-bottom: 5px; font-size: 0.85rem;" onclick="openVariantsModal()"><i class="fas fa-layer-group"></i> Variante Hărți</button>
+            <button class="btn btn-outline" style="width: 100%; font-size: 0.85rem; color: #d35400; border-color: #d35400;" onclick="activate2011Map()"><i class="fas fa-map-marked-alt"></i> Activează Harta M1-M7 (2011)</button>
         </div>
 
         <div class="lines-list" id="linesList">
@@ -1006,6 +1007,25 @@ try {
 
         function openVariantsModal() {
             document.getElementById('variantsModal').style.display = 'flex';
+        }
+
+        async function activate2011Map() {
+            if (!confirm("Ești sigur? Această acțiune va șterge complet harta curentă (dacă nu ai salvat-o ca variantă) și o va înlocui cu harta completă M1-M7!")) {
+                return;
+            }
+            try {
+                const res = await fetch('api_metro.php?action=activate_2011_map', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Harta M1-M7 a fost activată cu succes!");
+                    location.reload();
+                } else {
+                    alert("Eroare la activarea hărții: " + (data.error || 'Necunoscut'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Eroare de conexiune!");
+            }
         }
 
         function renderVariantsList() {

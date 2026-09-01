@@ -207,6 +207,171 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
 
+    if ($action == 'activate_2011_map') {
+        try {
+            $db->beginTransaction();
+            $db->exec("DELETE FROM metro_stations");
+            $db->exec("DELETE FROM metro_lines");
+            $db->exec("DELETE FROM metro_decorations");
+
+            $lines = [
+                ['name' => 'M1', 'color' => '#FFD700', 'stations' => [
+                    ['name' => 'Dristor 2', 'x' => 450, 'y' => 500],
+                    ['name' => 'Piața Muncii', 'x' => 450, 'y' => 450],
+                    ['name' => 'Piața Iancului', 'x' => 450, 'y' => 400],
+                    ['name' => 'Obor', 'x' => 400, 'y' => 350],
+                    ['name' => 'Ștefan cel Mare', 'x' => 350, 'y' => 350],
+                    ['name' => 'Piața Victoriei', 'x' => 300, 'y' => 350],
+                    ['name' => 'Gara de Nord', 'x' => 250, 'y' => 380],
+                    ['name' => 'Basarab', 'x' => 220, 'y' => 380],
+                    ['name' => 'Crângași', 'x' => 200, 'y' => 400],
+                    ['name' => 'Petrache Poenaru', 'x' => 200, 'y' => 430],
+                    ['name' => 'Grozăvești', 'x' => 220, 'y' => 450],
+                    ['name' => 'Eroilor', 'x' => 250, 'y' => 450],
+                    ['name' => 'Izvor', 'x' => 280, 'y' => 450],
+                    ['name' => 'Piața Unirii', 'x' => 320, 'y' => 480],
+                    ['name' => 'Timpuri Noi', 'x' => 370, 'y' => 500],
+                    ['name' => 'Mihai Bravu', 'x' => 400, 'y' => 530],
+                    ['name' => 'Dristor 1', 'x' => 450, 'y' => 530],
+                    ['name' => 'Nicolae Grigorescu', 'x' => 500, 'y' => 530],
+                    ['name' => 'Titan', 'x' => 550, 'y' => 500],
+                    ['name' => 'Costin Georgian', 'x' => 600, 'y' => 470],
+                    ['name' => 'Republica', 'x' => 650, 'y' => 500],
+                    ['name' => 'Pantelimon', 'x' => 700, 'y' => 500]
+                ]],
+                ['name' => 'M2', 'color' => '#0000FF', 'stations' => [
+                    ['name' => 'Pipera', 'x' => 350, 'y' => 250],
+                    ['name' => 'Aurel Vlaicu', 'x' => 350, 'y' => 280],
+                    ['name' => 'Aviatorilor', 'x' => 320, 'y' => 320],
+                    ['name' => 'Piața Victoriei', 'x' => 300, 'y' => 350],
+                    ['name' => 'Piața Romană', 'x' => 320, 'y' => 400],
+                    ['name' => 'Universitate', 'x' => 320, 'y' => 440],
+                    ['name' => 'Piața Unirii', 'x' => 320, 'y' => 480],
+                    ['name' => 'Tineretului', 'x' => 320, 'y' => 530],
+                    ['name' => 'Eroii Revoluției', 'x' => 320, 'y' => 570],
+                    ['name' => 'Constantin Brâncoveanu', 'x' => 350, 'y' => 600],
+                    ['name' => 'Piața Sudului', 'x' => 380, 'y' => 630],
+                    ['name' => 'Apărătorii Patriei', 'x' => 420, 'y' => 670],
+                    ['name' => 'Dimitrie Leonida', 'x' => 450, 'y' => 700],
+                    ['name' => 'Berceni', 'x' => 480, 'y' => 730]
+                ]],
+                ['name' => 'M3', 'color' => '#FF0000', 'stations' => [
+                    ['name' => 'Preciziei', 'x' => 100, 'y' => 480],
+                    ['name' => 'Păcii', 'x' => 130, 'y' => 480],
+                    ['name' => 'Gorjului', 'x' => 170, 'y' => 480],
+                    ['name' => 'Lujerului', 'x' => 200, 'y' => 480],
+                    ['name' => 'Politehnica', 'x' => 230, 'y' => 480],
+                    ['name' => 'Eroilor', 'x' => 250, 'y' => 450],
+                    ['name' => 'Izvor', 'x' => 280, 'y' => 450],
+                    ['name' => 'Piața Unirii', 'x' => 320, 'y' => 480],
+                    ['name' => 'Timpuri Noi', 'x' => 370, 'y' => 500],
+                    ['name' => 'Mihai Bravu', 'x' => 400, 'y' => 530],
+                    ['name' => 'Dristor 1', 'x' => 450, 'y' => 530],
+                    ['name' => 'Nicolae Grigorescu', 'x' => 500, 'y' => 530],
+                    ['name' => '1 Decembrie 1918', 'x' => 550, 'y' => 530],
+                    ['name' => 'Nicolae Teclu', 'x' => 600, 'y' => 530],
+                    ['name' => 'Anghel Saligny', 'x' => 650, 'y' => 530]
+                ]],
+                ['name' => 'M4', 'color' => '#00FF00', 'stations' => [
+                    ['name' => 'Lac Străulești', 'x' => 100, 'y' => 200],
+                    ['name' => 'Laminorului', 'x' => 130, 'y' => 230],
+                    ['name' => 'Parc Bazilescu', 'x' => 150, 'y' => 260],
+                    ['name' => 'Jiului', 'x' => 170, 'y' => 290],
+                    ['name' => '1 Mai', 'x' => 200, 'y' => 320],
+                    ['name' => 'Grivița', 'x' => 220, 'y' => 350],
+                    ['name' => 'Basarab', 'x' => 220, 'y' => 380],
+                    ['name' => 'Gara de Nord', 'x' => 250, 'y' => 380],
+                    ['name' => 'Știrbei Vodă', 'x' => 260, 'y' => 410],
+                    ['name' => 'Hașdeu', 'x' => 270, 'y' => 440],
+                    ['name' => 'Uranus', 'x' => 280, 'y' => 490],
+                    ['name' => 'George Călinescu', 'x' => 280, 'y' => 530],
+                    ['name' => 'Eroii Revoluției', 'x' => 320, 'y' => 570],
+                    ['name' => 'Bocovia', 'x' => 300, 'y' => 600],
+                    ['name' => 'Piața Progresul', 'x' => 280, 'y' => 630],
+                    ['name' => 'Toporan', 'x' => 280, 'y' => 660],
+                    ['name' => 'Grădiștea', 'x' => 280, 'y' => 690],
+                    ['name' => 'Luica', 'x' => 280, 'y' => 720],
+                    ['name' => 'Alexandru Moldoveanu', 'x' => 280, 'y' => 750],
+                    ['name' => 'Gara Progresul', 'x' => 280, 'y' => 780]
+                ]],
+                ['name' => 'M5', 'color' => '#FFA500', 'stations' => [
+                    ['name' => 'Valea Ialomiței', 'x' => 120, 'y' => 550],
+                    ['name' => 'Romancierilor', 'x' => 150, 'y' => 550],
+                    ['name' => 'Parc Drumul Taberei', 'x' => 180, 'y' => 550],
+                    ['name' => 'Tudor Vladimirescu', 'x' => 210, 'y' => 550],
+                    ['name' => 'Favorit', 'x' => 240, 'y' => 520],
+                    ['name' => 'Academia Militară', 'x' => 260, 'y' => 490],
+                    ['name' => 'Eroilor', 'x' => 250, 'y' => 450],
+                    ['name' => 'Hașdeu', 'x' => 270, 'y' => 440],
+                    ['name' => 'Universitate', 'x' => 320, 'y' => 440],
+                    ['name' => 'Calea Moșilor', 'x' => 370, 'y' => 440],
+                    ['name' => 'Piața Iancului', 'x' => 450, 'y' => 400],
+                    ['name' => 'Național Arena', 'x' => 500, 'y' => 400],
+                    ['name' => 'Morarilor', 'x' => 550, 'y' => 400],
+                    ['name' => 'Sf. Pantelimon', 'x' => 600, 'y' => 400],
+                    ['name' => 'Pantelimon', 'x' => 700, 'y' => 400]
+                ]],
+                ['name' => 'M6', 'color' => '#8B0000', 'stations' => [
+                    ['name' => 'Depou Otopeni', 'x' => 300, 'y' => 10],
+                    ['name' => 'Aeroport Henry Coandă', 'x' => 300, 'y' => 50],
+                    ['name' => 'Padina', 'x' => 300, 'y' => 100],
+                    ['name' => 'Privighetorilor', 'x' => 300, 'y' => 150],
+                    ['name' => 'Meteo Băneasa', 'x' => 300, 'y' => 200],
+                    ['name' => 'Institut Băneasa', 'x' => 300, 'y' => 250],
+                    ['name' => 'Aeroport Băneasa', 'x' => 300, 'y' => 280],
+                    ['name' => 'Cartier Băneasa', 'x' => 270, 'y' => 300],
+                    ['name' => 'Gara Băneasa', 'x' => 240, 'y' => 310],
+                    ['name' => 'Casa Presei Libere', 'x' => 220, 'y' => 320],
+                    ['name' => 'Pajura', 'x' => 200, 'y' => 320],
+                    ['name' => '1 Mai', 'x' => 200, 'y' => 320]
+                ]],
+                ['name' => 'M7', 'color' => '#800080', 'stations' => [
+                    ['name' => 'Depoul Voluntari', 'x' => 700, 'y' => 250],
+                    ['name' => 'Bucegi', 'x' => 600, 'y' => 250],
+                    ['name' => 'Alexandru Vlahuță', 'x' => 550, 'y' => 250],
+                    ['name' => 'Colentina', 'x' => 500, 'y' => 250],
+                    ['name' => 'Depou R.A.T.B.', 'x' => 450, 'y' => 250],
+                    ['name' => 'Sportului', 'x' => 400, 'y' => 250],
+                    ['name' => 'Andronache', 'x' => 380, 'y' => 270],
+                    ['name' => 'Plumbuita', 'x' => 360, 'y' => 300],
+                    ['name' => 'Doamna Ghica', 'x' => 340, 'y' => 340],
+                    ['name' => 'Piața Obor', 'x' => 400, 'y' => 350],
+                    ['name' => 'Dacia', 'x' => 370, 'y' => 380],
+                    ['name' => 'Piața Romană', 'x' => 320, 'y' => 400],
+                    ['name' => 'Izvor', 'x' => 280, 'y' => 450],
+                    ['name' => 'Academia Militară', 'x' => 260, 'y' => 490],
+                    ['name' => 'Tudor Vladimirescu', 'x' => 230, 'y' => 520],
+                    ['name' => 'Sebastian', 'x' => 200, 'y' => 550],
+                    ['name' => 'Piața Rahova', 'x' => 170, 'y' => 600],
+                    ['name' => 'Autogara Rahova', 'x' => 150, 'y' => 630],
+                    ['name' => 'Penitenciarul Rahova', 'x' => 130, 'y' => 660],
+                    ['name' => 'Express', 'x' => 110, 'y' => 690],
+                    ['name' => 'Alaska', 'x' => 90, 'y' => 720],
+                    ['name' => 'Independenței 1877', 'x' => 70, 'y' => 750]
+                ]]
+            ];
+
+            foreach ($lines as $line) {
+                $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, '05:00', '23:30', 6, 0)");
+                $stmt->execute([$line['name'], $line['color']]);
+                $line_id = $db->lastInsertId();
+
+                $order = 0;
+                foreach ($line['stations'] as $st) {
+                    $st_stmt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, is_waypoint, is_under_construction) VALUES (?, ?, ?, ?, ?, 0, 0)");
+                    $st_stmt->execute([$line_id, $st['name'], $st['x'], $st['y'], $order]);
+                    $order++;
+                }
+            }
+
+            $db->commit();
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            $db->rollBack();
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        die();
+    }
     if ($action == 'activate_bucharest_map') {
         $mapType = $_POST['map_type'] ?? 'default';
 
