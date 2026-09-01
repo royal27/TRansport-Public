@@ -35,7 +35,7 @@ if ($action == 'load') {
     $var_stmt = $db->query("SELECT id, name, created_at FROM metro_map_variants ORDER BY created_at DESC");
     $variants = $var_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo json_encode(['lines' => $lines, 'decorations' => $decorations, 'zoom' => $zoom, 'footer_message' => $footer_message, 'variants' => $variants]);
+    echo json_encode(['success' => true, 'lines' => $lines, 'decorations' => $decorations, 'zoom' => $zoom, 'footer_message' => $footer_message, 'variants' => $variants]);
     die();
 }
 
