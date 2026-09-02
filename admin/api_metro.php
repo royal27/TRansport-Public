@@ -354,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
 
             foreach ($lines as $line) {
-                $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, '05:00', '23:30', 6, 0)");
+                $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, '05:00', '23:30', 6, 0, 4, 16)");
                 $stmt->execute([$line['name'], $line['color']]);
                 $line_id = $db->lastInsertId();
 
