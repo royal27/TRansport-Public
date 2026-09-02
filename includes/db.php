@@ -371,6 +371,8 @@ EOT;
         try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN interval_minutes INT DEFAULT 6"); } catch (PDOException $e) {}
         try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN is_dashed TINYINT(1) DEFAULT 0"); } catch (PDOException $e) {}
         try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN is_hidden TINYINT(1) DEFAULT 0"); } catch (PDOException $e) {}
+        try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN dash_width INT DEFAULT 4"); } catch (PDOException $e) {}
+        try { $pdo->exec("ALTER TABLE metro_lines ADD COLUMN dash_gap INT DEFAULT 16"); } catch (PDOException $e) {}
 
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS metro_stations (

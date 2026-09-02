@@ -247,11 +247,20 @@ try {
                     <input type="time" id="lineEndInput" value="23:30">
                 </div>
             </div>
+
             <div class="form-group">
                 <label>Interval (minute)</label>
                 <input type="number" id="lineIntervalInput" value="6" min="1">
             </div>
+            <div class="form-group">
+                <label><input type="checkbox" id="lineDashedInput" onchange="document.getElementById('dashSettings').style.display = this.checked ? 'block' : 'none'"> Linie punctată (în construcție)</label>
+                <div id="dashSettings" style="display:none; margin-top:10px; background:#f9f9f9; padding:10px; border-radius:4px;">
+                    <label>Grosime Linie: <input type="number" id="lineDashWidthInput" value="4" style="width:60px;" min="1"></label>
+                    <label style="margin-left:10px;">Spațiu Liniuțe: <input type="number" id="lineDashGapInput" value="16" style="width:60px;" min="0"></label>
+                </div>
+            </div>
             <div class="modal-footer">
+
                 <button class="btn btn-outline" onclick="closeModal('lineModal')">Anulare</button>
                 <button class="btn btn-primary" onclick="saveLine()">Salvează</button>
             </div>
@@ -447,7 +456,7 @@ try {
                         y: 100,
                         width: 100, // Default display width
                         height: 100,
-                        content: data.url, // Contains uploaded path
+                        content: data.path, // Contains uploaded path
                         color: '',
                         font_weight: 'normal'
                     });
@@ -481,7 +490,7 @@ try {
                     el.setAttribute("y", dec.y);
                 } else if (dec.type === 'image') {
                     el = document.createElementNS("http://www.w3.org/2000/svg", "image");
-                    el.setAttribute("href", dec.content);
+                    el.setAttribute("href", dec.type === 'image' && !dec.content.startsWith('http') && !dec.content.startsWith('../') ? '../public/' + dec.content : dec.content);
                     el.setAttribute("x", dec.x - dec.width/2);
                     el.setAttribute("y", dec.y - dec.height/2);
                     el.setAttribute("width", dec.width);
@@ -594,6 +603,11 @@ try {
                 if (!line.stations || line.stations.length < 2) return;
 
                 // If the entire line is dashed
+
+                let dWidth = line.dash_width || 4;
+                let dGap = line.dash_gap || 16;
+                let dashArray = `${dWidth * 2},${dGap}`;
+
                 if (line.is_dashed == 1) {
                     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                     let d = `M ${line.stations[0].x} ${line.stations[0].y} `;
@@ -603,12 +617,11 @@ try {
                     path.setAttribute("d", d);
                     path.setAttribute("stroke", line.color);
                     path.setAttribute("fill", "none");
-                    path.setAttribute("stroke-width", "4"); // mai subțiri
+                    path.setAttribute("stroke-width", dWidth);
                     path.setAttribute("stroke-linejoin", "round");
-                    path.setAttribute("stroke-dasharray", "8,16"); // mai îndepărtate
+                    path.setAttribute("stroke-dasharray", dashArray);
                     svg.appendChild(path);
                 } else {
-                    // Draw segment by segment to handle individual under construction stations
                     for (let i = 1; i < line.stations.length; i++) {
                         const prevSt = line.stations[i-1];
                         const currSt = line.stations[i];
@@ -620,8 +633,8 @@ try {
                         path.setAttribute("stroke-linejoin", "round");
 
                         if (prevSt.is_under_construction == 1 || currSt.is_under_construction == 1) {
-                            path.setAttribute("stroke-width", "4");
-                            path.setAttribute("stroke-dasharray", "8,16");
+                            path.setAttribute("stroke-width", dWidth);
+                            path.setAttribute("stroke-dasharray", dashArray);
                         } else {
                             path.setAttribute("stroke-width", "6");
                         }
@@ -631,8 +644,10 @@ try {
                 }
             });
 
+
             // Draw stations (circles & text)
             linesData.forEach(line => {
+                if (line.is_hidden == 1) return;
                 if (!line.stations) return;
 
                 line.stations.forEach((st, idx) => {
@@ -854,6 +869,9 @@ try {
             document.getElementById('lineNameInput').value = '';
             document.getElementById('lineColorInput').value = '#e74c3c';
             document.getElementById('lineDashedInput').checked = false;
+            document.getElementById('dashSettings').style.display = 'none';
+            document.getElementById('lineDashWidthInput').value = 4;
+            document.getElementById('lineDashGapInput').value = 16;
             document.getElementById('lineStartInput').value = '05:00';
             document.getElementById('lineEndInput').value = '23:30';
             document.getElementById('lineIntervalInput').value = '6';
@@ -868,6 +886,9 @@ try {
             document.getElementById('lineNameInput').value = line.name;
             document.getElementById('lineColorInput').value = line.color;
             document.getElementById('lineDashedInput').checked = (line.is_dashed == 1);
+            document.getElementById('dashSettings').style.display = (line.is_dashed == 1) ? 'block' : 'none';
+            document.getElementById('lineDashWidthInput').value = line.dash_width || 4;
+            document.getElementById('lineDashGapInput').value = line.dash_gap || 16;
             document.getElementById('lineStartInput').value = line.start_time || '05:00';
             document.getElementById('lineEndInput').value = line.end_time || '23:30';
             document.getElementById('lineIntervalInput').value = line.interval_minutes || 6;
@@ -880,13 +901,15 @@ try {
             const name = document.getElementById('lineNameInput').value;
             const color = document.getElementById('lineColorInput').value;
             const is_dashed = document.getElementById('lineDashedInput').checked ? 1 : 0;
+            const dash_width = parseInt(document.getElementById('lineDashWidthInput').value) || 4;
+            const dash_gap = parseInt(document.getElementById('lineDashGapInput').value) || 16;
             const start_time = document.getElementById('lineStartInput').value;
             const end_time = document.getElementById('lineEndInput').value;
             const interval_minutes = document.getElementById('lineIntervalInput').value;
 
             if (!name) return alert('Nume invalid');
 
-            const payload = { name, color, is_dashed, start_time, end_time, interval_minutes };
+            const payload = { name, color, is_dashed, dash_width, dash_gap, start_time, end_time, interval_minutes };
             if (id) payload.id = id;
 
             const res = await fetch('api_metro.php?action=save_line', {
