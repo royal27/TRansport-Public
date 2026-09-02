@@ -407,53 +407,26 @@ $current_date = date('d.m.Y');
             }
         });
 
-
         // Render Paths
         lines.forEach(line => {
             if (!line.stations || line.stations.length < 2) return;
-
-            let dWidth = line.dash_width || 4;
-            let dGap = line.dash_gap || 16;
-            let dashArray = `${dWidth * 2},${dGap}`;
-
-            if (line.is_dashed == 1) {
-                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                let d = `M ${line.stations[0].x} ${line.stations[0].y} `;
-                for (let i = 1; i < line.stations.length; i++) {
-                    d += `L ${line.stations[i].x} ${line.stations[i].y} `;
-                }
-                path.setAttribute("d", d);
-                path.setAttribute("stroke", line.color);
-                path.setAttribute("fill", "none");
-                path.setAttribute("stroke-width", dWidth);
-                path.setAttribute("stroke-linejoin", "round");
-                path.setAttribute("stroke-dasharray", dashArray);
-                path.classList.add("draw-animation");
-                svg.appendChild(path);
-            } else {
-                for (let i = 1; i < line.stations.length; i++) {
-                    const prevSt = line.stations[i-1];
-                    const currSt = line.stations[i];
-
-                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    path.setAttribute("d", `M ${prevSt.x} ${prevSt.y} L ${currSt.x} ${currSt.y}`);
-                    path.setAttribute("stroke", line.color);
-                    path.setAttribute("fill", "none");
-                    path.setAttribute("stroke-linejoin", "round");
-                    path.classList.add("draw-animation");
-
-                    if (prevSt.is_under_construction == 1 || currSt.is_under_construction == 1) {
-                        path.setAttribute("stroke-width", dWidth);
-                        path.setAttribute("stroke-dasharray", dashArray);
-                    } else {
-                        path.setAttribute("stroke-width", "6");
-                    }
-
-                    svg.appendChild(path);
-                }
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            let d = `M ${line.stations[0].x} ${line.stations[0].y} `;
+            for (let i = 1; i < line.stations.length; i++) {
+                d += `L ${line.stations[i].x} ${line.stations[i].y} `;
             }
+            path.setAttribute("d", d);
+            path.setAttribute("stroke", line.color);
+            path.setAttribute("stroke-width", "6");
+            path.setAttribute("fill", "none");
+            path.setAttribute("stroke-linejoin", "round");
+            if (line.is_dashed == 1) {
+                path.setAttribute("stroke-dasharray", "10,10");
+            } else {
+                path.classList.add("draw-animation");
+            }
+            svg.appendChild(path);
         });
-
 
         // Render Stations
         lines.forEach(line => {

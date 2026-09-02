@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_user'])) {
 
 require_once '../includes/db.php';
 $db = getDB();
-$action = $_GET['action'] ?? $_POST['action'] ?? '';
+$action = $_GET['action'] ?? '';
 
 if ($action == 'load') {
     $stmt = $db->query("SELECT * FROM metro_lines ORDER BY id ASC");
@@ -68,12 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $is_dashed = isset($data['is_dashed']) && $data['is_dashed'] ? 1 : 0;
 
         if (isset($data['id'])) {
-            $stmt = $db->prepare("UPDATE metro_lines SET name = ?, color = ?, start_time = ?, end_time = ?, interval_minutes = ?, is_dashed = ?, dash_width = ?, dash_gap = ? WHERE id = ?");
-            $stmt->execute([$data['name'], $data['color'], $start_time, $end_time, $interval, $is_dashed, $data['dash_width'] ?? 4, $data['dash_gap'] ?? 16, $data['id']]);
+            $stmt = $db->prepare("UPDATE metro_lines SET name = ?, color = ?, start_time = ?, end_time = ?, interval_minutes = ?, is_dashed = ? WHERE id = ?");
+            $stmt->execute([$data['name'], $data['color'], $start_time, $end_time, $interval, $is_dashed, $data['id']]);
             $id = $data['id'];
         } else {
-            $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$data['name'], $data['color'], $start_time, $end_time, $interval, $is_dashed, $data['dash_width'] ?? 4, $data['dash_gap'] ?? 16]);
+            $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$data['name'], $data['color'], $start_time, $end_time, $interval, $is_dashed]);
             $id = $db->lastInsertId();
         }
         echo json_encode(['success' => true, 'id' => $id]);
@@ -163,14 +163,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->exec("DELETE FROM metro_decorations");
 
             if (isset($data['lines']) && is_array($data['lines'])) {
-                $stmtLine = $db->prepare("INSERT INTO metro_lines (id, name, color, active, start_time, end_time, interval_minutes, is_dashed, is_hidden, dash_width, dash_gap) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)");
+                $stmtLine = $db->prepare("INSERT INTO metro_lines (id, name, color, active, start_time, end_time, interval_minutes, is_dashed, is_hidden) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?)");
                 $stmtStation = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight, is_under_construction) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
                 foreach ($data['lines'] as $line) {
                     $stmtLine->execute([
                         $line['id'], $line['name'], $line['color'],
                         $line['start_time'] ?? '05:00', $line['end_time'] ?? '23:30',
-                        $line['interval_minutes'] ?? 6, $line['is_dashed'] ?? 0, $line['is_hidden'] ?? 0, $line['dash_width'] ?? 4, $line['dash_gap'] ?? 16
+                        $line['interval_minutes'] ?? 6, $line['is_dashed'] ?? 0, $line['is_hidden'] ?? 0
                     ]);
 
                     if (isset($line['stations']) && is_array($line['stations'])) {
@@ -354,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
 
             foreach ($lines as $line) {
-                $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, '05:00', '23:30', 6, 0, 4, 16)");
+                $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, '05:00', '23:30', 6, 0)");
                 $stmt->execute([$line['name'], $line['color']]);
                 $line_id = $db->lastInsertId();
 
@@ -385,7 +385,7 @@ $db->exec("DELETE FROM metro_decorations");
 
 if ($mapType == 'future') {
     // A simplified or modified version of the map
-    $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute(['M1', '#ffe100', '05:00', '23:30', 6, 0]);
     $lineId = $db->lastInsertId();
     $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -394,7 +394,7 @@ if ($mapType == 'future') {
     $stmtSt->execute([$lineId, 'Piața Unirii', 400, 450, 2, 15, -5, 0, 'bold']);
     $stmtSt->execute([$lineId, 'Gara de Nord Noua', 360, 310, 3, -80, 15, 0, 'bold']);
 } else if ($mapType == 'minimal') {
-    $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute(['M2', '#3b5998', '05:00', '23:30', 6, 0]);
     $lineId = $db->lastInsertId();
     $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -405,7 +405,7 @@ if ($mapType == 'future') {
     // Default Bucharest M1-M7 Map
 
 
-$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
 $stmt->execute(['M2', '#3b5998', '05:00', '23:30', 6, 0]);
 $lineId = $db->lastInsertId();
 $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -425,7 +425,7 @@ $stmtSt->execute([$lineId, 'Apărătorii Patriei', 520, 690, 12, 10, -5, 0, 'bol
 $stmtSt->execute([$lineId, 'Dimitrie Leonida', 560, 730, 13, 10, -5, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Berceni', 600, 770, 14, 15, 5, 0, 'bold']);
 
-$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
 $stmt->execute(['M1', '#ffe100', '05:00', '23:30', 6, 0]);
 $lineId = $db->lastInsertId();
 $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -451,7 +451,7 @@ $stmtSt->execute([$lineId, 'Timpuri Noi', 450, 500, 18, 10, 15, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Mihai Bravu', 500, 500, 19, -20, 20, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Dristor 1', 550, 490, 20, -20, 20, 0, 'bold']);
 
-$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
 $stmt->execute(['M3', '#e74c3c', '05:00', '23:30', 6, 0]);
 $lineId = $db->lastInsertId();
 $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -472,7 +472,7 @@ $stmtSt->execute([$lineId, '1 Decembrie 1918', 650, 490, 13, 10, -10, 0, 'bold']
 $stmtSt->execute([$lineId, 'Nicolae Teclu', 700, 490, 14, 10, 20, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Anghel Saligny', 750, 490, 15, 15, 5, 0, 'bold']);
 
-$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
 $stmt->execute(['M4', '#2ecc71', '05:00', '23:30', 6, 0]);
 $lineId = $db->lastInsertId();
 $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -496,7 +496,7 @@ $stmtSt->execute([$lineId, 'Luica', 320, 780, 16, -40, 5, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Alexandru Moldoveanu', 320, 820, 17, 15, 5, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Gara Progresul', 320, 860, 18, 15, 5, 0, 'bold']);
 
-$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
 $stmt->execute(['M5', '#e67e22', '05:00', '23:30', 6, 0]);
 $lineId = $db->lastInsertId();
 $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -519,7 +519,7 @@ $stmtSt->execute([$lineId, 'Spital Fundeni', 670, 410, 15, 10, -15, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Granitul', 720, 410, 16, 10, 15, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Pantelimon', 750, 430, 17, 15, -5, 0, 'bold']);
 
-$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
 $stmt->execute(['M6', '#800000', '05:00', '23:30', 6, 0]);
 $lineId = $db->lastInsertId();
 $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -536,7 +536,7 @@ $stmtSt->execute([$lineId, 'Padina', 400, -50, 9, 15, 5, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Aeroport Henri Coandă', 400, -100, 10, -150, 5, 0, 'bold']);
 $stmtSt->execute([$lineId, 'Depou Otopeni', 400, -150, 11, 15, 5, 0, 'bold']);
 
-$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed, dash_width, dash_gap) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt = $db->prepare("INSERT INTO metro_lines (name, color, start_time, end_time, interval_minutes, is_dashed) VALUES (?, ?, ?, ?, ?, ?)");
 $stmt->execute(['M7', '#9b59b6', '05:00', '23:30', 6, 0]);
 $lineId = $db->lastInsertId();
 $stmtSt = $db->prepare("INSERT INTO metro_stations (line_id, name, x, y, order_idx, text_offset_x, text_offset_y, is_waypoint, font_weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -570,7 +570,6 @@ $stmtSt->execute([$lineId, 'Independenței 1877', 160, 750, 18, 15, 5, 0, 'bold'
         die();
     }
 
-
     if ($action == 'upload_image') {
         if (!isset($_FILES['image'])) {
             echo json_encode(['success' => false, 'error' => 'Niciun fișier încărcat']);
@@ -578,10 +577,15 @@ $stmtSt->execute([$lineId, 'Independenței 1877', 160, 750, 18, 15, 5, 0, 'bold'
         }
         $file = $_FILES['image'];
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $allowed = ['png', 'jpg', 'jpeg', 'gif']; // Allow more formats
+        $allowed = ['png']; // Forced PNG as requested
 
         if (!in_array($ext, $allowed)) {
-            echo json_encode(['success' => false, 'error' => 'Format nepermis. Doar imagini (png, jpg, gif).']);
+            echo json_encode(['success' => false, 'error' => 'Te rog să încarci doar imagini cu formatul .png']);
+            die();
+        }
+
+        if (!getimagesize($file['tmp_name'])) {
+            echo json_encode(['success' => false, 'error' => 'Fișierul nu este o imagine validă']);
             die();
         }
 
@@ -590,15 +594,17 @@ $stmtSt->execute([$lineId, 'Independenței 1877', 160, 750, 18, 15, 5, 0, 'bold'
             mkdir($upload_dir, 0755, true);
         }
 
-        $filename = uniqid() . '.' . $ext;
-        $dest = $upload_dir . $filename;
+        $filename = 'metro_' . uniqid() . '.' . $ext;
+        $target = $upload_dir . $filename;
 
-        if (move_uploaded_file($file['tmp_name'], $dest)) {
-            echo json_encode(['success' => true, 'path' => 'uploads/' . $filename]);
+        if (move_uploaded_file($file['tmp_name'], $target)) {
+            $url = 'uploads/' . $filename; // Relative to public/
+            echo json_encode(['success' => true, 'url' => $url]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Eroare la mutarea fișierului pe server']);
+            $err = error_get_last();
+            echo json_encode(['success' => false, 'error' => 'A apărut o eroare la salvarea fișierului pe server. Verificați permisiunile folderului public/uploads/. Detalii: ' . ($err ? $err['message'] : '')]);
         }
         die();
     }
-
-    echo json_encode(['success' => false, 'error' => 'Invalid action']);
+}
+echo json_encode(['success' => false, 'error' => 'Invalid action']);
