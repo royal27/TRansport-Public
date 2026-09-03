@@ -562,6 +562,7 @@ async function loadCustomLine(id) {
         // Fetch markers
         const markersRes = await fetch(`api/custom_lines.php?action=get_markers&line_id=${id}`);
         const markersResult = await markersRes.json();
+        currentCustomStations = markersResult || [];
 
         const badgeHtml = `<i class="fas fa-bus-alt"></i> <span style="margin-left:5px;">${infoResult.name}</span>`;
 

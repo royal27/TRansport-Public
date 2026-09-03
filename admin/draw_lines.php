@@ -451,7 +451,6 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-
         const q = document.getElementById('osmSearchInput').value.trim();
         if(!q) return;
 
@@ -463,44 +462,48 @@ document.addEventListener("DOMContentLoaded", function() {
                     alert("Traseul nu a fost găsit pe OSM.");
                     return;
                 }
-                // Get the first route_id
-                const routeId = linesData[0].route_id || linesData[0].name;
+                const routeId = linesData[0].route_id || linesData[0].name || (linesData.data && linesData.data[0] ? (linesData.data[0].route_id || linesData.data[0].route_short_name) : null);
+
+                // If it returned data directly (new format)
+                if (linesData.data && linesData.data[0]) {
+                    processRouteData(linesData);
+                    return null;
+                }
+
                 return fetch('../public/api/lines.php?route_id=' + encodeURIComponent(routeId));
             })
             .then(res => res ? res.json() : null)
             .then(data => {
-                if (!data || data.error || !data.data || !data.data[0] || !data.data[0].shape) {
-                    if(data && !data.error) alert("Geometria nu a putut fi extrasă.");
+                if (data) processRouteData(data);
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Eroare API OSM.");
+            });
+
+        function processRouteData(data) {
+            if (!data || data.error || !data.data || !data.data[0] || !data.data[0].shape_id) {
+                if(data && !data.error) alert("Geometria nu a putut fi extrasă.");
+                return;
+            }
+
+            const shapeId = data.data[0].shape_id;
+            const stations = data.data[0].stations || [];
+
+            fetch('../public/api/lines.php?shape=' + encodeURIComponent(shapeId))
+            .then(res => res.json())
+            .then(shapeData => {
+                if (!shapeData || !shapeData.data) {
+                    alert("Nu s-au putut prelua coordonatele rutei.");
                     return;
                 }
 
                 drawnItems.clearLayers();
                 if(routePolyline) map.removeLayer(routePolyline);
 
-                const latlngs = data.data[0].shape.map(pt => [pt.lat, pt.lng]);
+                const latlngs = shapeData.data.map(pt => [pt.lat, pt.lng]);
                 routePolyline = L.polyline(latlngs, {color: currentLineColor, weight: 5}).addTo(drawnItems);
                 map.fitBounds(routePolyline.getBounds());
-
-
-                    routePolyline.on('click', function(e) {
-                        if (isEraserActive) {
-                            const pts = routePolyline.getLatLngs();
-                            if (pts.length > 2) {
-                                let minD = Infinity, minI = -1;
-                                for(let i=0; i<pts.length; i++){
-                                    const d = e.latlng.distanceTo(pts[i]);
-                                    if(d < minD){ minD = d; minI = i; }
-                                }
-                                if(minI > -1){
-                                    pts.splice(minI, 1);
-                                    routePolyline.setLatLngs(pts);
-                                }
-                            } else {
-                                drawnItems.removeLayer(routePolyline);
-                            }
-                        }
-                    });
-
 
                 routePolyline.on('click', function(e) {
                     if (isEraserActive) {
@@ -521,9 +524,43 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                 });
 
-                showStatus('Traseu importat! Modifică și salvează.');
-            })
-            .catch(err => alert("Eroare API OSM."));
+                // Add stations as markers automatically
+                if (stations.length > 0) {
+                    if (confirm("Am găsit " + stations.length + " stații pe acest traseu. Dorești să le adaugi automat ca markere? (Atenție: pot dura câteva secunde să se salveze)")) {
+                        let i = 0;
+                        function saveNextStation() {
+                            if (i >= stations.length) {
+                                showStatus('Traseu și ' + stations.length + ' stații importate! Modifică și salvează linia.');
+                                // reload markers to display them
+                                loadLineData(currentLineId);
+                                return;
+                            }
+                            let st = stations[i];
+                            fetch('api_draw.php?action=add_marker', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({
+                                    line_id: currentLineId,
+                                    lat: st.lat,
+                                    lng: st.lng,
+                                    type: 'station',
+                                    description: st.name
+                                })
+                            }).then(() => {
+                                i++;
+                                showStatus("Salvăm stațiile... " + i + "/" + stations.length);
+                                saveNextStation();
+                            });
+                        }
+                        saveNextStation();
+                    } else {
+                        showStatus('Traseu importat! Modifică și salvează.');
+                    }
+                } else {
+                    showStatus('Traseu importat! Modifică și salvează.');
+                }
+            });
+        }
     });
 
 </script>
