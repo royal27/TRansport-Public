@@ -74,6 +74,12 @@ $linesJson = json_encode($lines);
             <button id="btnSaveRoute" class="btn-save" style="display: none;"><i class="fas fa-save"></i> Salvează Traseul desenat</button>
             <button id="btnLiveRecord" class="btn-save" style="display: none; background-color: #e74c3c; margin-left:10px;"><i class="fas fa-circle"></i> Începe înregistrarea traseului</button>
             <span id="statusMsg" style="color: #27ae60; font-weight: bold; margin-left: 10px;"></span>
+            <div style="margin-left: 15px; display: inline-block;">
+                <input type="text" id="osmSearchInput" placeholder="Caută traseu STB (ex: 335)" style="padding: 5px; width: 180px;">
+                <button id="btnOsmSearch" class="btn-save" style="background-color: #3498db;"><i class="fas fa-search"></i> Caută</button>
+                <button id="btnErase" class="btn-save" style="background-color: #f1c40f; color: black; display: none;"><i class="fas fa-eraser"></i> Radieră (Click pe segment)</button>
+            </div>
+
         </div>
 
         <div class="marker-controls" id="markerControls" style="display: none;">
@@ -83,6 +89,10 @@ $linesJson = json_encode($lines);
             <button class="marker-btn" data-type="accident"><i class="fas fa-car-crash" style="color:#e74c3c;"></i> Accident</button>
             <button class="marker-btn" data-type="detour"><i class="fas fa-directions" style="color:#9b59b6;"></i> Rută ocolitoare</button>
             <button class="marker-btn" data-type="traffic"><i class="fas fa-traffic-light" style="color:#e67e22;"></i> Aglomerație</button>
+
+            <button class="marker-btn" data-type="pompieri"><i class="fas fa-fire-extinguisher" style="color:#e74c3c;"></i> Pompieri</button>
+            <button class="marker-btn" data-type="primajutor"><i class="fas fa-medkit" style="color:#2ecc71;"></i> Prim Ajutor</button>
+
             <button class="marker-btn" data-type="police"><i class="fas fa-user-shield" style="color:#2980b9;"></i> Poliție</button>
             <button class="marker-btn" data-type="interventie"><i class="fas fa-ambulance" style="color:#c0392b;"></i> Intervenție STB</button>
             <button class="marker-btn" data-type="suspended"><i class="fas fa-ban" style="color:#000;"></i> Linie suspendată</button>
@@ -96,7 +106,7 @@ $linesJson = json_encode($lines);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script>
     const map = L.map('map').setView([44.4268, 26.1025], 13); // Bucharest center
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap & CARTO',
         maxZoom: 19
     }).addTo(map);
@@ -136,6 +146,8 @@ $linesJson = json_encode($lines);
         'detour': L.divIcon({ html: '<i class="fas fa-directions fa-2x" style="color:#9b59b6"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
         'traffic': L.divIcon({ html: '<i class="fas fa-traffic-light fa-2x" style="color:#e67e22"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
         'police': L.divIcon({ html: '<i class="fas fa-user-shield fa-2x" style="color:#2980b9"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+        'pompieri': L.divIcon({ html: '<i class="fas fa-fire-extinguisher fa-2x" style="color:#e74c3c"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
+        'primajutor': L.divIcon({ html: '<i class="fas fa-medkit fa-2x" style="color:#2ecc71"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
         'interventie': L.divIcon({ html: '<i class="fas fa-ambulance fa-2x" style="color:#c0392b"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] }),
         'suspended': L.divIcon({ html: '<i class="fas fa-ban fa-2x" style="color:#000"></i>', className: 'custom-icon', iconSize: [30, 30], iconAnchor: [15, 30] })
     };
@@ -148,6 +160,7 @@ $linesJson = json_encode($lines);
             currentLineColor = this.options[this.selectedIndex].getAttribute('data-color');
             document.getElementById('btnSaveRoute').style.display = 'inline-block';
             document.getElementById('btnLiveRecord').style.display = 'inline-block';
+            document.getElementById('btnErase').style.display = 'inline-block';
             document.getElementById('markerControls').style.display = 'flex';
             map.addControl(drawControl);
             drawControl.setDrawingOptions({
@@ -157,6 +170,7 @@ $linesJson = json_encode($lines);
         } else {
             document.getElementById('btnSaveRoute').style.display = 'none';
             document.getElementById('btnLiveRecord').style.display = 'none';
+            document.getElementById('btnErase').style.display = 'none';
             document.getElementById('markerControls').style.display = 'none';
             map.removeControl(drawControl);
             drawnItems.clearLayers();
@@ -183,6 +197,26 @@ $linesJson = json_encode($lines);
                     const latlngs = data.map(pt => [pt.latitude, pt.longitude]);
                     routePolyline = L.polyline(latlngs, {color: currentLineColor, weight: 5}).addTo(drawnItems);
                     map.fitBounds(routePolyline.getBounds());
+
+                    routePolyline.on('click', function(e) {
+                        if (isEraserActive) {
+                            const pts = routePolyline.getLatLngs();
+                            if (pts.length > 2) {
+                                let minD = Infinity, minI = -1;
+                                for(let i=0; i<pts.length; i++){
+                                    const d = e.latlng.distanceTo(pts[i]);
+                                    if(d < minD){ minD = d; minI = i; }
+                                }
+                                if(minI > -1){
+                                    pts.splice(minI, 1);
+                                    routePolyline.setLatLngs(pts);
+                                }
+                            } else {
+                                drawnItems.removeLayer(routePolyline);
+                            }
+                        }
+                    });
+
                 }
             });
 
@@ -394,6 +428,104 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
+
+    let isEraserActive = false;
+    document.getElementById('btnErase').addEventListener('click', function() {
+        isEraserActive = !isEraserActive;
+        if (isEraserActive) {
+            this.style.backgroundColor = '#e74c3c';
+            this.style.color = '#fff';
+            this.innerHTML = '<i class="fas fa-eraser"></i> Radieră Activă (Click linie)';
+            map.getContainer().style.cursor = 'crosshair';
+        } else {
+            this.style.backgroundColor = '#f1c40f';
+            this.style.color = '#000';
+            this.innerHTML = '<i class="fas fa-eraser"></i> Radieră (Click pe segment)';
+            map.getContainer().style.cursor = '';
+        }
+    });
+
+    document.getElementById('btnOsmSearch').addEventListener('click', function() {
+        if (!currentLineId) {
+            alert("Te rog selectează o linie custom mai întâi (din stânga) pentru a asocia traseul.");
+            return;
+        }
+
+
+        const q = document.getElementById('osmSearchInput').value.trim();
+        if(!q) return;
+
+        showStatus('Caut traseul pe OpenStreetMap...');
+        fetch('../public/api/lines.php?search=' + encodeURIComponent(q))
+            .then(res => res.json())
+            .then(linesData => {
+                if (!linesData || linesData.length === 0 || linesData.error) {
+                    alert("Traseul nu a fost găsit pe OSM.");
+                    return;
+                }
+                // Get the first route_id
+                const routeId = linesData[0].route_id || linesData[0].name;
+                return fetch('../public/api/lines.php?route_id=' + encodeURIComponent(routeId));
+            })
+            .then(res => res ? res.json() : null)
+            .then(data => {
+                if (!data || data.error || !data.data || !data.data[0] || !data.data[0].shape) {
+                    if(data && !data.error) alert("Geometria nu a putut fi extrasă.");
+                    return;
+                }
+
+                drawnItems.clearLayers();
+                if(routePolyline) map.removeLayer(routePolyline);
+
+                const latlngs = data.data[0].shape.map(pt => [pt.lat, pt.lng]);
+                routePolyline = L.polyline(latlngs, {color: currentLineColor, weight: 5}).addTo(drawnItems);
+                map.fitBounds(routePolyline.getBounds());
+
+
+                    routePolyline.on('click', function(e) {
+                        if (isEraserActive) {
+                            const pts = routePolyline.getLatLngs();
+                            if (pts.length > 2) {
+                                let minD = Infinity, minI = -1;
+                                for(let i=0; i<pts.length; i++){
+                                    const d = e.latlng.distanceTo(pts[i]);
+                                    if(d < minD){ minD = d; minI = i; }
+                                }
+                                if(minI > -1){
+                                    pts.splice(minI, 1);
+                                    routePolyline.setLatLngs(pts);
+                                }
+                            } else {
+                                drawnItems.removeLayer(routePolyline);
+                            }
+                        }
+                    });
+
+
+                routePolyline.on('click', function(e) {
+                    if (isEraserActive) {
+                        const pts = routePolyline.getLatLngs();
+                        if (pts.length > 2) {
+                            let minD = Infinity, minI = -1;
+                            for(let i=0; i<pts.length; i++){
+                                const d = e.latlng.distanceTo(pts[i]);
+                                if(d < minD){ minD = d; minI = i; }
+                            }
+                            if(minI > -1){
+                                pts.splice(minI, 1);
+                                routePolyline.setLatLngs(pts);
+                            }
+                        } else {
+                            drawnItems.removeLayer(routePolyline);
+                        }
+                    }
+                });
+
+                showStatus('Traseu importat! Modifică și salvează.');
+            })
+            .catch(err => alert("Eroare API OSM."));
+    });
+
 </script>
 </body>
 </html>

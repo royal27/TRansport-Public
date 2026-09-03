@@ -171,6 +171,11 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
 <body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
     <nav class="left-nav">
+        <?php if (!empty($logo_path)): ?>
+            <div class="sidebar-logo-container" style="text-align: center; padding: 10px 0;">
+                <img src="<?= htmlspecialchars($logo_path) ?>" alt="Logo" style="max-height: 50px; max-width: 100%;">
+            </div>
+        <?php endif; ?>
         <div class="nav-top">
             <a href="index.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_map', $lang) ?>"><i class="fas fa-map-marker-alt"></i></a>
             <a href="schedules.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_schedules', $lang) ?>"><i class="fas fa-clock"></i></a>
@@ -223,8 +228,8 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
             <div id="routing-ui-container"></div>
 
             <div class="footer-branding">
-                București Transport Live v1.0.0<br>
-                by Admin
+                GoBucuresti vV2.19<br>
+                by Stoian Rudolf
             </div>
         </div>
 

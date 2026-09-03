@@ -21,9 +21,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 $theme_color = $settings['theme_color'] ?? 'green';
 $announcement_text = $settings['announcement_text'] ?? '';
 $announcement_speed = $settings['announcement_speed'] ?? '15';
-$app_name = $settings['app_name'] ?? 'București Transport Live';
-$app_version = $settings['app_version'] ?? '1.0.0';
-$app_author = $settings['app_author'] ?? 'Admin';
+$app_name = $settings['app_name'] ?? 'GoBucuresti';
+$app_version = $settings['app_version'] ?? 'V2.19';
+$app_author = $settings['app_author'] ?? 'Stoian Rudolf';
 $weather_api_key = $settings['weather_api_key'] ?? '';
 $splash_screen_media = $settings['splash_screen_media'] ?? '';
 
@@ -69,7 +69,12 @@ $current_date = date('d.m.Y');
 </div>
 
 <nav class="left-nav">
-                <div class="nav-top">
+                <?php if (!empty($logo_path)): ?>
+            <div class="sidebar-logo-container" style="text-align: center; padding: 10px 0;">
+                <img src="<?= htmlspecialchars($logo_path) ?>" alt="Logo" style="max-height: 50px; max-width: 100%;">
+            </div>
+        <?php endif; ?>
+        <div class="nav-top">
             <a href="index.php?lang=<?= $lang ?>" class="nav-item active" title="<?= getTranslation('btn_map', $lang) ?>"><i class="fas fa-map-marker-alt"></i></a>
             <a href="schedules.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_schedules', $lang) ?>"><i class="fas fa-clock"></i></a>
             <a href="lines.php?lang=<?= $lang ?>" class="nav-item" title="Orar și Linii Curente"><i class="fas fa-route"></i></a>
@@ -122,6 +127,11 @@ $current_date = date('d.m.Y');
 
     <!-- Adjacent white panel -->
     <div id="sidebar">
+        <?php if (!empty($logo_path)): ?>
+        <div class="sidebar-logo-container" style="text-align: center; padding: 10px 0;">
+            <img src="<?= htmlspecialchars($logo_path) ?>" alt="Logo" style="max-height: 50px; max-width: 100%;">
+        </div>
+        <?php endif; ?>
         <!-- 3-column grid for line categories -->
         <div class="transport-categories">
             <button class="cat-btn bus-btn active" data-type="bus"><i class="fas fa-bus"></i></button>

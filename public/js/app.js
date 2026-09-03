@@ -697,3 +697,73 @@ if ("geolocation" in navigator) {
         }
     );
 }
+
+
+let userRouteTrackingWatcher = null;
+let currentCustomStations = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    const trackBtn = document.getElementById('bp-live-track');
+    if (trackBtn) {
+        trackBtn.addEventListener('click', function() {
+            if (userRouteTrackingWatcher) {
+                navigator.geolocation.clearWatch(userRouteTrackingWatcher);
+                userRouteTrackingWatcher = null;
+                this.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                this.style.backgroundColor = '#e74c3c';
+                return;
+            }
+
+            if (!navigator.geolocation) return alert('GPS nu este suportat');
+
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            this.style.backgroundColor = '#2ecc71';
+
+            userRouteTrackingWatcher = navigator.geolocation.watchPosition(pos => {
+                const userLat = pos.coords.latitude;
+                const userLng = pos.coords.longitude;
+
+                // Update user marker
+                if(!userLocationMarker) {
+                    const icon = L.divIcon({
+                        html: '<div style="width: 15px; height: 15px; background: #3498db; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
+                        className: 'user-marker'
+                    });
+                    userLocationMarker = L.marker([userLat, userLng], {icon: icon, zIndexOffset: 1000}).addTo(map);
+                } else {
+                    userLocationMarker.setLatLng([userLat, userLng]);
+                }
+
+                // Check stations distance
+                const timelineItems = document.querySelectorAll('.timeline-item');
+                currentCustomStations.forEach((st, idx) => {
+                    if (st.passed) return;
+                    const R = 6371e3; // metres
+                    const φ1 = userLat * Math.PI/180;
+                    const φ2 = parseFloat(st.latitude) * Math.PI/180;
+                    const Δφ = (parseFloat(st.latitude)-userLat) * Math.PI/180;
+                    const Δλ = (parseFloat(st.longitude)-userLng) * Math.PI/180;
+
+                    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                              Math.cos(φ1) * Math.cos(φ2) *
+                              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+                    const dist = R * c;
+
+                    if (dist < 50) {
+                        st.passed = true;
+                        if(timelineItems[idx]) {
+                            timelineItems[idx].classList.add('passed');
+                            const dot = timelineItems[idx].querySelector('.timeline-dot');
+                            if(dot) dot.style.background = '#000';
+                        }
+                    }
+                });
+
+            }, err => {
+                console.error(err);
+            }, { enableHighAccuracy: true });
+        });
+    }
+});

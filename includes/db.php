@@ -258,7 +258,7 @@ EOT;
 
         $pdo->exec("
             INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
-            ('app_name', 'București Transport Live'),
+            ('app_name', 'GoBucuresti'),
             ('app_logo', ''),
             ('tpbi_api_key', ''),
             ('theme_color', 'green'),
