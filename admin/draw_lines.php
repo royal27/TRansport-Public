@@ -458,11 +458,17 @@ document.addEventListener("DOMContentLoaded", function() {
         fetch('../public/api/lines.php?search=' + encodeURIComponent(q))
             .then(res => res.json())
             .then(linesData => {
-                if (!linesData || linesData.length === 0 || linesData.error) {
+                if (!linesData || linesData.error || (Array.isArray(linesData) && linesData.length === 0) || (linesData.data && linesData.data.length === 0)) {
                     alert("Traseul nu a fost găsit pe OSM.");
                     return;
                 }
-                const routeId = linesData[0].route_id || linesData[0].name || (linesData.data && linesData.data[0] ? (linesData.data[0].route_id || linesData.data[0].route_short_name) : null);
+
+                let routeId = null;
+                if (Array.isArray(linesData) && linesData.length > 0) {
+                    routeId = linesData[0].route_id || linesData[0].name;
+                } else if (linesData.data && linesData.data[0]) {
+                    routeId = linesData.data[0].route_id || linesData.data[0].route_short_name;
+                }
 
                 // If it returned data directly (new format)
                 if (linesData.data && linesData.data[0]) {
@@ -470,7 +476,10 @@ document.addEventListener("DOMContentLoaded", function() {
                     return null;
                 }
 
-                return fetch('../public/api/lines.php?route_id=' + encodeURIComponent(routeId));
+                if (routeId) {
+                    return fetch('../public/api/lines.php?route_id=' + encodeURIComponent(routeId));
+                }
+                return null;
             })
             .then(res => res ? res.json() : null)
             .then(data => {
