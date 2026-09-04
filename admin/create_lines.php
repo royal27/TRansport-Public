@@ -44,7 +44,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$id]);
             $success = "Linia a fost ștearsă.";
         }
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'import_json') {
+        if (isset($_FILES['import_file']) && $_FILES['import_file']['error'] == 0) {
+            $json = file_get_contents($_FILES['import_file']['tmp_name']);
+            $data = json_decode($json, true);
+            if ($data && is_array($data)) {
+                $db->beginTransaction();
+                try {
+                    $db->exec("DELETE FROM custom_lines");
+                    $stmt = $db->prepare("INSERT INTO custom_lines (id, name, color, description) VALUES (?, ?, ?, ?)");
+                    foreach ($data as $item) {
+                        $stmt->execute([$item['id'], $item['name'], $item['color'], $item['description']]);
+                    }
+                    $db->commit();
+                    $success = "Liniile au fost importate cu succes!";
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    $error = "Eroare la import: " . $e->getMessage();
+                }
+            } else {
+                $error = "Fișier JSON invalid.";
+            }
+        }
     }
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'export_json') {
+    $stmt = $db->query("SELECT id, name, color, description FROM custom_lines ORDER BY id ASC");
+    $exportData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    header('Content-Type: application/json');
+    header('Content-Disposition: attachment; filename="custom_lines_export.json"');
+    echo json_encode($exportData);
+    exit;
 }
 
 $stmt = $db->query("SELECT * FROM custom_lines ORDER BY id DESC");
@@ -127,7 +158,19 @@ $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
 
         <div class="card">
-            <h2>Linii Existente</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin: 0;">Linii Existente</h2>
+                <div>
+                    <a href="?action=export_json" class="btn-save" style="background-color: #9b59b6; text-decoration: none; padding: 10px; display: inline-block; color: white; border-radius: 4px;"><i class="fas fa-file-export"></i> Export JSON</a>
+                    <button type="button" class="btn-save" style="background-color: #2ecc71; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('importFileForm').style.display='inline-block'"><i class="fas fa-file-import"></i> Import JSON</button>
+                    <form id="importFileForm" method="POST" enctype="multipart/form-data" style="display: none; margin-left: 10px;">
+                        <input type="hidden" name="action" value="import_json">
+                        <input type="file" name="import_file" accept=".json" required>
+                        <button type="submit" class="btn-save" style="background-color: #f39c12; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer;"><i class="fas fa-upload"></i> Încarcă</button>
+                    </form>
+                </div>
+            </div>
+
             <?php if (count($lines) > 0): ?>
                 <table>
                     <thead>

@@ -80,6 +80,12 @@ $linesJson = json_encode($lines);
                 <button id="btnErase" class="btn-save" style="background-color: #f1c40f; color: black; display: none;"><i class="fas fa-eraser"></i> Radieră (Click pe segment)</button>
             </div>
 
+            <div style="float: right;">
+                <button id="btnExportAll" class="btn-save" style="background-color: #9b59b6;"><i class="fas fa-file-export"></i> Export</button>
+                <button id="btnImportAll" class="btn-save" style="background-color: #2ecc71;" onclick="document.getElementById('importFileInput').click()"><i class="fas fa-file-import"></i> Import</button>
+                <input type="file" id="importFileInput" style="display:none;" accept=".json">
+            </div>
+
         </div>
 
         <div class="marker-controls" id="markerControls" style="display: none;">
@@ -198,24 +204,6 @@ $linesJson = json_encode($lines);
                     routePolyline = L.polyline(latlngs, {color: currentLineColor, weight: 5}).addTo(drawnItems);
                     map.fitBounds(routePolyline.getBounds());
 
-                    routePolyline.on('click', function(e) {
-                        if (isEraserActive) {
-                            const pts = routePolyline.getLatLngs();
-                            if (pts.length > 2) {
-                                let minD = Infinity, minI = -1;
-                                for(let i=0; i<pts.length; i++){
-                                    const d = e.latlng.distanceTo(pts[i]);
-                                    if(d < minD){ minD = d; minI = i; }
-                                }
-                                if(minI > -1){
-                                    pts.splice(minI, 1);
-                                    routePolyline.setLatLngs(pts);
-                                }
-                            } else {
-                                drawnItems.removeLayer(routePolyline);
-                            }
-                        }
-                    });
 
                 }
             });
@@ -416,6 +404,60 @@ $linesJson = json_encode($lines);
         el.innerText = msg;
         setTimeout(() => el.innerText = '', 3000);
     }
+
+    // Export All Lines/Routes
+    document.getElementById('btnExportAll').addEventListener('click', function() {
+        showStatus('Generăm exportul...');
+        fetch('api_draw.php?action=export_all')
+            .then(res => res.json())
+            .then(data => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "toate_liniile_desenate.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                showStatus('Export complet!');
+            });
+    });
+
+    // Import All Lines/Routes
+    document.getElementById('importFileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const data = JSON.parse(evt.target.result);
+                if (!data.routes || !data.markers) throw new Error("Format invalid");
+
+                if (confirm('Atenție: Această acțiune va șterge TOATE rutele desenate actuale și le va înlocui cu cele din fișier! Continuăm?')) {
+                    showStatus('Se importă datele...');
+                    fetch('api_draw.php?action=import_all', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    })
+                    .then(res => res.json())
+                    .then(resData => {
+                        if (resData.success) {
+                            showStatus('Import realizat cu succes!');
+                            if (currentLineId) loadLineData(currentLineId);
+                        } else {
+                            alert('Eroare la import: ' + resData.error);
+                        }
+                    });
+                }
+            } catch(e) {
+                alert('Eroare la parsarea fișierului: ' + e.message);
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = ''; // reset
+    });
+
 </script>
 
 <script>
@@ -430,18 +472,72 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
     let isEraserActive = false;
+    let isEraserDragging = false;
+
     document.getElementById('btnErase').addEventListener('click', function() {
         isEraserActive = !isEraserActive;
         if (isEraserActive) {
             this.style.backgroundColor = '#e74c3c';
             this.style.color = '#fff';
-            this.innerHTML = '<i class="fas fa-eraser"></i> Radieră Activă (Click linie)';
+            this.innerHTML = '<i class="fas fa-eraser"></i> Radieră Activă (Trage peste linie)';
             map.getContainer().style.cursor = 'crosshair';
+            map.dragging.disable();
         } else {
             this.style.backgroundColor = '#f1c40f';
             this.style.color = '#000';
-            this.innerHTML = '<i class="fas fa-eraser"></i> Radieră (Click pe segment)';
+            this.innerHTML = '<i class="fas fa-eraser"></i> Radieră (Trage pe segment)';
             map.getContainer().style.cursor = '';
+            map.dragging.enable();
+            isEraserDragging = false;
+        }
+    });
+
+    function erasePointsNear(latlng) {
+        if (!routePolyline) return;
+        const pts = routePolyline.getLatLngs();
+        if (pts.length <= 2) {
+            drawnItems.removeLayer(routePolyline);
+            routePolyline = null;
+            return;
+        }
+
+        // Remove points within ~30 pixels distance
+        const keepPts = [];
+        const threshold = 30;
+
+        for(let i=0; i<pts.length; i++){
+            const p = map.latLngToLayerPoint(pts[i]);
+            const mp = map.latLngToLayerPoint(latlng);
+            const dist = Math.sqrt(Math.pow(p.x - mp.x, 2) + Math.pow(p.y - mp.y, 2));
+            if(dist > threshold) {
+                keepPts.push(pts[i]);
+            }
+        }
+
+        if (keepPts.length > 1) {
+            routePolyline.setLatLngs(keepPts);
+        } else if (keepPts.length <= 1) {
+            drawnItems.removeLayer(routePolyline);
+            routePolyline = null;
+        }
+    }
+
+    map.on('mousedown', function(e) {
+        if (isEraserActive) {
+            isEraserDragging = true;
+            erasePointsNear(e.latlng);
+        }
+    });
+
+    map.on('mousemove', function(e) {
+        if (isEraserActive && isEraserDragging) {
+            erasePointsNear(e.latlng);
+        }
+    });
+
+    map.on('mouseup', function() {
+        if (isEraserActive) {
+            isEraserDragging = false;
         }
     });
 
@@ -524,24 +620,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     showStatus('Traseu salvat automat!');
                 });
 
-                routePolyline.on('click', function(e) {
-                    if (isEraserActive) {
-                        const pts = routePolyline.getLatLngs();
-                        if (pts.length > 2) {
-                            let minD = Infinity, minI = -1;
-                            for(let i=0; i<pts.length; i++){
-                                const d = e.latlng.distanceTo(pts[i]);
-                                if(d < minD){ minD = d; minI = i; }
-                            }
-                            if(minI > -1){
-                                pts.splice(minI, 1);
-                                routePolyline.setLatLngs(pts);
-                            }
-                        } else {
-                            drawnItems.removeLayer(routePolyline);
-                        }
-                    }
-                });
 
                 // Add stations as markers automatically
                 if (stations.length > 0) {

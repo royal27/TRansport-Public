@@ -13,6 +13,16 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
 if ($method === 'GET') {
+    if ($action === 'export_all') {
+        $stmtR = $db->query("SELECT line_id, latitude, longitude, order_idx FROM custom_routes ORDER BY line_id ASC, order_idx ASC");
+        $routes = $stmtR->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtM = $db->query("SELECT line_id, latitude, longitude, type, description FROM custom_markers ORDER BY line_id ASC");
+        $markers = $stmtM->fetchAll(PDO::FETCH_ASSOC);
+
+        die(json_encode(['routes' => $routes, 'markers' => $markers]));
+    }
+
     if ($action === 'get_routes' && isset($_GET['line_id'])) {
         $stmt = $db->prepare("SELECT latitude, longitude FROM custom_routes WHERE line_id = ? ORDER BY order_idx ASC");
         $stmt->execute([$_GET['line_id']]);
@@ -77,6 +87,33 @@ if ($method === 'GET') {
             die(json_encode(['success' => true]));
         } else {
             die(json_encode(['error' => 'Invalid marker ID']));
+        }
+    }
+
+    if ($action === 'import_all') {
+        $routes = $input['routes'] ?? [];
+        $markers = $input['markers'] ?? [];
+
+        $db->beginTransaction();
+        try {
+            $db->exec("DELETE FROM custom_routes");
+            $db->exec("DELETE FROM custom_markers");
+
+            $stmtR = $db->prepare("INSERT INTO custom_routes (line_id, latitude, longitude, order_idx) VALUES (?, ?, ?, ?)");
+            foreach ($routes as $r) {
+                $stmtR->execute([$r['line_id'], $r['latitude'], $r['longitude'], $r['order_idx']]);
+            }
+
+            $stmtM = $db->prepare("INSERT INTO custom_markers (line_id, latitude, longitude, type, description) VALUES (?, ?, ?, ?, ?)");
+            foreach ($markers as $m) {
+                $stmtM->execute([$m['line_id'], $m['latitude'], $m['longitude'], $m['type'], $m['description']]);
+            }
+
+            $db->commit();
+            die(json_encode(['success' => true]));
+        } catch (Exception $e) {
+            $db->rollBack();
+            die(json_encode(['error' => $e->getMessage()]));
         }
     }
 }

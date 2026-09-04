@@ -21,12 +21,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt->execute([$line_name, $category, $schedule_details]);
             $success = "Linia a fost adăugată cu succes.";
         }
+    } elseif ($_POST['action'] == 'edit_schedule') {
+        $id = $_POST['id'] ?? 0;
+        $line_name = trim($_POST['line_name'] ?? '');
+        $category = $_POST['category'] ?? 'BUS';
+        $schedule_details = trim($_POST['schedule_details'] ?? '');
+
+        if ($id && !empty($line_name)) {
+            $stmt = $db->prepare("UPDATE schedules SET line_name = ?, category = ?, schedule_details = ? WHERE id = ?");
+            $stmt->execute([$line_name, $category, $schedule_details, $id]);
+            $success = "Linia a fost modificată cu succes.";
+        }
     } elseif ($_POST['action'] == 'delete_schedule') {
         $id = $_POST['id'] ?? 0;
         $stmt = $db->prepare("DELETE FROM schedules WHERE id = ?");
         $stmt->execute([$id]);
         $success = "Orarul a fost șters.";
+    } elseif ($_POST['action'] == 'import_json') {
+        if (isset($_FILES['import_file']) && $_FILES['import_file']['error'] == 0) {
+            $json = file_get_contents($_FILES['import_file']['tmp_name']);
+            $data = json_decode($json, true);
+            if ($data && is_array($data)) {
+                $db->beginTransaction();
+                try {
+                    $db->exec("DELETE FROM schedules");
+                    $stmt = $db->prepare("INSERT INTO schedules (id, line_name, category, schedule_details) VALUES (?, ?, ?, ?)");
+                    foreach ($data as $item) {
+                        $stmt->execute([$item['id'], $item['line_name'], $item['category'], $item['schedule_details']]);
+                    }
+                    $db->commit();
+                    $success = "Liniile (schedules) au fost importate cu succes!";
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    $success = "Eroare la import: " . $e->getMessage();
+                }
+            } else {
+                $success = "Fișier JSON invalid.";
+            }
+        }
     }
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'export_json') {
+    $stmt = $db->query("SELECT id, line_name, category, schedule_details FROM schedules ORDER BY id ASC");
+    $exportData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    header('Content-Type: application/json');
+    header('Content-Disposition: attachment; filename="schedules_export.json"');
+    echo json_encode($exportData);
+    exit;
 }
 
 // Fetch all schedules
@@ -124,7 +166,18 @@ $logo_path = $logo_row ? $logo_row['setting_value'] : '';
         </div>
 
         <div class="card">
-            <h2>Linii Existente</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin: 0;">Linii Existente</h2>
+                <div>
+                    <a href="?action=export_json" class="btn-save" style="background-color: #9b59b6; text-decoration: none; padding: 10px; display: inline-block; color: white; border-radius: 4px;"><i class="fas fa-file-export"></i> Export JSON</a>
+                    <button type="button" class="btn-save" style="background-color: #2ecc71; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('importFileForm').style.display='inline-block'"><i class="fas fa-file-import"></i> Import JSON</button>
+                    <form id="importFileForm" method="POST" enctype="multipart/form-data" style="display: none; margin-left: 10px;">
+                        <input type="hidden" name="action" value="import_json">
+                        <input type="file" name="import_file" accept=".json" required>
+                        <button type="submit" class="btn-save" style="background-color: #f39c12; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer;"><i class="fas fa-upload"></i> Încarcă</button>
+                    </form>
+                </div>
+            </div>
             <?php if (count($schedules) > 0): ?>
                 <table>
                     <thead>
@@ -142,6 +195,7 @@ $logo_path = $logo_row ? $logo_row['setting_value'] : '';
                             <td><?= htmlspecialchars($s['category'] ?? 'BUS') ?></td>
                             <td><?= nl2br(htmlspecialchars($s['schedule_details'])) ?></td>
                             <td>
+                                <button type="button" class="btn-edit" style="margin-bottom:5px;" onclick="openEditModal(<?= $s['id'] ?>, '<?= htmlspecialchars(addslashes($s['line_name'])) ?>', '<?= htmlspecialchars(addslashes($s['category'])) ?>', '<?= htmlspecialchars(addslashes($s['schedule_details'])) ?>')"><i class="fas fa-edit"></i> Editează</button>
                                 <a href="manage_schedule_stations.php?id=<?= $s['id'] ?>" class="btn-edit" style="text-decoration:none; display:inline-block; margin-bottom:5px;"><i class="fas fa-map-marked-alt"></i> Traseu & Stații</a>
                                 <form method="POST" action="" style="display:inline-block;" onsubmit="return confirm('Sigur dorești să ștergi?');">
                                     <input type="hidden" name="action" value="delete_schedule">
@@ -160,12 +214,60 @@ $logo_path = $logo_row ? $logo_row['setting_value'] : '';
     </div>
 </div>
 
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeEditModal()">&times;</span>
+    <h2>Editează Linia</h2>
+    <form method="POST" action="">
+        <input type="hidden" name="action" value="edit_schedule">
+        <input type="hidden" name="id" id="edit_id" value="">
+        <div class="form-group">
+            <label>Nume Linie (ex: 335, 41):</label>
+            <input type="text" name="line_name" id="edit_name" required>
+        </div>
+        <div class="form-group">
+            <label>Categorie:</label>
+            <select name="category" id="edit_category">
+                <option value="BUS">Autobuz (BUS)</option>
+                <option value="TRAM">Tramvai (TRAM)</option>
+                <option value="TROLLEYBUS">Troleibuz (TROLLEYBUS)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Configurare Orar (JSON Array - ignorat de simularea nouă dar necesar pentru compatibilitate):</label>
+            <textarea name="schedule_details" id="edit_details" rows="5"></textarea>
+        </div>
+        <button type="submit" class="btn-save" style="width: 100%;"><i class="fas fa-save"></i> Salvează Modificările</button>
+    </form>
+  </div>
+</div>
+
 <footer class="admin-footer">
     CopyRight Transport 2026 By Stoian rudolf
 </footer>
 
 
 <script>
+function openEditModal(id, name, category, details) {
+    document.getElementById('edit_id').value = id;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_category').value = category;
+    document.getElementById('edit_details').value = details;
+    document.getElementById('editModal').style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    let modal = document.getElementById('editModal');
+    if (event.target == modal) {
+        closeEditModal();
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     var menuToggle = document.getElementById("menuToggle");
     var sidebar = document.getElementById("sidebar");
