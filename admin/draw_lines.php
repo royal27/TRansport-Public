@@ -514,6 +514,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 routePolyline = L.polyline(latlngs, {color: currentLineColor, weight: 5}).addTo(drawnItems);
                 map.fitBounds(routePolyline.getBounds());
 
+                // Auto-save the imported route
+                const routesToSave = latlngs.map(ll => ({lat: ll[0], lng: ll[1]}));
+                fetch('api_draw.php?action=save_routes', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ line_id: currentLineId, routes: routesToSave })
+                }).then(() => {
+                    showStatus('Traseu salvat automat!');
+                });
+
                 routePolyline.on('click', function(e) {
                     if (isEraserActive) {
                         const pts = routePolyline.getLatLngs();
