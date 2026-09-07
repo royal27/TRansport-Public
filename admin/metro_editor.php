@@ -481,7 +481,11 @@ try {
                     el.setAttribute("y", dec.y);
                 } else if (dec.type === 'image') {
                     el = document.createElementNS("http://www.w3.org/2000/svg", "image");
-                    el.setAttribute("href", dec.content);
+                    let imagePath = dec.content;
+                    if (imagePath && imagePath.startsWith('uploads/')) {
+                        imagePath = '../public/' + imagePath;
+                    }
+                    el.setAttribute("href", imagePath);
                     el.setAttribute("x", dec.x - dec.width/2);
                     el.setAttribute("y", dec.y - dec.height/2);
                     el.setAttribute("width", dec.width);
