@@ -38,6 +38,23 @@ $linesJson = json_encode($lines);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
 
     <link rel="stylesheet" href="css/admin_style.css?v=<?= time() ?>">
+    <style>
+        /* Custom vehicle markers for Live Tracking */
+        .vehicle-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+    </style>
 </head>
 <body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
@@ -126,6 +143,9 @@ $linesJson = json_encode($lines);
     let markersLayer = new L.FeatureGroup();
     map.addLayer(markersLayer);
 
+    let liveVehiclesLayer = new L.FeatureGroup();
+    map.addLayer(liveVehiclesLayer);
+
     const drawControl = new L.Control.Draw({
         edit: {
             featureGroup: drawnItems
@@ -160,10 +180,14 @@ $linesJson = json_encode($lines);
 
     let activeMarkerType = null;
 
+    let currentLineName = null;
+    let liveVehiclesInterval = null;
+
     document.getElementById('lineSelect').addEventListener('change', function() {
         currentLineId = this.value;
         if (currentLineId) {
             currentLineColor = this.options[this.selectedIndex].getAttribute('data-color');
+            currentLineName = this.options[this.selectedIndex].text.trim();
             document.getElementById('btnSaveRoute').style.display = 'inline-block';
             document.getElementById('btnLiveRecord').style.display = 'inline-block';
             document.getElementById('btnErase').style.display = 'inline-block';
@@ -173,7 +197,13 @@ $linesJson = json_encode($lines);
                 polyline: { shapeOptions: { color: currentLineColor, weight: 5, opacity: 0.8 } }
             });
             loadLineData(currentLineId);
+
+            // Start live vehicles tracking for this line
+            if (liveVehiclesInterval) clearInterval(liveVehiclesInterval);
+            fetchAndRenderLiveVehicles();
+            liveVehiclesInterval = setInterval(fetchAndRenderLiveVehicles, 5000);
         } else {
+            currentLineName = null;
             document.getElementById('btnSaveRoute').style.display = 'none';
             document.getElementById('btnLiveRecord').style.display = 'none';
             document.getElementById('btnErase').style.display = 'none';
@@ -181,6 +211,11 @@ $linesJson = json_encode($lines);
             map.removeControl(drawControl);
             drawnItems.clearLayers();
             markersLayer.clearLayers();
+            liveVehiclesLayer.clearLayers();
+            if (liveVehiclesInterval) {
+                clearInterval(liveVehiclesInterval);
+                liveVehiclesInterval = null;
+            }
             if(routePolyline) map.removeLayer(routePolyline);
 
             // Stop recording if active
@@ -189,6 +224,34 @@ $linesJson = json_encode($lines);
             }
         }
     });
+
+    function fetchAndRenderLiveVehicles() {
+        if (!currentLineName) return;
+        fetch('../public/api/vehicles.php')
+            .then(res => res.json())
+            .then(result => {
+                liveVehiclesLayer.clearLayers();
+                if (result.status === 'success' && result.data) {
+                    const lineVehicles = result.data.filter(v => v.line === currentLineName);
+                    lineVehicles.forEach(v => {
+                        let color = v.type === 'TRAM' ? '#e74c3c' : (v.type === 'TROLLEYBUS' ? '#27ae60' : '#3498db');
+                        let faIcon = v.type === 'TRAM' ? 'fas fa-train-tram' : (v.type === 'TROLLEYBUS' ? 'fas fa-bus-simple' : 'fas fa-bus');
+
+                        const icon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div class="vehicle-marker" style="background-color: ${color};">
+                                        <i class="${faIcon}" style="font-size:10px; margin-bottom:1px;"></i>
+                                        <span style="line-height:1;">${v.line}</span>
+                                   </div>`,
+                            iconSize: [36, 36],
+                            iconAnchor: [18, 18]
+                        });
+                        L.marker([v.lat, v.lng], { icon: icon }).addTo(liveVehiclesLayer);
+                    });
+                }
+            })
+            .catch(e => console.error("Error fetching live vehicles", e));
+    }
 
     function loadLineData(lineId) {
         drawnItems.clearLayers();
