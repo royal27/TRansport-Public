@@ -65,17 +65,33 @@ $current_date = date('d.m.Y');
         .page-content { max-width: 1000px; margin: 30px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
         .page-title { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
 
-        table.flights-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .flights-table th { background-color: #34495e; color: white; padding: 15px; text-align: left; }
-        .flights-table td { padding: 15px; border-bottom: 1px solid #eee; }
+        table.flights-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .flights-table th { background-color: #1a252f; color: #f1c40f; padding: 18px 15px; text-align: left; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .flights-table td { padding: 15px; border-bottom: 1px solid #eee; vertical-align: middle; }
         .flights-table tr:last-child td { border-bottom: none; }
-        .flights-table tr:hover { background-color: #f9f9f9; }
+        .flights-table tr:hover { background-color: #f4f6f9; }
 
-        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        .status-OnTime { background-color: #d4edda; color: #155724; }
-        .status-Delayed { background-color: #f8d7da; color: #721c24; }
-        .status-Boarding { background-color: #cce5ff; color: #004085; }
-        .status-Scheduled { background-color: #e2e3e5; color: #383d41; }
+        .airline-cell { display: flex; align-items: center; gap: 15px; }
+        .airline-logo { width: 60px; height: 30px; object-fit: contain; }
+        .flight-number { font-weight: 700; font-size: 16px; color: #2c3e50; }
+        .airline-name { font-size: 12px; color: #7f8c8d; display: block; }
+
+        .destination-cell { font-weight: 600; font-size: 15px; color: #34495e; }
+        .time-cell { font-weight: bold; font-size: 18px; color: #2c3e50; }
+
+        .status-badge { padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; min-width: 90px; text-align: center; }
+        .status-OnTime { background-color: #2ecc71; color: white; }
+        .status-Delayed { background-color: #e74c3c; color: white; animation: blink 2s infinite; }
+        .status-Boarding { background-color: #f39c12; color: white; }
+        .status-FinalCall { background-color: #d35400; color: white; animation: blink 1s infinite; }
+        .status-Scheduled { background-color: #95a5a6; color: white; }
+        .status-Departed { background-color: #34495e; color: white; }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
 
         .loading-div { text-align: center; padding: 50px; color: #7f8c8d; }
 
@@ -154,18 +170,26 @@ $current_date = date('d.m.Y');
                     `;
 
                     result.data.forEach(flight => {
-                        const statusClass = 'status-' + flight.status.replace(' ', '');
+                        const statusClass = 'status-' + flight.status.replace(/ /g, '');
                         html += `
                             <tr>
-                                <td><strong>${flight.flight_number}</strong></td>
-                                <td>${flight.destination}</td>
-                                <td>${flight.departure_time}</td>
+                                <td>
+                                    <div class="airline-cell">
+                                        <img src="${flight.airline_logo}" class="airline-logo" alt="${flight.airline_name}">
+                                        <div>
+                                            <span class="flight-number">${flight.flight_number}</span>
+                                            <span class="airline-name">${flight.airline_name}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="destination-cell">${flight.destination}</td>
+                                <td class="time-cell">${flight.departure_time}</td>
                                 <td><span class="status-badge ${statusClass}">${flight.status}</span></td>
                             </tr>
                         `;
                     });
 
-                    html += `</tbody></table>`;
+                    html += `</tbody></table></div>`;
                     container.innerHTML = html;
                 }
             } catch (error) {

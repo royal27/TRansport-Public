@@ -305,6 +305,8 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
 
                 let startStr = startInput.value;
                 let endStr = endInput.value;
+                const routingContainer = document.getElementById('routing-ui-container');
+                routingContainer.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Calculăm ruta intermodală optimă...</p></div>';
 
                 // Geocode start
                 geocoder.geocode(startStr, function(resultsStart) {
@@ -315,24 +317,51 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
                         geocoder.geocode(endStr, function(resultsEnd) {
                             if (resultsEnd.length > 0) {
                                 let wpEnd = resultsEnd[0].center;
-                                routingControl.setWaypoints([
-                                    L.latLng(wpStart.lat, wpStart.lng),
-                                    L.latLng(wpEnd.lat, wpEnd.lng)
-                                ]);
 
-                                // After searching, show the actual routing instructions inside our container
-                                container.style.display = 'block';
+                                // Fetch STB + Walk custom routing
+                                fetch(`api/routing.php?start_lat=${wpStart.lat}&start_lng=${wpStart.lng}&end_lat=${wpEnd.lat}&end_lng=${wpEnd.lng}`)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            routingControl.setWaypoints([
+                                                L.latLng(wpStart.lat, wpStart.lng),
+                                                L.latLng(wpEnd.lat, wpEnd.lng)
+                                            ]);
+
+                                            // Build Custom HTML Itinerary
+                                            let html = `<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-top: 15px; background: #f9f9f9;">
+                                                <h3 style="margin-top:0; color: var(--primary-color, #2ecc71);"><i class="fas fa-route"></i> Durată estimată: ${data.route.total_time_mins} min</h3>
+                                                <ul style="list-style: none; padding: 0; margin: 0;">`;
+
+                                            data.route.segments.forEach((seg, idx) => {
+                                                let icon = seg.type === 'WALK' ? '<i class="fas fa-walking" style="color:#555;"></i>' : '<i class="fas fa-bus" style="color:var(--primary-color, #2ecc71);"></i>';
+                                                let borderLine = idx < data.route.segments.length - 1 ? 'border-left: 2px solid #ccc;' : '';
+
+                                                html += `<li style="position: relative; padding-left: 20px; padding-bottom: 15px; ${borderLine}">
+                                                    <div style="position: absolute; left: -9px; top: 0; background: white; border-radius: 50%; padding: 2px;">${icon}</div>
+                                                    <div style="font-weight: bold; font-size: 14px; margin-bottom: 3px;">${seg.instruction}</div>
+                                                    <div style="font-size: 12px; color: #777;">Timp estimat: ${seg.time} ${seg.distance ? ' ('+seg.distance+')' : ''}</div>
+                                                </li>`;
+                                            });
+
+                                            html += `</ul></div>`;
+                                            routingContainer.innerHTML = html;
+                                        } else {
+                                            routingContainer.innerHTML = `<div style="padding: 15px; color: red;">Eroare la calcularea rutei. Vă rugăm să încercați din nou.</div>`;
+                                        }
+                                    })
+                                    .catch(err => {
+                                        routingContainer.innerHTML = `<div style="padding: 15px; color: red;">Eroare conexiune API de rutare.</div>`;
+                                    });
                             }
                         });
                     }
                 });
             });
 
-            // Muta UI-ul de routing în sidebar-ul nostru pt un design mai curat
+            // Ascunde containerul OSRM default deoarece am integrat instructiunile proprii
             var container = routingControl.getContainer();
-            // Ascunde containerul initial, il vom afisa dupa ce userul apasa butonul nostru de cautare
             container.style.display = 'none';
-            document.getElementById('routing-ui-container').appendChild(container);
 
             // Adăugare Marker Locație GPS Utilizator, ca și în index.php (Live location on all maps)
             let userMarker;
