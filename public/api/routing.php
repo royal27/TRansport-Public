@@ -28,14 +28,16 @@ if ($directWalkDist < 1000) {
     $time = round($directWalkDist / 1.4 / 60);
     die(json_encode([
         'status' => 'success',
-        'route' => [
-            'total_time_mins' => $time,
-            'segments' => [
-                [
-                    'type' => 'WALK',
-                    'instruction' => 'Mergi pe jos spre destinație',
-                    'distance' => round($directWalkDist) . 'm',
-                    'time' => $time . ' min'
+        'routes' => [
+            [
+                'total_time_mins' => $time,
+                'segments' => [
+                    [
+                        'type' => 'WALK',
+                        'instruction' => 'Mergi pe jos spre destinație',
+                        'distance' => round($directWalkDist) . 'm',
+                        'time' => $time . ' min'
+                    ]
                 ]
             ]
         ]
@@ -47,17 +49,27 @@ $timeWait = mt_rand(2, 7);
 $timeRide = round($directWalkDist / 5.5 / 60);
 $timeWalk2 = mt_rand(2, 5);
 
-$total = $timeWalk1 + $timeWait + $timeRide + $timeWalk2;
-
 $mockLines = ['335', '41', '1', '10', '32', '104', '381', '79'];
-$line = $mockLines[array_rand($mockLines)];
-$type = 'Autobuzul';
-if (in_array($line, ['41', '1', '10', '32'])) $type = 'Tramvaiul';
-if (in_array($line, ['79'])) $type = 'Troleibuzul';
+shuffle($mockLines);
 
-die(json_encode([
-    'status' => 'success',
-    'route' => [
+$routes = [];
+$numRoutes = mt_rand(2, 3); // 2 or 3 variants
+
+for ($i = 0; $i < $numRoutes; $i++) {
+    $timeWalk1 = mt_rand(3, 8);
+    $timeWait = mt_rand(2, 7);
+    $timeRide = round($directWalkDist / 5.5 / 60) + mt_rand(-3, 3);
+    if ($timeRide < 1) $timeRide = 1;
+    $timeWalk2 = mt_rand(2, 5);
+
+    $total = $timeWalk1 + $timeWait + $timeRide + $timeWalk2;
+
+    $line = $mockLines[$i];
+    $type = 'Autobuzul';
+    if (in_array($line, ['41', '1', '10', '32'])) $type = 'Tramvaiul';
+    if (in_array($line, ['79'])) $type = 'Troleibuzul';
+
+    $routes[] = [
         'total_time_mins' => $total,
         'segments' => [
             [
@@ -80,5 +92,14 @@ die(json_encode([
                 'time' => $timeWalk2 . ' min'
             ]
         ]
-    ]
+    ];
+}
+
+usort($routes, function($a, $b) {
+    return $a['total_time_mins'] <=> $b['total_time_mins'];
+});
+
+die(json_encode([
+    'status' => 'success',
+    'routes' => $routes
 ]));

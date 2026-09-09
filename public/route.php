@@ -267,7 +267,7 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
                 ],
                 routeWhileDragging: true,
                 geocoder: L.Control.Geocoder.nominatim(),
-                language: 'ro', // Română
+                language: 'en', // English default
                 showAlternatives: true,
                 fitSelectedRoutes: true,
                 lineOptions: {
@@ -282,44 +282,93 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
             const btnSearch = document.getElementById('btn-search');
             const geocoder = L.Control.Geocoder.nominatim();
 
-            function checkInputs() {
-                if (startInput.value.trim() !== '' && endInput.value.trim() !== '') {
-                    btnSearch.classList.add('active');
+            function forceCheck() {
+                const sInp = document.getElementById('start-input');
+                const eInp = document.getElementById('end-input');
+                const bSearch = document.getElementById('btn-search');
+                if (!sInp || !eInp || !bSearch) return;
+
+                if (sInp.value.trim() !== '' && eInp.value.trim() !== '') {
+                    bSearch.classList.add('active');
+                    bSearch.style.backgroundColor = '#2ecc71';
+                    bSearch.style.color = 'white';
+                    bSearch.style.cursor = 'pointer';
+                    bSearch.removeAttribute('disabled');
+                    bSearch.style.pointerEvents = 'auto';
                 } else {
-                    btnSearch.classList.remove('active');
+                    bSearch.classList.remove('active');
+                    bSearch.style.backgroundColor = '#ccc';
+                    bSearch.style.cursor = 'not-allowed';
                 }
             }
+            window.forceCheck = forceCheck;
+            window.setInterval(forceCheck, 500);
 
-            startInput.addEventListener('input', checkInputs);
-            endInput.addEventListener('input', checkInputs);
+            window.forceCheck = function() {
+                const sInp = document.getElementById('start-input');
+                const eInp = document.getElementById('end-input');
+                const bSearch = document.getElementById('btn-search');
+
+                if (sInp && eInp && bSearch) {
+                    if (sInp.value.trim() !== '' && eInp.value.trim() !== '') {
+                        bSearch.classList.add('active');
+                        bSearch.style.backgroundColor = '#2ecc71';
+                        bSearch.style.color = 'white';
+                        bSearch.style.cursor = 'pointer';
+                        bSearch.removeAttribute('disabled');
+                        bSearch.style.pointerEvents = 'auto';
+                    } else {
+                        bSearch.classList.remove('active');
+                        bSearch.style.backgroundColor = '#ccc';
+                        bSearch.style.cursor = 'not-allowed';
+                    }
+                }
+            };
+
+            // force check initially
+            setTimeout(window.forceCheck, 100);
+
+            document.getElementById('start-input').addEventListener('input', window.forceCheck);
+            document.getElementById('end-input').addEventListener('input', window.forceCheck);
+            document.getElementById('start-input').addEventListener('change', window.forceCheck);
+            document.getElementById('end-input').addEventListener('change', window.forceCheck);
+
+            // Check periodically in case autofill completely bypasses events
+            setInterval(window.forceCheck, 500);
 
             document.getElementById('swap-points').addEventListener('click', function() {
                 let temp = startInput.value;
                 startInput.value = endInput.value;
                 endInput.value = temp;
-                checkInputs();
+                window.forceCheck();
             });
 
             btnSearch.addEventListener('click', function() {
-                if (!btnSearch.classList.contains('active')) return;
+                if (startInput.value.trim() === '' || endInput.value.trim() === '') {
+                    alert('Introduceți atât punctul de plecare, cât și destinația.');
+                    return;
+                }
 
                 let startStr = startInput.value;
                 let endStr = endInput.value;
                 const routingContainer = document.getElementById('routing-ui-container');
                 routingContainer.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Calculăm ruta intermodală optimă...</p></div>';
 
-                // Geocode start
-                geocoder.geocode(startStr, function(resultsStart) {
-                    if (resultsStart.length > 0) {
-                        let wpStart = resultsStart[0].center;
+                // Use fetch to nominatim directly since leaflet geocoder callback fails sometimes in headless
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(startStr + ', București, România')}`)
+                    .then(r => r.json())
+                    .then(resultsStart => {
+                        if (resultsStart.length > 0) {
+                            let wpStart = { lat: resultsStart[0].lat, lng: resultsStart[0].lon };
 
-                        // Geocode end
-                        geocoder.geocode(endStr, function(resultsEnd) {
-                            if (resultsEnd.length > 0) {
-                                let wpEnd = resultsEnd[0].center;
+                            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endStr + ', București, România')}`)
+                                .then(r => r.json())
+                                .then(resultsEnd => {
+                                    if (resultsEnd.length > 0) {
+                                        let wpEnd = { lat: resultsEnd[0].lat, lng: resultsEnd[0].lon };
 
-                                // Fetch STB + Walk custom routing
-                                fetch(`api/routing.php?start_lat=${wpStart.lat}&start_lng=${wpStart.lng}&end_lat=${wpEnd.lat}&end_lng=${wpEnd.lng}`)
+                                        // Fetch STB + Walk custom routing
+                                        fetch(`api/routing.php?start_lat=${wpStart.lat}&start_lng=${wpStart.lng}&end_lat=${wpEnd.lat}&end_lng=${wpEnd.lng}`)
                                     .then(res => res.json())
                                     .then(data => {
                                         if (data.status === 'success') {
@@ -351,7 +400,8 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
                                         }
                                     })
                                     .catch(err => {
-                                        routingContainer.innerHTML = `<div style="padding: 15px; color: red;">Eroare conexiune API de rutare.</div>`;
+                                        console.error('Fetch err:', err);
+                                        routingContainer.innerHTML = `<div style="padding: 15px; color: red;">Eroare conexiune API de rutare. (${err.message})</div>`;
                                     });
                             }
                         });
