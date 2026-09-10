@@ -377,24 +377,44 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
                                                 L.latLng(wpEnd.lat, wpEnd.lng)
                                             ]);
 
-                                            // Build Custom HTML Itinerary
-                                            let html = `<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-top: 15px; background: #f9f9f9;">
-                                                <h3 style="margin-top:0; color: var(--primary-color, #2ecc71);"><i class="fas fa-route"></i> Durată estimată: ${data.route.total_time_mins} min</h3>
-                                                <ul style="list-style: none; padding: 0; margin: 0;">`;
+                                            if (data.routes && data.routes.length > 0) {
+                                                // Build Custom HTML Itinerary for variants
+                                                let html = `<div><h3 style="margin: 0 0 10px 0; color: #333;">Variante de traseu intermodal</h3>`;
 
-                                            data.route.segments.forEach((seg, idx) => {
-                                                let icon = seg.type === 'WALK' ? '<i class="fas fa-walking" style="color:#555;"></i>' : '<i class="fas fa-bus" style="color:var(--primary-color, #2ecc71);"></i>';
-                                                let borderLine = idx < data.route.segments.length - 1 ? 'border-left: 2px solid #ccc;' : '';
+                                                data.routes.forEach((route, routeIdx) => {
+                                                    let variantTitle = routeIdx === 0 ? 'Opțiunea Optimă' : `Alternativa ${routeIdx + 1}`;
+                                                    let badgeColor = routeIdx === 0 ? 'var(--primary-color, #2ecc71)' : '#f39c12';
 
-                                                html += `<li style="position: relative; padding-left: 20px; padding-bottom: 15px; ${borderLine}">
-                                                    <div style="position: absolute; left: -9px; top: 0; background: white; border-radius: 50%; padding: 2px;">${icon}</div>
-                                                    <div style="font-weight: bold; font-size: 14px; margin-bottom: 3px;">${seg.instruction}</div>
-                                                    <div style="font-size: 12px; color: #777;">Timp estimat: ${seg.time} ${seg.distance ? ' ('+seg.distance+')' : ''}</div>
-                                                </li>`;
-                                            });
+                                                    html += `<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
+                                                            <span style="background: ${badgeColor}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">${variantTitle}</span>
+                                                            <h4 style="margin:0; color: ${badgeColor};"><i class="fas fa-clock"></i> ~${route.total_time_mins} min</h4>
+                                                        </div>
+                                                        <ul style="list-style: none; padding: 0; margin: 0;">`;
 
-                                            html += `</ul></div>`;
-                                            routingContainer.innerHTML = html;
+                                                    route.segments.forEach((seg, idx) => {
+                                                        let icon = seg.type === 'WALK' ? '<i class="fas fa-walking" style="color:#555;"></i>' : '<i class="fas fa-bus" style="color:var(--primary-color, #2ecc71);"></i>';
+                                                        if(seg.vehicle_type === 'Tramvaiul') icon = '<i class="fas fa-tram" style="color:var(--primary-color, #2ecc71);"></i>';
+                                                        if(seg.vehicle_type === 'Troleibuzul') icon = '<i class="fas fa-bus-alt" style="color:var(--primary-color, #2ecc71);"></i>';
+
+                                                        let borderLine = idx < route.segments.length - 1 ? 'border-left: 2px solid #ddd;' : '';
+
+                                                        html += `<li style="position: relative; padding-left: 25px; padding-bottom: 15px; ${borderLine}">
+                                                            <div style="position: absolute; left: -11px; top: 0; width: 22px; height: 22px; background: white; border: 2px solid #ddd; border-radius: 50%; text-align: center; line-height: 18px; font-size: 10px;">
+                                                                ${icon}
+                                                            </div>
+                                                            <strong style="display:block; font-size: 14px; margin-bottom: 3px; color: #444;">${seg.instruction}</strong>
+                                                            <span style="font-size: 12px; color: #888;"><i class="fas ${seg.type === 'WALK' ? 'fa-ruler-horizontal' : 'fa-hourglass-half'}"></i> ${seg.type === 'WALK' ? seg.distance : seg.time}</span>
+                                                        </li>`;
+                                                    });
+
+                                                    html += `</ul></div>`;
+                                                });
+                                                html += `</div>`;
+                                                routingContainer.innerHTML = html;
+                                            } else {
+                                                routingContainer.innerHTML = '<div style="color:red; padding:20px;">Eroare la calcularea rutei. Nu au fost găsite variante.</div>';
+                                            }
                                         } else {
                                             routingContainer.innerHTML = `<div style="padding: 15px; color: red;">Eroare la calcularea rutei. Vă rugăm să încercați din nou.</div>`;
                                         }
@@ -404,9 +424,9 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
                                         routingContainer.innerHTML = `<div style="padding: 15px; color: red;">Eroare conexiune API de rutare. (${err.message})</div>`;
                                     });
                             }
-                        });
+                        }).catch(e => console.error("End geocode err:", e));
                     }
-                });
+                }).catch(e => console.error("Start geocode err:", e));
             });
 
             // Ascunde containerul OSRM default deoarece am integrat instructiunile proprii
