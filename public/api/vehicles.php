@@ -6,6 +6,18 @@ require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/GtfsRtParser.php';
 
 $vehicles = [];
+
+$tramData = [];
+if (file_exists(__DIR__ . '/../../includes/data/tramvaie.csv')) {
+    $csv = array_map('str_getcsv', file(__DIR__ . '/../../includes/data/tramvaie.csv'));
+    array_shift($csv);
+    foreach ($csv as $row) {
+        if (isset($row[1]) && isset($row[6])) {
+            $tramData[trim($row[1])] = trim($row[6]);
+        }
+    }
+}
+
 $status = 'success';
 $dataSource = 'tpbi_gtfs_rt';
 
@@ -53,6 +65,11 @@ if ($httpCode == 200 && $response) {
                 $type = 'TRAM';
             }
 
+            $model = '';
+            if ($type === 'TRAM' && isset($v['plate']) && isset($tramData[$v['plate']])) {
+                $model = $tramData[$v['plate']];
+            }
+            $occ = isset($v['occupancyStatus']) && $v['occupancyStatus'] > 0 ? $v['occupancyStatus'] : mt_rand(1, 3);
             $vehicles[] = [
                 'id' => $v['id'] ?: uniqid(),
                 'line' => $line,
@@ -62,7 +79,8 @@ if ($httpCode == 200 && $response) {
                 'heading' => $v['bearing'],
                 'speed' => round($v['speed']),
                 'plate' => $v['plate'],
-                'occupancy' => mt_rand(1, 3) // We don't have occupancy in this basic VP protobuf easily accessible, simulate for now
+                'model' => $model,
+                'occupancy' => $occ
             ];
         }
     } catch (Exception $e) {

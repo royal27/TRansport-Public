@@ -157,7 +157,7 @@ $trains = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <td><?= htmlspecialchars($train['default_status']) ?></td>
                             <td><?= htmlspecialchars($train['default_platform']) ?></td>
                             <td>
-                                <button class="btn btn-primary btn-sm" onclick='editTrain(<?= json_encode($train) ?>)'><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn btn-primary btn-sm" onclick='editTrain(<?= htmlspecialchars(json_encode($train), ENT_QUOTES, "UTF-8") ?>)'><i class="fa-solid fa-pen"></i></button>
                                 <form method="POST" style="display:inline;" onsubmit="return confirm('Ești sigur că vrei să ștergi acest tren?');">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="id" value="<?= $train['id'] ?>">

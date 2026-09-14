@@ -60,6 +60,7 @@ class GtfsRtParser {
                     $bearing = 0;
                     $speed = 0;
                     $plate = '';
+                    $occupancyStatus = 0;
 
                     while($offset < $entityEnd) {
                         $eKey = self::readVarint($data, $offset);
@@ -78,7 +79,10 @@ class GtfsRtParser {
                                     $vField = $vKey >> 3;
                                     $vWire = $vKey & 0x07;
 
-                                    if ($vWire == 0) { self::readVarint($data, $offset); }
+                                    if ($vWire == 0) {
+                                        $vVal = self::readVarint($data, $offset);
+                                        if ($vField == 9) $occupancyStatus = $vVal;
+                                    }
                                     elseif ($vWire == 5) { $offset += 4; }
                                     elseif ($vWire == 1) { $offset += 8; }
                                     elseif ($vWire == 2) {
@@ -145,6 +149,7 @@ class GtfsRtParser {
                     }
                     if ($lat != 0) {
                         $vehicles[] = [
+                            'occupancyStatus' => $occupancyStatus,
                             'id' => $id,
                             'routeId' => $routeId,
                             'lat' => $lat,
