@@ -4,18 +4,11 @@ header('Content-Type: application/json; charset=utf-8');
 $cacheFile = sys_get_temp_dir() . '/stb_alerts_cache.json';
 $userInfoCacheFile = sys_get_temp_dir() . '/stb_user_info.txt';
 
-require_once __DIR__ . '/../../includes/db.php';
-$db = getDB();
-$stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'tpbi_api_key'");
-$row = $stmt->fetch(PDO::FETCH_ASSOC);
-// We use a dummy key if nothing is defined in DB to prevent leaking defaults
-$appKey = ($row && !empty($row['setting_value'])) ? $row['setting_value'] : 'dummy_key';
-
 $commonHeaders = [
     "Accept: application/json, text/plain, */*",
     "App-Id: buca1aafb0c-e130-41b7-92bc-5e7dd03f0c96",
     "App-Version: 0.0.0",
-    "App-key: " . $appKey,
+    "App-key: gcALgRyZHC,qFonZ=Jde",
     "Connection: keep-alive",
     "Device-Name: Chrome",
     "Host: info.stbsa.ro",
@@ -41,10 +34,18 @@ function fetchUserInfo() {
     curl_close($ch);
 
     if ($httpCode == 200 && $response) {
+        // The API returns the token directly wrapped in JSON {"user_info":"..."} but sometimes it comes without quotes or inside headers. Let's be safe:
         $data = json_decode($response, true);
-        if (isset($data['user_info'])) {
-            file_put_contents($userInfoCacheFile, $data['user_info']);
-            return $data['user_info'];
+        if ($data && isset($data['user_info'])) {
+            $token = $data['user_info'];
+            file_put_contents($userInfoCacheFile, $token);
+            return $token;
+        } else if (strpos($response, '"user_info"') !== false) {
+             preg_match('/"user_info"\s*:\s*"([^"]+)"/', $response, $matches);
+             if (isset($matches[1])) {
+                  file_put_contents($userInfoCacheFile, $matches[1]);
+                  return $matches[1];
+             }
         }
     }
     return null;
