@@ -7,6 +7,28 @@ require_once __DIR__ . '/../../includes/GtfsRtParser.php';
 
 $vehicles = [];
 
+function guessVehicleModel($id, $plate, $type) {
+    // Strip non-numeric for ID matching
+    $numId = (int)preg_replace('/[^0-9]/', '', $id);
+
+    if ($type === 'BUS') {
+        if ($numId >= 3200 && $numId <= 3499) return "Karsan e-ATA 12m";
+        if ($numId >= 4000 && $numId <= 4999) return "Mercedes-Benz Citaro Euro 3/4";
+        if ($numId >= 5300 && $numId <= 5399) return "Mercedes-Benz Citaro Euro 4";
+        if ($numId >= 6200 && $numId <= 6299) return "Mercedes-Benz Citaro Euro 4";
+        if ($numId >= 6400 && $numId <= 6499) return "Otokar Kent C 10m";
+        if ($numId >= 6500 && $numId <= 6699) return "Otokar Kent C 12m";
+        if ($numId >= 6800 && $numId <= 6999) return "Otokar Kent C 18m";
+        if ($numId >= 7000 && $numId <= 7199) return "Mercedes-Benz Citaro Hybrid";
+        if ($numId >= 7200 && $numId <= 7299) return "ZTE Granton 12m";
+    } elseif ($type === 'TROLLEYBUS') {
+        if ($numId >= 5100 && $numId <= 5299) return "Astra Irisbus Citelis";
+        if ($numId >= 5300 && $numId <= 5399) return "Ikarus 415T";
+        if ($numId >= 5400 && $numId <= 5499) return "Solaris Trollino 12";
+        if ($numId >= 7300 && $numId <= 7399) return "Solaris Trollino 12";
+    }
+    return '';
+}
 $tramData = [];
 if (file_exists(__DIR__ . '/../../includes/data/tramvaie.csv')) {
     $csv = array_map('str_getcsv', file(__DIR__ . '/../../includes/data/tramvaie.csv'));
@@ -68,6 +90,8 @@ if ($httpCode == 200 && $response) {
             $model = '';
             if ($type === 'TRAM' && isset($v['plate']) && isset($tramData[$v['plate']])) {
                 $model = $tramData[$v['plate']];
+            } else {
+                $model = guessVehicleModel($v['id'], $v['plate'] ?? '', $type);
             }
             $occ = isset($v['occupancyStatus']) && $v['occupancyStatus'] > 0 ? $v['occupancyStatus'] : mt_rand(1, 3);
             $vehicles[] = [

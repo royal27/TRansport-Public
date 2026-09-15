@@ -183,6 +183,20 @@ $linesJson = json_encode($lines);
 
     let currentLineName = null;
     let liveVehiclesInterval = null;
+    let isLiveVehiclesEnabled = true;
+
+    document.getElementById('btnToggleVehicles').addEventListener('click', function() {
+        isLiveVehiclesEnabled = !isLiveVehiclesEnabled;
+        if (isLiveVehiclesEnabled) {
+            this.classList.remove('btn-secondary');
+            this.classList.add('btn-info');
+            fetchAndRenderLiveVehicles();
+        } else {
+            this.classList.remove('btn-info');
+            this.classList.add('btn-secondary');
+            liveVehiclesLayer.clearLayers();
+        }
+    });
 
     document.getElementById('lineSelect').addEventListener('change', function() {
         currentLineId = this.value;
@@ -192,6 +206,7 @@ $linesJson = json_encode($lines);
             document.getElementById('btnSaveRoute').style.display = 'inline-block';
             document.getElementById('btnLiveRecord').style.display = 'inline-block';
             document.getElementById('btnErase').style.display = 'inline-block';
+            document.getElementById('btnToggleVehicles').style.display = 'inline-block';
             document.getElementById('markerControls').style.display = 'flex';
             map.addControl(drawControl);
             drawControl.setDrawingOptions({
@@ -208,6 +223,7 @@ $linesJson = json_encode($lines);
             document.getElementById('btnSaveRoute').style.display = 'none';
             document.getElementById('btnLiveRecord').style.display = 'none';
             document.getElementById('btnErase').style.display = 'none';
+            document.getElementById('btnToggleVehicles').style.display = 'none';
             document.getElementById('markerControls').style.display = 'none';
             map.removeControl(drawControl);
             drawnItems.clearLayers();
@@ -227,7 +243,7 @@ $linesJson = json_encode($lines);
     });
 
     function fetchAndRenderLiveVehicles() {
-        if (!currentLineName) return;
+        if (!currentLineName || !isLiveVehiclesEnabled) return;
         fetch('../public/api/vehicles.php')
             .then(res => res.json())
             .then(result => {

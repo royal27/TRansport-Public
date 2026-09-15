@@ -167,6 +167,7 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
             border-top: 1px solid #eee;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 </head>
 <body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 

@@ -600,6 +600,41 @@ async function loadCustomLine(id) {
             bpBadge.style.backgroundColor = infoResult.color;
         }
 
+        // --- FETCH LIVE VEHICLES FOR THIS CUSTOM LINE ---
+        if (infoResult.name) {
+            let lineNameStr = infoResult.name;
+            let firstWord = lineNameStr.split(' ')[0]; // E.g. "336" or "10"
+            try {
+                const vehRes = await fetch('api/vehicles.php');
+                const vehResult = await vehRes.json();
+                if (vehResult.status === 'success') {
+                    const matchedVehicles = vehResult.data.filter(v => String(v.line) === String(firstWord) || String(v.line) === String(lineNameStr));
+                    if (isLiveVehiclesEnabled) {
+                        renderVehiclesOnMap(matchedVehicles);
+                    }
+
+                    // Cleanup previous custom interval if any
+                    if (window.customLineLiveInterval) clearInterval(window.customLineLiveInterval);
+
+                    window.customLineLiveInterval = setInterval(async () => {
+                        if (!isLiveVehiclesEnabled) {
+                            vehiclesLayer.clearLayers();
+                            return;
+                        }
+                        try {
+                            const newRes = await fetch('api/vehicles.php');
+                            const newResult = await newRes.json();
+                            if (newResult.status === 'success') {
+                                const newMatched = newResult.data.filter(v => String(v.line) === String(firstWord) || String(v.line) === String(lineNameStr));
+                                renderVehiclesOnMap(newMatched);
+                            }
+                        } catch (err) {}
+                    }, 10000);
+                }
+            } catch (err) {}
+        }
+        // ------------------------------------------------
+
         const bpDirText = document.getElementById('bp-direction-text');
         if(bpDirText) {
             bpDirText.innerHTML = infoResult.description || 'Traseu Customizat';
