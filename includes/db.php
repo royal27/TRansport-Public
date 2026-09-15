@@ -444,6 +444,16 @@ EOT;
             ");
         }
 
+                $pdo->exec("
+            CREATE TABLE IF NOT EXISTS ac_votes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                vehicle_id VARCHAR(50) NOT NULL,
+                has_ac TINYINT(1) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_vote (vehicle_id, created_at)
+            )
+        ");
+
         return $pdo;
     } catch (PDOException $e) {
         die("Eroare conexiune: " . $e->getMessage());

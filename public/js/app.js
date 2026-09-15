@@ -336,22 +336,55 @@ function renderVehiclesOnMap(dataList) {
         const color = getColorByType(v.type);
         const faIcon = getIconByType(v.type);
 
+        let loadIcons = '';
+        if (v.occupancy) {
+            let occLevel = Math.min(3, Math.max(1, v.occupancy));
+            let colorMap = {1: '#27ae60', 2: '#f39c12', 3: '#c0392b'};
+            loadIcons = `<div style="display:flex; gap:2px; margin-top:2px;">
+                <div style="width:6px; height:6px; border-radius:50%; background-color:${occLevel >= 1 ? colorMap[occLevel] : 'transparent'}"></div>
+                <div style="width:6px; height:6px; border-radius:50%; background-color:${occLevel >= 2 ? colorMap[occLevel] : 'transparent'}"></div>
+                <div style="width:6px; height:6px; border-radius:50%; background-color:${occLevel >= 3 ? colorMap[occLevel] : 'transparent'}"></div>
+            </div>`;
+        }
+
         const icon = L.divIcon({
             className: 'custom-div-icon',
             html: `<div class="vehicle-marker" style="background-color: ${color}; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12px;">
                         <i class="${faIcon}" style="font-size:10px; margin-bottom:1px;"></i>
-                        <span style="line-height:1;">${v.line}</span>
+                        <strong style="margin-top:2px;">${v.line}</strong>
+                        ${loadIcons}
                    </div>`,
-            iconSize: [36, 36],
-            iconAnchor: [18, 18]
+            iconSize: [35, 45],
+            iconAnchor: [17, 45]
         });
+
+        let extraPopup = v.model ? `<br><small style="color:#7f8c8d; font-weight:bold;">${v.model}</small>` : '';
+        let comfortHtml = '';
+        if (v.comfortTier) {
+            let badgeClass = v.comfortTier === 'excelent' ? 'background:#27ae60;' : (v.comfortTier === 'ok' ? 'background:#f39c12;' : 'background:#e74c3c;');
+            comfortHtml = `<div style="margin-top:5px;"><span style="${badgeClass} color:white; padding: 2px 6px; border-radius: 4px; font-size:11px;">Confort: ${v.comfortTier.toUpperCase()}</span></div>`;
+        }
+
+        const popupContent = `<div style="text-align:center; min-width: 150px;">
+                <strong>Linia ${v.line}</strong>${extraPopup}<br>
+                ${comfortHtml}
+                <div style="margin-top:5px; font-size:11px;">
+                    Viteza: ${v.speed} km/h | Dir: ${Math.round(v.heading)}°<br>
+                    <strong>Are AC?</strong> <span id="ac-status-${v.id}" style="color:${v.hasAc ? '#27ae60' : '#e74c3c'}">${v.hasAc ? 'Da' : 'Nu'}</span>
+                </div>
+                <div style="margin-top: 8px; display:flex; justify-content: space-around;">
+                    <button onclick="voteAC('${v.id}', 1)" style="background: #27ae60; color:white; border:none; padding:3px 8px; border-radius:4px; cursor:pointer; font-size:11px;"><i class="fas fa-thumbs-up"></i> (${v.votes_yes || 0})</button>
+                    <button onclick="voteAC('${v.id}', 0)" style="background: #e74c3c; color:white; border:none; padding:3px 8px; border-radius:4px; cursor:pointer; font-size:11px;"><i class="fas fa-thumbs-down"></i> (${v.votes_no || 0})</button>
+                </div>
+            </div>`;
 
         const marker = L.marker([v.lat, v.lng], { icon: icon });
+        marker.bindPopup(popupContent);
 
-        // La click pe vehicul, simulăm căutarea/selecția liniei respective
-        marker.on('click', () => {
-            searchLine(v.line);
-        });
+        // Oprim redirectarea catre searchLine pentru a permite click-ul pe butoane in popup
+        // marker.on('click', () => {
+        //    searchLine(v.line);
+        // });
 
         vehiclesLayer.addLayer(marker);
     });
@@ -847,3 +880,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function voteAC(vehicleId, hasAc) {
+    fetch('api/ac_vote.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vehicle_id: vehicleId, has_ac: hasAc })
+    }).then(r => r.json()).then(res => {
+        if (res.status === 'success') {
+            alert('Votul tau a fost inregistrat!');
+            // Re-fetch to update popup visually
+            loadVehicles();
+        } else {
+            alert('Eroare la inregistrarea votului.');
+        }
+    });
+}
