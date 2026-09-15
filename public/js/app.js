@@ -343,7 +343,8 @@ function renderVehiclesOnMap(dataList) {
     });
 }
 
-let allVehicles = []; // Store globally for the popup menu
+let allVehicles = [];
+let isLiveVehiclesEnabled = true;
 
 async function loadVehicles() {
     try {
@@ -352,7 +353,11 @@ async function loadVehicles() {
 
         if (result.status === 'success') {
             allVehicles = result.data;
-            renderVehiclesOnMap(result.data);
+            if (isLiveVehiclesEnabled) {
+                renderVehiclesOnMap(result.data);
+            } else {
+                vehiclesLayer.clearLayers();
+            }
 
             // If popup is open, refresh its content to show updated active lines
             const popupEl = document.getElementById('lines-popup');
@@ -704,6 +709,21 @@ let userRouteTrackingWatcher = null;
 let currentCustomStations = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    const toggleVehiclesBtn = document.getElementById('bp-toggle-vehicles');
+    if (toggleVehiclesBtn) {
+        toggleVehiclesBtn.addEventListener('click', function() {
+            isLiveVehiclesEnabled = !isLiveVehiclesEnabled;
+            if (isLiveVehiclesEnabled) {
+                this.style.backgroundColor = '#3498db'; // Active
+                renderVehiclesOnMap(allVehicles);
+            } else {
+                this.style.backgroundColor = '#95a5a6'; // Inactive
+                vehiclesLayer.clearLayers();
+            }
+        });
+    }
+
     const trackBtn = document.getElementById('bp-live-track');
     if (trackBtn) {
         trackBtn.addEventListener('click', function() {

@@ -210,6 +210,7 @@ $current_date = date('d.m.Y');
                     </div>
                 </div>
                 <div>
+                    <button id="bp-toggle-vehicles" class="btn-icon-circular" style="background:#3498db; color:white; margin-right: 10px;" title="Toggle Live Vehicles"><i class="fas fa-bus"></i></button>
                     <button id="bp-live-track" class="btn-icon-circular" style="background:#e74c3c; color:white; margin-right: 10px;" title="Live Route Tracking"><i class="fas fa-crosshairs"></i></button>
                     <button id="bp-switch-dir" class="btn-icon-circular"><i class="fas fa-exchange-alt"></i></button>
                 </div>
