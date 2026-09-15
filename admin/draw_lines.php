@@ -233,19 +233,32 @@ $linesJson = json_encode($lines);
             .then(result => {
                 liveVehiclesLayer.clearLayers();
                 if (result.status === 'success' && result.data) {
-                    const lineVehicles = result.data.filter(v => v.line === currentLineName);
+                    let firstWord = currentLineName.split(' ')[0];
+                    const lineVehicles = result.data.filter(v => v.line === currentLineName || v.line === firstWord);
                     lineVehicles.forEach(v => {
                         let color = v.type === 'TRAM' ? '#e74c3c' : (v.type === 'TROLLEYBUS' ? '#27ae60' : '#3498db');
                         let faIcon = v.type === 'TRAM' ? 'fas fa-train-tram' : (v.type === 'TROLLEYBUS' ? 'fas fa-bus-simple' : 'fas fa-bus');
 
+                        let loadIcons = '';
+                        if (v.occupancy) {
+                            let occLevel = Math.min(3, Math.max(1, v.occupancy));
+                            let colorMap = {1: '#27ae60', 2: '#f39c12', 3: '#c0392b'};
+                            loadIcons = `<div style="display:flex; gap:2px; margin-top:2px;">
+                                <div style="width:6px; height:6px; border-radius:50%; background-color:${occLevel >= 1 ? colorMap[occLevel] : 'transparent'}"></div>
+                                <div style="width:6px; height:6px; border-radius:50%; background-color:${occLevel >= 2 ? colorMap[occLevel] : 'transparent'}"></div>
+                                <div style="width:6px; height:6px; border-radius:50%; background-color:${occLevel >= 3 ? colorMap[occLevel] : 'transparent'}"></div>
+                            </div>`;
+                        }
+
                         const icon = L.divIcon({
                             className: 'custom-div-icon',
-                            html: `<div class="vehicle-marker" style="background-color: ${color};">
-                                        <i class="${faIcon}" style="font-size:10px; margin-bottom:1px;"></i>
-                                        <span style="line-height:1;">${v.line}</span>
+                            html: `<div class="vehicle-marker" style="background-color: ${color}; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12px;">
+                                        <i class="${faIcon}"></i>
+                                        <strong style="margin-top:2px;">${v.line}</strong>
+                                        ${loadIcons}
                                    </div>`,
-                            iconSize: [36, 36],
-                            iconAnchor: [18, 18]
+                            iconSize: [35, 45],
+                            iconAnchor: [17, 45]
                         });
                         L.marker([v.lat, v.lng], { icon: icon }).addTo(liveVehiclesLayer);
                     });
