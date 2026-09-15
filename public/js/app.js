@@ -38,7 +38,10 @@ if (btnBackLine) btnBackLine.addEventListener('click', () => {
     lineInfo.classList.add('hidden');
     bottomPanel.classList.add('hidden');
     welcomeInfo.classList.remove('hidden');
-    if (currentRoutePolyline) map.removeLayer(currentRoutePolyline);
+        if (currentRoutePolyline) {
+        map.removeLayer(currentRoutePolyline);
+        if (currentRoutePolyline.decorator) map.removeLayer(currentRoutePolyline.decorator);
+    }
 });
 
 // Setup Category Tabs & Popup
@@ -284,12 +287,23 @@ function renderTimelineUI(result, shapeCoordinates) {
         });
     });
 
-    if (currentRoutePolyline) map.removeLayer(currentRoutePolyline);
+        if (currentRoutePolyline) {
+        map.removeLayer(currentRoutePolyline);
+        if (currentRoutePolyline.decorator) map.removeLayer(currentRoutePolyline.decorator);
+    }
 
     // Draw route
     if (shapeCoordinates && shapeCoordinates.length > 0) {
         const latlngs = shapeCoordinates.map(p => [p.lat, p.lng]);
-        currentRoutePolyline = L.polyline(latlngs, {color: result.color, weight: 6, opacity: 0.8}).addTo(map);
+                currentRoutePolyline = L.polyline(latlngs, {color: result.color, weight: 6, opacity: 0.8}).addTo(map);
+        // Add directional arrows
+        if (typeof L.polylineDecorator === 'function') {
+            currentRoutePolyline.decorator = L.polylineDecorator(currentRoutePolyline, {
+                patterns: [
+                    {offset: 25, repeat: 100, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: {fillOpacity: 1, weight: 0, color: '#000'}})}
+                ]
+            }).addTo(map);
+        }
         map.fitBounds(currentRoutePolyline.getBounds());
     }
 }
@@ -552,7 +566,10 @@ async function loadCustomLine(id) {
 
     timelineList.innerHTML = '<div class="loading">Se încarcă linia...</div>';
 
-    if (currentRoutePolyline) map.removeLayer(currentRoutePolyline);
+        if (currentRoutePolyline) {
+        map.removeLayer(currentRoutePolyline);
+        if (currentRoutePolyline.decorator) map.removeLayer(currentRoutePolyline.decorator);
+    }
 
     try {
         // Fetch info
@@ -591,7 +608,14 @@ async function loadCustomLine(id) {
         // Draw route
         if (routeResult && routeResult.length > 0) {
             const latlngs = routeResult.map(p => [p.latitude, p.longitude]);
-            currentRoutePolyline = L.polyline(latlngs, {color: infoResult.color, weight: 6, opacity: 0.8}).addTo(map);
+                        currentRoutePolyline = L.polyline(latlngs, {color: infoResult.color, weight: 6, opacity: 0.8}).addTo(map);
+            if (typeof L.polylineDecorator === 'function') {
+                currentRoutePolyline.decorator = L.polylineDecorator(currentRoutePolyline, {
+                    patterns: [
+                        {offset: 25, repeat: 100, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: {fillOpacity: 1, weight: 0, color: '#000'}})}
+                    ]
+                }).addTo(map);
+            }
             map.fitBounds(currentRoutePolyline.getBounds());
         }
 
