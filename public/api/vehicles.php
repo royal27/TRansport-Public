@@ -26,45 +26,53 @@ try {
     }
 } catch (Exception $e) {}
 
-// Pre-load all fleet JSON files
+// Pre-load all fleet JSON files with server-side caching (APCu or temp file)
 $fleetDataCache = [];
+$fleetCacheFile = sys_get_temp_dir() . '/fleet_data_cache.php';
 
-function loadFleetJson($filename, $modelPrefix) {
-    global $fleetDataCache;
-    $path = __DIR__ . '/../../includes/data/' . $filename;
-    if (file_exists($path)) {
-        $data = json_decode(file_get_contents($path), true);
-        if ($data) {
-            foreach ($data as $veh) {
-                if (isset($veh['plate']) && isset($veh['inventory'])) {
-                    $plate = str_replace('-', '', $veh['plate']);
-                    $modelName = $modelPrefix;
-                    if (isset($veh['modelType'])) {
-                        $modelName = $veh['modelType'];
-                    } else if ($filename === 'citaro.json') {
-                         $modelName = "Mercedes Citaro Euro 3/4";
-                    } else if ($filename === 'otokar.json') {
-                         $modelName = "Otokar Kent";
-                    } else if ($filename === 'city-tour.json') {
-                         $modelName = "BCT Bus";
+if (file_exists($fleetCacheFile) && (time() - filemtime($fleetCacheFile)) < 3600) {
+    $fleetDataCache = include $fleetCacheFile;
+} else {
+    function loadFleetJson($filename, $modelPrefix) {
+        global $fleetDataCache;
+        $path = __DIR__ . '/../../includes/data/' . $filename;
+        if (file_exists($path)) {
+            $data = json_decode(file_get_contents($path), true);
+            if ($data) {
+                foreach ($data as $veh) {
+                    if (isset($veh['plate']) && isset($veh['inventory'])) {
+                        $plate = str_replace('-', '', $veh['plate']);
+                        $modelName = $modelPrefix;
+                        if (isset($veh['modelType'])) {
+                            $modelName = $veh['modelType'];
+                        } else if ($filename === 'citaro.json') {
+                             $modelName = "Mercedes Citaro Euro 3/4";
+                        } else if ($filename === 'otokar.json') {
+                             $modelName = "Otokar Kent";
+                        } else if ($filename === 'city-tour.json') {
+                             $modelName = "BCT Bus";
+                        }
+
+                        $fleetDataCache[$plate] = [
+                            'inventory' => $veh['inventory'],
+                            'model' => $modelName
+                        ];
                     }
-
-                    $fleetDataCache[$plate] = [
-                        'inventory' => $veh['inventory'],
-                        'model' => $modelName
-                    ];
                 }
             }
         }
     }
-}
 
-// Ensure trolleybus.json, citaro.json, otokar.json, all-buses.json etc. are loaded
-loadFleetJson('citaro.json', 'Mercedes Citaro');
-loadFleetJson('otokar.json', 'Otokar Kent');
-loadFleetJson('all-buses.json', 'STB Bus');
-loadFleetJson('trolleybus.json', 'STB Trolleybus');
-loadFleetJson('city-tour.json', 'City Tour Bus');
+    loadFleetJson('citaro.json', 'Mercedes Citaro');
+    loadFleetJson('otokar.json', 'Otokar Kent');
+    loadFleetJson('all-buses.json', 'STB Bus');
+    loadFleetJson('trolleybus.json', 'STB Trolleybus');
+    loadFleetJson('city-tour.json', 'City Tour Bus');
+
+    file_put_contents($fleetCacheFile, "<?php
+return " . var_export($fleetDataCache, true) . ";
+");
+}
 
 function guessVehicleModel($id, $plate, $type) {
     global $fleetDataCache;

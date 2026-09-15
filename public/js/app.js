@@ -340,22 +340,32 @@ function renderVehiclesOnMap(dataList) {
         if (v.occupancy) {
             let occLevel = Math.min(3, Math.max(1, v.occupancy));
             let colorMap = {1: '#27ae60', 2: '#f39c12', 3: '#c0392b'};
-            loadIcons = `<div style="display:flex; gap:2px; margin-top:2px;">
-                <div style="width:6px; height:6px; border-radius:50%; background-color:${occLevel >= 1 ? colorMap[occLevel] : 'transparent'}"></div>
-                <div style="width:6px; height:6px; border-radius:50%; background-color:${occLevel >= 2 ? colorMap[occLevel] : 'transparent'}"></div>
-                <div style="width:6px; height:6px; border-radius:50%; background-color:${occLevel >= 3 ? colorMap[occLevel] : 'transparent'}"></div>
+            loadIcons = `<div class="infotb-occupancy">
+                <div style="width:5px; height:5px; border-radius:50%; background-color:${occLevel >= 1 ? colorMap[occLevel] : 'transparent'}"></div>
+                <div style="width:5px; height:5px; border-radius:50%; background-color:${occLevel >= 2 ? colorMap[occLevel] : 'transparent'}"></div>
+                <div style="width:5px; height:5px; border-radius:50%; background-color:${occLevel >= 3 ? colorMap[occLevel] : 'transparent'}"></div>
             </div>`;
+        }
+
+        // Use ID or plate as the fleet number (numar de parc). E.g. "3874" or "B-123-STB"
+        let fleetNumber = v.id;
+        if (!isNaN(v.id) && v.id.length < 5) {
+            fleetNumber = v.id; // Pure number, typical for STB park numbers
+        } else if (v.plate && v.plate.trim() !== '') {
+            fleetNumber = v.plate; // Fallback to plate if id is weird UUID
         }
 
         const icon = L.divIcon({
             className: 'custom-div-icon',
-            html: `<div class="vehicle-marker" style="background-color: ${color}; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12px;">
-                        <i class="${faIcon}" style="font-size:10px; margin-bottom:1px;"></i>
-                        <strong style="margin-top:2px;">${v.line}</strong>
+            html: `<div class="infotb-marker-wrapper">
+                        <div class="infotb-label">L: ${v.line}<br><span style="font-weight:normal; font-size:9px; color:#555;">P: ${fleetNumber}</span></div>
+                        <div class="infotb-circle" style="background-color: ${color};">
+                            <i class="${faIcon}"></i>
+                        </div>
                         ${loadIcons}
                    </div>`,
-            iconSize: [35, 45],
-            iconAnchor: [17, 45]
+            iconSize: [60, 70],
+            iconAnchor: [30, 50] // Anchored to the center of the circle
         });
 
         let extraPopup = v.model ? `<br><small style="color:#7f8c8d; font-weight:bold;">${v.model}</small>` : '';
