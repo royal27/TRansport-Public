@@ -96,6 +96,7 @@ $linesJson = json_encode($lines);
                 <input type="text" id="osmSearchInput" placeholder="Caută traseu STB (ex: 335)" style="padding: 5px; width: 180px;">
                 <button id="btnOsmSearch" class="btn-save" style="background-color: #3498db;"><i class="fas fa-search"></i> Caută</button>
                 <button id="btnErase" class="btn-save" style="background-color: #f1c40f; color: black; display: none;"><i class="fas fa-eraser"></i> Radieră (Click pe segment)</button>
+                <button id="btnToggleVehicles" class="btn-save" style="background-color: #3498db; display: none;"><i class="fas fa-bus"></i> Live Vehicles</button>
             </div>
 
             <div style="float: right;">
