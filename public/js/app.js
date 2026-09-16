@@ -400,6 +400,7 @@ async function fetchStationArrivals(stationId, stationName) {
     welcomeInfo.classList.add('hidden');
     lineInfo.classList.add('hidden');
     bottomPanel.classList.add('hidden');
+    currentCustomLineStr = null;
     stationInfo.classList.remove('hidden');
     stationNameEl.textContent = stationName;
     arrivalsListEl.innerHTML = `<div class="loading">${i18n.loading}</div>`;
@@ -657,6 +658,41 @@ async function loadCustomLine(id) {
 
         timelineList.innerHTML = html;
 
+        // --- FETCH LIVE VEHICLES FOR THIS CUSTOM LINE ---
+        if (infoResult.name) {
+            let lineNameStr = infoResult.name;
+            let firstWord = lineNameStr.split(' ')[0]; // E.g. "336" or "10"
+            try {
+                const vehRes = await fetch('api/vehicles.php');
+                const vehResult = await vehRes.json();
+                if (vehResult.status === 'success') {
+                    const matchedVehicles = vehResult.data.filter(v => String(v.line) === String(firstWord) || String(v.line) === String(lineNameStr));
+                    if (typeof isLiveVehiclesEnabled !== 'undefined' && isLiveVehiclesEnabled) {
+                        renderVehiclesOnMap(matchedVehicles);
+                    }
+
+                    // Cleanup previous custom interval if any
+                    if (window.customLineLiveInterval) clearInterval(window.customLineLiveInterval);
+
+                    window.customLineLiveInterval = setInterval(async () => {
+                        if (typeof isLiveVehiclesEnabled !== 'undefined' && !isLiveVehiclesEnabled) {
+                            vehiclesLayer.clearLayers();
+                            return;
+                        }
+                        try {
+                            const newRes = await fetch('api/vehicles.php');
+                            const newResult = await newRes.json();
+                            if (newResult.status === 'success') {
+                                const newMatched = newResult.data.filter(v => String(v.line) === String(firstWord) || String(v.line) === String(lineNameStr));
+                                renderVehiclesOnMap(newMatched);
+                            }
+                        } catch (err) {}
+                    }, 10000);
+                }
+            } catch (err) {}
+        }
+        // ------------------------------------------------
+
         // Cleanup old markers when new route is loaded
         const originalRemove = map.removeLayer.bind(map);
         map.removeLayer = function(layer) {
@@ -716,6 +752,26 @@ let userRouteTrackingWatcher = null;
 let currentCustomStations = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+    const toggleVehiclesBtn = document.getElementById('bp-toggle-vehicles');
+    if (toggleVehiclesBtn) {
+        toggleVehiclesBtn.addEventListener('click', function() {
+            if (typeof isLiveVehiclesEnabled === 'undefined') window.isLiveVehiclesEnabled = true;
+            isLiveVehiclesEnabled = !isLiveVehiclesEnabled;
+            if (isLiveVehiclesEnabled) {
+                this.style.backgroundColor = '#3498db'; // Active
+                if (currentCustomLineStr) {
+                    let firstWord = currentCustomLineStr.split(' ')[0];
+                    const matchedVehicles = allVehicles.filter(v => String(v.line) === String(firstWord) || String(v.line) === String(currentCustomLineStr));
+                    renderVehiclesOnMap(matchedVehicles);
+                } else {
+                    renderVehiclesOnMap(allVehicles);
+                }
+            } else {
+                this.style.backgroundColor = '#95a5a6'; // Inactive
+                vehiclesLayer.clearLayers();
+            }
+        });
+    }
     const trackBtn = document.getElementById('bp-live-track');
     if (trackBtn) {
         trackBtn.addEventListener('click', function() {

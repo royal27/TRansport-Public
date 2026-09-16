@@ -67,7 +67,6 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <a href="metro_editor.php"><i class="fas fa-subway"></i> Desenează Harta Metrou</a>
         <a href="manage_users.php"><i class="fas fa-users"></i> Administrează Utilizatori</a>
         <a href="manage_tickets.php"><i class="fas fa-ticket-alt"></i> Plăți prin SMS</a>
-        <a href="manage_cfr.php"><i class="fa-solid fa-train"></i> Plecări CFR</a>
         <a href="backup.php"><i class="fas fa-save"></i> Backup / Restore</a>
         <a href="../public/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Vezi site-ul</a>
         <a href="index.php?action=logout" style="color: #e74c3c; margin-top: 50px;"><i class="fas fa-sign-out-alt"></i> Logout</a>

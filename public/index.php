@@ -78,8 +78,6 @@ $current_date = date('d.m.Y');
             <a href="index.php?lang=<?= $lang ?>" class="nav-item active" title="<?= getTranslation('btn_map', $lang) ?>"><i class="fas fa-map-marker-alt"></i></a>
             <a href="schedules.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_schedules', $lang) ?>"><i class="fas fa-clock"></i></a>
             <a href="lines.php?lang=<?= $lang ?>" class="nav-item" title="Orar și Linii Curente"><i class="fas fa-route"></i></a>
-            <a href="cfr.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('cfr_title', $lang) ?>"><i class="fas fa-train"></i></a>
-            <a href="alerts.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('stb_alerts', $lang) ?>"><i class="fas fa-bell"></i></a>
             <a href="flights.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_flights', $lang) ?>"><i class="fas fa-plane"></i></a>
             <a href="metro.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_metro', $lang) ?>"><i class="fas fa-subway"></i></a>
             <a href="route.php?lang=<?= $lang ?>" class="nav-item" title="Organizează rută"><i class="fas fa-directions"></i></a>
@@ -210,7 +208,6 @@ $current_date = date('d.m.Y');
                     </div>
                 </div>
                 <div>
-                    <button id="bp-toggle-vehicles" class="btn-icon-circular" style="background:#3498db; color:white; margin-right: 10px;" title="Toggle Live Vehicles"><i class="fas fa-bus"></i></button>
                     <button id="bp-live-track" class="btn-icon-circular" style="background:#e74c3c; color:white; margin-right: 10px;" title="Live Route Tracking"><i class="fas fa-crosshairs"></i></button>
                     <button id="bp-switch-dir" class="btn-icon-circular"><i class="fas fa-exchange-alt"></i></button>
                 </div>

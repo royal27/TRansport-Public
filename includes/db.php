@@ -413,47 +413,6 @@ EOT;
             )
         ");
 
-        try {
-            $pdo->exec("
-                CREATE TABLE IF NOT EXISTS cfr_trains (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    train_number VARCHAR(50) NOT NULL,
-                    type VARCHAR(20) NOT NULL DEFAULT 'IR',
-                    route VARCHAR(100) NOT NULL,
-                    time VARCHAR(10) NOT NULL,
-                    direction VARCHAR(20) NOT NULL DEFAULT 'plecare',
-                    default_status VARCHAR(50) DEFAULT 'La timp',
-                    default_platform VARCHAR(20) DEFAULT '',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ");
-        } catch (PDOException $e) {
-            // If the DB is MySQL, use INT AUTO_INCREMENT
-            $pdo->exec("
-                CREATE TABLE IF NOT EXISTS cfr_trains (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    train_number VARCHAR(50) NOT NULL,
-                    type VARCHAR(20) NOT NULL DEFAULT 'IR',
-                    route VARCHAR(100) NOT NULL,
-                    time VARCHAR(10) NOT NULL,
-                    direction VARCHAR(20) NOT NULL DEFAULT 'plecare',
-                    default_status VARCHAR(50) DEFAULT 'La timp',
-                    default_platform VARCHAR(20) DEFAULT '',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ");
-        }
-
-                $pdo->exec("
-            CREATE TABLE IF NOT EXISTS ac_votes (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                vehicle_id VARCHAR(50) NOT NULL,
-                has_ac TINYINT(1) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE KEY unique_vote (vehicle_id, created_at)
-            )
-        ");
-
         return $pdo;
     } catch (PDOException $e) {
         die("Eroare conexiune: " . $e->getMessage());
