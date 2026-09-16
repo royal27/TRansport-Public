@@ -72,7 +72,6 @@ $linesJson = json_encode($lines);
         <a href="metro_editor.php"><i class="fas fa-subway"></i> Desenează Harta Metrou</a>
         <a href="manage_users.php"><i class="fas fa-users"></i> Administrează Utilizatori</a>
         <a href="manage_tickets.php"><i class="fas fa-ticket-alt"></i> Plăți prin SMS</a>
-        <a href="manage_cfr.php"><i class="fa-solid fa-train"></i> Plecări CFR</a>
         <a href="backup.php"><i class="fas fa-save"></i> Backup / Restore</a>
         <a href="../public/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Vezi site-ul</a>
         <a href="index.php?action=logout" style="color: #e74c3c; margin-top: 50px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -96,7 +95,6 @@ $linesJson = json_encode($lines);
                 <input type="text" id="osmSearchInput" placeholder="Caută traseu STB (ex: 335)" style="padding: 5px; width: 180px;">
                 <button id="btnOsmSearch" class="btn-save" style="background-color: #3498db;"><i class="fas fa-search"></i> Caută</button>
                 <button id="btnErase" class="btn-save" style="background-color: #f1c40f; color: black; display: none;"><i class="fas fa-eraser"></i> Radieră (Click pe segment)</button>
-                <button id="btnToggleVehicles" class="btn-save" style="background-color: #3498db; display: none;"><i class="fas fa-bus"></i> Live Vehicles</button>
             </div>
 
             <div style="float: right;">
@@ -184,20 +182,6 @@ $linesJson = json_encode($lines);
 
     let currentLineName = null;
     let liveVehiclesInterval = null;
-    let isLiveVehiclesEnabled = true;
-
-    document.getElementById('btnToggleVehicles').addEventListener('click', function() {
-        isLiveVehiclesEnabled = !isLiveVehiclesEnabled;
-        if (isLiveVehiclesEnabled) {
-            this.classList.remove('btn-secondary');
-            this.classList.add('btn-info');
-            fetchAndRenderLiveVehicles();
-        } else {
-            this.classList.remove('btn-info');
-            this.classList.add('btn-secondary');
-            liveVehiclesLayer.clearLayers();
-        }
-    });
 
     document.getElementById('lineSelect').addEventListener('change', function() {
         currentLineId = this.value;
@@ -207,7 +191,6 @@ $linesJson = json_encode($lines);
             document.getElementById('btnSaveRoute').style.display = 'inline-block';
             document.getElementById('btnLiveRecord').style.display = 'inline-block';
             document.getElementById('btnErase').style.display = 'inline-block';
-            document.getElementById('btnToggleVehicles').style.display = 'inline-block';
             document.getElementById('markerControls').style.display = 'flex';
             map.addControl(drawControl);
             drawControl.setDrawingOptions({
@@ -224,7 +207,6 @@ $linesJson = json_encode($lines);
             document.getElementById('btnSaveRoute').style.display = 'none';
             document.getElementById('btnLiveRecord').style.display = 'none';
             document.getElementById('btnErase').style.display = 'none';
-            document.getElementById('btnToggleVehicles').style.display = 'none';
             document.getElementById('markerControls').style.display = 'none';
             map.removeControl(drawControl);
             drawnItems.clearLayers();
@@ -244,49 +226,25 @@ $linesJson = json_encode($lines);
     });
 
     function fetchAndRenderLiveVehicles() {
-        if (!currentLineName || !isLiveVehiclesEnabled) return;
+        if (!currentLineName) return;
         fetch('../public/api/vehicles.php')
             .then(res => res.json())
             .then(result => {
                 liveVehiclesLayer.clearLayers();
                 if (result.status === 'success' && result.data) {
-                    let firstWord = currentLineName.split(' ')[0];
-                    const lineVehicles = result.data.filter(v => v.line === currentLineName || v.line === firstWord);
+                    const lineVehicles = result.data.filter(v => v.line === currentLineName);
                     lineVehicles.forEach(v => {
                         let color = v.type === 'TRAM' ? '#e74c3c' : (v.type === 'TROLLEYBUS' ? '#27ae60' : '#3498db');
                         let faIcon = v.type === 'TRAM' ? 'fas fa-train-tram' : (v.type === 'TROLLEYBUS' ? 'fas fa-bus-simple' : 'fas fa-bus');
 
-                        let loadIcons = '';
-                        if (v.occupancy) {
-                            let occLevel = Math.min(3, Math.max(1, v.occupancy));
-                            let colorMap = {1: '#27ae60', 2: '#f39c12', 3: '#c0392b'};
-                            loadIcons = `<div class="infotb-occupancy" style="display:flex; gap:2px; margin-top:3px; position:absolute; bottom:-8px; background:rgba(255,255,255,0.9); padding:2px 4px; border-radius:6px; box-shadow:0px 1px 3px rgba(0,0,0,0.3);">
-                                <div style="width:5px; height:5px; border-radius:50%; background-color:${occLevel >= 1 ? colorMap[occLevel] : 'transparent'}"></div>
-                                <div style="width:5px; height:5px; border-radius:50%; background-color:${occLevel >= 2 ? colorMap[occLevel] : 'transparent'}"></div>
-                                <div style="width:5px; height:5px; border-radius:50%; background-color:${occLevel >= 3 ? colorMap[occLevel] : 'transparent'}"></div>
-                            </div>`;
-                        }
-
-                        let fleetNumber = v.id;
-                        if (!isNaN(v.id) && String(v.id).length < 5) {
-                            fleetNumber = v.id;
-                        } else if (v.plate && v.plate.trim() !== '') {
-                            fleetNumber = v.plate;
-                        }
-
                         const icon = L.divIcon({
                             className: 'custom-div-icon',
-                            html: `<div class="infotb-marker-wrapper" style="position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; width:60px; height:70px;">
-                                        <div class="infotb-label" style="position:absolute; top:-5px; background:white; color:black; font-size:11px; font-weight:800; padding:2px 6px; border-radius:8px; box-shadow:0px 2px 4px rgba(0,0,0,0.3); white-space:nowrap; z-index:2; border:1px solid #ddd; text-align:center;">
-                                            L: ${v.line}<br><span style="font-weight:normal; font-size:9px; color:#555;">P: ${fleetNumber}</span>
-                                        </div>
-                                        <div class="infotb-circle" style="width:32px; height:32px; border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; font-size:16px; border:2px solid white; box-shadow:0px 2px 5px rgba(0,0,0,0.4); position:relative; z-index:1; background-color: ${color};">
-                                            <i class="${faIcon}"></i>
-                                        </div>
-                                        ${loadIcons}
+                            html: `<div class="vehicle-marker" style="background-color: ${color};">
+                                        <i class="${faIcon}" style="font-size:10px; margin-bottom:1px;"></i>
+                                        <span style="line-height:1;">${v.line}</span>
                                    </div>`,
-                            iconSize: [60, 70],
-                            iconAnchor: [30, 50]
+                            iconSize: [36, 36],
+                            iconAnchor: [18, 18]
                         });
                         L.marker([v.lat, v.lng], { icon: icon }).addTo(liveVehiclesLayer);
                     });

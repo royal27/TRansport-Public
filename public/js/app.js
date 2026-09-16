@@ -39,8 +39,23 @@ if (btnBackLine) btnBackLine.addEventListener('click', () => {
     lineInfo.classList.add('hidden');
     bottomPanel.classList.add('hidden');
     currentCustomLineStr = null;
+
+    // Cleanup custom interval if any
+    if (window.customLineLiveInterval) {
+        clearInterval(window.customLineLiveInterval);
+        window.customLineLiveInterval = null;
+    }
+
+    // Refresh regular vehicles
+    if (isLiveVehiclesEnabled && allVehicles.length > 0) {
+        renderVehiclesOnMap(allVehicles);
+    }
+
     welcomeInfo.classList.remove('hidden');
-    if (currentRoutePolyline) map.removeLayer(currentRoutePolyline);
+    if (currentRoutePolyline) {
+        if (currentRoutePolyline.decorator) map.removeLayer(currentRoutePolyline.decorator);
+        map.removeLayer(currentRoutePolyline);
+    }
 });
 
 // Setup Category Tabs & Popup
@@ -295,6 +310,26 @@ function renderTimelineUI(result, shapeCoordinates) {
         const latlngs = shapeCoordinates.map(p => [p.lat, p.lng]);
         currentRoutePolyline = L.polyline(latlngs, {color: result.color, weight: 6, opacity: 0.8}).addTo(map);
         map.fitBounds(currentRoutePolyline.getBounds());
+
+        // Add directional arrows if polyline decorator is available
+        if (typeof L.polylineDecorator === 'function') {
+            const arrowColor = (result.color === '#f1c40f' || result.color === '#ffffff') ? '#000000' : '#ffffff';
+            const arrowDecorator = L.polylineDecorator(currentRoutePolyline, {
+                patterns: [
+                    {
+                        offset: 25,
+                        repeat: 100,
+                        symbol: L.Symbol.arrowHead({
+                            pixelSize: 10,
+                            polygon: false,
+                            pathOptions: { stroke: true, color: arrowColor, weight: 2, opacity: 1 }
+                        })
+                    }
+                ]
+            }).addTo(map);
+            // Store decorator to remove it later when line is cleared
+            currentRoutePolyline.decorator = arrowDecorator;
+        }
     }
 }
 
@@ -326,15 +361,40 @@ function renderVehiclesOnMap(dataList) {
         const color = getColorByType(v.type);
         const faIcon = getIconByType(v.type);
 
+        let specialBadgeHtml = '';
+        if (v.special_type && v.special_type !== 'unknown') {
+            specialBadgeHtml = `<div style="position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 14px; height: 14px; font-size: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid white;" title="Special model: ${v.special_type}">*</div>`;
+        }
+
+        const scoreColor = (v.comfort_score !== undefined && v.comfort_score < 40) ? '#e74c3c' : '#2ecc71';
+        let occupancyHtml = '';
+        if (v.occupancy !== undefined && v.comfort_score !== undefined) {
+             occupancyHtml = `<div class="infotb-occupancy" style="bottom:-15px;">
+                 <i class="fas fa-users" style="color: #34495e; font-size:8px;"></i>
+                 <span style="font-size:9px; font-weight:bold; color:#2c3e50;">${v.occupancy}%</span>
+                 <i class="fas fa-snowflake" style="color: ${scoreColor}; font-size:8px; margin-left:2px;"></i>
+             </div>`;
+        }
+
+        let labelHtml = v.line;
+        if (v.id) {
+            labelHtml = `L: ${v.line}<br><span style="font-size:9px; color:#555;">P: ${v.id}</span>`;
+        }
+
         const icon = L.divIcon({
             className: 'custom-div-icon',
-            html: `<div class="vehicle-marker" style="background-color: ${color}; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12px;">
-                        <i class="${faIcon}" style="font-size:10px; margin-bottom:1px;"></i>
-                        <span style="line-height:1;">${v.line}</span>
+            html: `<div class="infotb-marker-container">
+                        <div class="infotb-label" style="text-align:center; line-height:1.1; padding:3px 6px;">${labelHtml}</div>
+                        <div class="infotb-circle" style="background-color: ${color};">
+                            <i class="${faIcon}" style="font-size:14px; text-shadow: 1px 1px 1px rgba(0,0,0,0.5);"></i>
+                        </div>
+                        ${specialBadgeHtml}
+                        ${occupancyHtml}
                    </div>`,
-            iconSize: [36, 36],
-            iconAnchor: [18, 18]
+            iconSize: [60, 70],
+            iconAnchor: [30, 50]
         });
+
 
         const marker = L.marker([v.lat, v.lng], { icon: icon });
 
@@ -643,6 +703,25 @@ async function loadCustomLine(id) {
             const latlngs = routeResult.map(p => [p.latitude, p.longitude]);
             currentRoutePolyline = L.polyline(latlngs, {color: infoResult.color, weight: 6, opacity: 0.8}).addTo(map);
             map.fitBounds(currentRoutePolyline.getBounds());
+
+            // Add directional arrows if polyline decorator is available
+            if (typeof L.polylineDecorator === 'function') {
+                const arrowColor = (infoResult.color === '#f1c40f' || infoResult.color === '#ffffff') ? '#000000' : '#ffffff';
+                const arrowDecorator = L.polylineDecorator(currentRoutePolyline, {
+                    patterns: [
+                        {
+                            offset: 25,
+                            repeat: 100,
+                            symbol: L.Symbol.arrowHead({
+                                pixelSize: 10,
+                                polygon: false,
+                                pathOptions: { stroke: true, color: arrowColor, weight: 2, opacity: 1 }
+                            })
+                        }
+                    ]
+                }).addTo(map);
+                currentRoutePolyline.decorator = arrowDecorator;
+            }
         }
 
         // Draw custom markers onto map and build timeline
@@ -780,6 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
     const trackBtn = document.getElementById('bp-live-track');
     if (trackBtn) {
         trackBtn.addEventListener('click', function() {

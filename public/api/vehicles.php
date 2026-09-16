@@ -4,117 +4,8 @@ header('Access-Control-Allow-Origin: *');
 
 require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/GtfsRtParser.php';
-$GLOBALS['db'] = getDB();
 
 $vehicles = [];
-
-// Fetch all AC votes from the last 4 hours grouped by vehicle to avoid N+1 queries
-$allAcVotes = [];
-try {
-    $timeExpr = (strpos($GLOBALS['db']->getAttribute(PDO::ATTR_DRIVER_NAME), 'sqlite') !== false) ? "datetime('now', '-4 hours')" : "DATE_SUB(NOW(), INTERVAL 4 HOUR)";
-    $stmtVotesAll = $GLOBALS['db']->query("SELECT vehicle_id, has_ac, COUNT(*) as count FROM ac_votes WHERE created_at >= $timeExpr GROUP BY vehicle_id, has_ac");
-    $voteResults = $stmtVotesAll->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($voteResults as $r) {
-        if (!isset($allAcVotes[$r['vehicle_id']])) {
-            $allAcVotes[$r['vehicle_id']] = ['yes' => 0, 'no' => 0];
-        }
-        if ($r['has_ac'] == 1) {
-            $allAcVotes[$r['vehicle_id']]['yes'] = $r['count'];
-        } else {
-            $allAcVotes[$r['vehicle_id']]['no'] = $r['count'];
-        }
-    }
-} catch (Exception $e) {}
-
-// Pre-load all fleet JSON files with server-side caching (APCu or temp file)
-$fleetDataCache = [];
-$fleetCacheFile = sys_get_temp_dir() . '/fleet_data_cache.php';
-
-if (file_exists($fleetCacheFile) && (time() - filemtime($fleetCacheFile)) < 3600) {
-    $fleetDataCache = include $fleetCacheFile;
-} else {
-    function loadFleetJson($filename, $modelPrefix) {
-        global $fleetDataCache;
-        $path = __DIR__ . '/../../includes/data/' . $filename;
-        if (file_exists($path)) {
-            $data = json_decode(file_get_contents($path), true);
-            if ($data) {
-                foreach ($data as $veh) {
-                    if (isset($veh['plate']) && isset($veh['inventory'])) {
-                        $plate = str_replace('-', '', $veh['plate']);
-                        $modelName = $modelPrefix;
-                        if (isset($veh['modelType'])) {
-                            $modelName = $veh['modelType'];
-                        } else if ($filename === 'citaro.json') {
-                             $modelName = "Mercedes Citaro Euro 3/4";
-                        } else if ($filename === 'otokar.json') {
-                             $modelName = "Otokar Kent";
-                        } else if ($filename === 'city-tour.json') {
-                             $modelName = "BCT Bus";
-                        }
-
-                        $fleetDataCache[$plate] = [
-                            'inventory' => $veh['inventory'],
-                            'model' => $modelName
-                        ];
-                    }
-                }
-            }
-        }
-    }
-
-    loadFleetJson('citaro.json', 'Mercedes Citaro');
-    loadFleetJson('otokar.json', 'Otokar Kent');
-    loadFleetJson('all-buses.json', 'STB Bus');
-    loadFleetJson('trolleybus.json', 'STB Trolleybus');
-    loadFleetJson('city-tour.json', 'City Tour Bus');
-
-    file_put_contents($fleetCacheFile, "<?php
-return " . var_export($fleetDataCache, true) . ";
-");
-}
-
-function guessVehicleModel($id, $plate, $type) {
-    global $fleetDataCache;
-    $strippedPlate = str_replace(['-', ' '], '', $plate);
-
-    // Exact match from JSON
-    if (isset($fleetDataCache[$strippedPlate])) {
-        return $fleetDataCache[$strippedPlate]['model'];
-    }
-
-    // Fallback heuristic if not in JSON
-    $numId = (int)preg_replace('/[^0-9]/', '', $id);
-
-    if ($type === 'BUS') {
-        if ($numId >= 3200 && $numId <= 3499) return "Karsan e-ATA 12m";
-        if ($numId >= 4000 && $numId <= 4999) return "Mercedes-Benz Citaro Euro 3/4";
-        if ($numId >= 5300 && $numId <= 5399) return "Mercedes-Benz Citaro Euro 4";
-        if ($numId >= 6200 && $numId <= 6299) return "Mercedes-Benz Citaro Euro 4";
-        if ($numId >= 6400 && $numId <= 6499) return "Otokar Kent C 10m";
-        if ($numId >= 6500 && $numId <= 6699) return "Otokar Kent C 12m";
-        if ($numId >= 6800 && $numId <= 6999) return "Otokar Kent C 18m";
-        if ($numId >= 7000 && $numId <= 7199) return "Mercedes-Benz Citaro Hybrid";
-        if ($numId >= 7200 && $numId <= 7299) return "ZTE Granton 12m";
-    } elseif ($type === 'TROLLEYBUS') {
-        if ($numId >= 5100 && $numId <= 5299) return "Astra Irisbus Citelis";
-        if ($numId >= 5300 && $numId <= 5399) return "Ikarus 415T";
-        if ($numId >= 5400 && $numId <= 5499) return "Solaris Trollino 12";
-        if ($numId >= 7300 && $numId <= 7399) return "Solaris Trollino 12";
-    }
-    return '';
-}
-$tramData = [];
-if (file_exists(__DIR__ . '/../../includes/data/tramvaie.csv')) {
-    $csv = array_map('str_getcsv', file(__DIR__ . '/../../includes/data/tramvaie.csv'));
-    array_shift($csv);
-    foreach ($csv as $row) {
-        if (isset($row[1]) && isset($row[6])) {
-            $tramData[trim($row[1])] = trim($row[6]);
-        }
-    }
-}
-
 $status = 'success';
 $dataSource = 'tpbi_gtfs_rt';
 
@@ -162,42 +53,8 @@ if ($httpCode == 200 && $response) {
                 $type = 'TRAM';
             }
 
-            $model = '';
-            if ($type === 'TRAM' && isset($v['plate']) && isset($tramData[$v['plate']])) {
-                $model = $tramData[$v['plate']];
-            } else {
-                $model = guessVehicleModel($v['id'], $v['plate'] ?? '', $type);
-            }
-            $occ = isset($v['occupancyStatus']) && $v['occupancyStatus'] > 0 ? $v['occupancyStatus'] : mt_rand(1, 3);
-
-            // Comfort logic: 1 is empty, 2 is moderate, 3 is crowded.
-            // AC adds comfort. For this demo, let's assume buses >= year 2018 have AC (or default true for new models)
-            $hasAc = strpos($model, 'Otokar') !== false || strpos($model, 'Hybrid') !== false || strpos($model, 'ZTE') !== false || strpos($model, 'Solaris') !== false || strpos($model, 'Imperio') !== false || strpos($model, 'Karsan') !== false;
-
-            $acPoints = $hasAc ? 1.0 : 0.0;
-            $crowdPoints = 1.0;
-            if ($occ == 2) $crowdPoints = 0.6;
-            if ($occ == 3) $crowdPoints = 0.2;
-
-            // comfort = AC points × 0.6 + crowd points × 0.4
-            $comfortScore = ($acPoints * 0.6) + ($crowdPoints * 0.4);
-
-            $comfortTier = 'slab'; // poor
-            if ($comfortScore >= 0.45) $comfortTier = 'ok';
-            if ($comfortScore >= 0.75) $comfortTier = 'excelent'; // great
-
-            $vid = $v['id'] ?: uniqid();
-            $yes = 0; $no = 0;
-            if (isset($allAcVotes[$vid])) {
-                $yes = $allAcVotes[$vid]['yes'];
-                $no = $allAcVotes[$vid]['no'];
-                // Override AC status if strong user consensus
-                if ($yes > $no && $yes > 2) $hasAc = true;
-                if ($no > $yes && $no > 2) $hasAc = false;
-            }
-
             $vehicles[] = [
-                'id' => $vid,
+                'id' => $v['id'] ?: uniqid(),
                 'line' => $line,
                 'type' => $type,
                 'lat' => $v['lat'],
@@ -205,12 +62,7 @@ if ($httpCode == 200 && $response) {
                 'heading' => $v['bearing'],
                 'speed' => round($v['speed']),
                 'plate' => $v['plate'],
-                'model' => $model,
-                'occupancy' => $occ,
-                'comfortTier' => $comfortTier,
-                'hasAc' => $hasAc,
-                'votes_yes' => $yes ?? 0,
-                'votes_no' => $no ?? 0
+                'occupancy' => mt_rand(1, 3) // We don't have occupancy in this basic VP protobuf easily accessible, simulate for now
             ];
         }
     } catch (Exception $e) {
