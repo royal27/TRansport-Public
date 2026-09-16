@@ -26,6 +26,8 @@ let filters = {
     'TRAM': true,
     'TROLLEYBUS': true
 };
+// Set true for multiple selections, false for exclusive (like tabs)
+let allowMultipleFilters = true;
 let currentLineType = 'BUS'; // default category
 
 // Events for back buttons
@@ -58,23 +60,30 @@ if (closeLinesPopup) {
 
 document.querySelectorAll('.cat-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-
         const type = e.currentTarget.getAttribute('data-type');
-        if (type === 'bus') currentLineType = 'BUS';
-        else if (type === 'tram') currentLineType = 'TRAM';
-        else if (type === 'trolley') currentLineType = 'TROLLEYBUS';
+        const internalKey = type === 'bus' ? 'BUS' : (type === 'tram' ? 'TRAM' : 'TROLLEYBUS');
 
-        // Optional: filter map markers immediately
-        filters['BUS'] = type === 'bus';
-        filters['TRAM'] = type === 'tram';
-        filters['TROLLEYBUS'] = type === 'trolley';
+        if (allowMultipleFilters) {
+            e.currentTarget.classList.toggle('active');
+            filters[internalKey] = e.currentTarget.classList.contains('active');
+        } else {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            filters['BUS'] = type === 'bus';
+            filters['TRAM'] = type === 'tram';
+            filters['TROLLEYBUS'] = type === 'trolley';
+            openLinesPopup(internalKey);
+        }
 
+        currentLineType = internalKey;
         loadVehicles(); // refresh map
+    });
 
-        // Open the popup to select a specific line
-        openLinesPopup(currentLineType);
+    // Add double click / long press event to open line selection popup without un-toggling
+    btn.addEventListener('dblclick', (e) => {
+        const type = e.currentTarget.getAttribute('data-type');
+        const internalKey = type === 'bus' ? 'BUS' : (type === 'tram' ? 'TRAM' : 'TROLLEYBUS');
+        openLinesPopup(internalKey);
     });
 });
 
