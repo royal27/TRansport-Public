@@ -357,12 +357,12 @@ async function loadVehicles() {
         if (result.status === 'success') {
             allVehicles = result.data;
             if (currentCustomLineStr) {
-                let firstWord = currentCustomLineStr.split(' ')[0];
-                const matchedVehicles = result.data.filter(v => String(v.line) === String(firstWord) || String(v.line) === String(currentCustomLineStr));
-                renderVehiclesOnMap(matchedVehicles);
-            } else {
-                renderVehiclesOnMap(result.data);
-            }
+                    let firstWord = currentCustomLineStr.split(' ')[0];
+                    const matchedVehicles = result.data.filter(v => String(v.line) === String(firstWord) || String(v.line) === String(currentCustomLineStr));
+                    renderVehiclesOnMap(matchedVehicles);
+                } else {
+                    renderVehiclesOnMap(result.data);
+                }
 
             // If popup is open, refresh its content to show updated active lines
             const popupEl = document.getElementById('lines-popup');
