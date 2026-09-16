@@ -1,0 +1,52 @@
+[Wed Sep 16 12:29:28 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
+[Wed Sep 16 12:29:55 2026] [::1]:35168 Accepted
+[Wed Sep 16 12:29:55 2026] [::1]:35168 [200]: GET /index.php
+[Wed Sep 16 12:29:55 2026] [::1]:35168 Closing
+[Wed Sep 16 12:29:55 2026] [::1]:35182 Accepted
+[Wed Sep 16 12:29:55 2026] [::1]:35196 Accepted
+[Wed Sep 16 12:29:55 2026] [::1]:35182 [200]: GET /css/style.css?v=1789561795
+[Wed Sep 16 12:29:55 2026] [::1]:35182 Closing
+[Wed Sep 16 12:29:55 2026] [::1]:35196 [200]: GET /js/app.js?v=1789561795
+[Wed Sep 16 12:29:55 2026] [::1]:35196 Closing
+[Wed Sep 16 12:29:56 2026] [::1]:35198 Accepted
+[Wed Sep 16 12:29:56 2026] [::1]:35198 [200]: GET /api/stations.php
+[Wed Sep 16 12:29:56 2026] [::1]:35198 Closing
+[Wed Sep 16 12:29:56 2026] [::1]:35214 Accepted
+[Wed Sep 16 12:29:57 2026] [::1]:35214 [200]: GET /api/vehicles.php
+[Wed Sep 16 12:29:57 2026] [::1]:35214 Closing
+[Wed Sep 16 12:30:06 2026] [::1]:49690 Accepted
+[Wed Sep 16 12:30:07 2026] [::1]:49690 [200]: GET /api/vehicles.php
+[Wed Sep 16 12:30:07 2026] [::1]:49690 Closing
+[Wed Sep 16 12:30:16 2026] [::1]:44124 Accepted
+[Wed Sep 16 12:30:18 2026] [::1]:44124 [200]: GET /api/vehicles.php
+[Wed Sep 16 12:30:18 2026] [::1]:44124 Closing
+[Wed Sep 16 12:30:26 2026] [::1]:48830 Accepted
+[Wed Sep 16 12:30:27 2026] [::1]:48830 [200]: GET /api/vehicles.php
+[Wed Sep 16 12:30:27 2026] [::1]:48830 Closing
+[Wed Sep 16 12:31:24 2026] [::1]:49072 Accepted
+[Wed Sep 16 12:31:24 2026] [::1]:49072 [200]: GET /index.php
+[Wed Sep 16 12:31:24 2026] [::1]:49072 Closing
+[Wed Sep 16 12:31:24 2026] [::1]:49088 Accepted
+[Wed Sep 16 12:31:24 2026] [::1]:49104 Accepted
+[Wed Sep 16 12:31:24 2026] [::1]:49088 [200]: GET /css/style.css?v=1789561884
+[Wed Sep 16 12:31:24 2026] [::1]:49088 Closing
+[Wed Sep 16 12:31:24 2026] [::1]:49104 [200]: GET /js/app.js?v=1789561884
+[Wed Sep 16 12:31:24 2026] [::1]:49104 Closing
+[Wed Sep 16 12:31:24 2026] [::1]:49106 Accepted
+[Wed Sep 16 12:31:24 2026] [::1]:49106 [200]: GET /api/stations.php
+[Wed Sep 16 12:31:24 2026] [::1]:49106 Closing
+[Wed Sep 16 12:31:24 2026] [::1]:49110 Accepted
+[Wed Sep 16 12:31:26 2026] [::1]:49110 [200]: GET /api/vehicles.php
+[Wed Sep 16 12:31:26 2026] [::1]:49110 Closing
+[Wed Sep 16 12:31:29 2026] [::1]:47844 Accepted
+[Wed Sep 16 12:31:29 2026] [::1]:47844 [200]: GET /api/custom_lines.php?action=get_info&line_id=101
+[Wed Sep 16 12:31:29 2026] [::1]:47844 Closing
+[Wed Sep 16 12:31:29 2026] [::1]:47850 Accepted
+[Wed Sep 16 12:31:29 2026] [::1]:47850 [200]: GET /api/custom_lines.php?action=get_routes&line_id=101
+[Wed Sep 16 12:31:29 2026] [::1]:47850 Closing
+[Wed Sep 16 12:31:29 2026] [::1]:47854 Accepted
+[Wed Sep 16 12:31:29 2026] [::1]:47854 [200]: GET /api/custom_lines.php?action=get_markers&line_id=101
+[Wed Sep 16 12:31:29 2026] [::1]:47854 Closing
+[Wed Sep 16 12:31:34 2026] [::1]:47860 Accepted
+[Wed Sep 16 12:31:37 2026] [::1]:47860 [200]: GET /api/vehicles.php
+[Wed Sep 16 12:31:37 2026] [::1]:47860 Closing
