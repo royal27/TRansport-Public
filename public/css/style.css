@@ -805,14 +805,8 @@ html.dark-mode .mbb-ticker-text {
     color: #333;
     font-weight: bold;
 }
-.infotb-marker-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    width: 60px;
-    height: 70px;
-}
+
+/* New InfoTB Style Marker */
 
 .infotb-label {
     position: absolute;
@@ -855,4 +849,5 @@ html.dark-mode .mbb-ticker-text {
     padding: 2px 4px;
     border-radius: 6px;
     box-shadow: 0px 1px 3px rgba(0,0,0,0.3);
+}
 }

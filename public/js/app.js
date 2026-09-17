@@ -366,9 +366,9 @@ function renderVehiclesOnMap(dataList) {
             specialBadgeHtml = `<div style="position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 14px; height: 14px; font-size: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid white;" title="Special model: ${v.special_type}">*</div>`;
         }
 
-        const scoreColor = (v.comfort_score !== undefined && v.comfort_score < 40) ? '#e74c3c' : '#2ecc71';
+        const scoreColor = (v.comfortTier !== undefined && v.comfortTier < 40) ? '#e74c3c' : '#2ecc71';
         let occupancyHtml = '';
-        if (v.occupancy !== undefined && v.comfort_score !== undefined) {
+        if (v.occupancy !== undefined) {
              occupancyHtml = `<div class="infotb-occupancy" style="bottom:-15px;">
                  <i class="fas fa-users" style="color: #34495e; font-size:8px;"></i>
                  <span style="font-size:9px; font-weight:bold; color:#2c3e50;">${v.occupancy}%</span>

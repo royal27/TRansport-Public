@@ -167,6 +167,7 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
             border-top: 1px solid #eee;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 </head>
 <body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
 
@@ -180,6 +181,8 @@ $app_name = $settings['app_name'] ?? 'București Transport Live';
             <a href="index.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_map', $lang) ?>"><i class="fas fa-map-marker-alt"></i></a>
             <a href="schedules.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_schedules', $lang) ?>"><i class="fas fa-clock"></i></a>
             <a href="lines.php?lang=<?= $lang ?>" class="nav-item" title="Orar și Linii Curente"><i class="fas fa-route"></i></a>
+            <a href="cfr.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('cfr_title', $lang) ?>"><i class="fas fa-train"></i></a>
+            <a href="alerts.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('stb_alerts', $lang) ?>"><i class="fas fa-bell"></i></a>
             <a href="flights.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_flights', $lang) ?>"><i class="fas fa-plane"></i></a>
             <a href="metro.php?lang=<?= $lang ?>" class="nav-item" title="<?= getTranslation('btn_metro', $lang) ?>"><i class="fas fa-subway"></i></a>
             <a href="route.php?lang=<?= $lang ?>" class="nav-item active" title="Organizează rută"><i class="fas fa-directions"></i></a>
