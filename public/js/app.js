@@ -31,14 +31,31 @@ let currentLineType = 'BUS'; // default category
 // Events for back buttons
 if (btnBack) btnBack.addEventListener('click', () => {
     stationInfo.classList.add('hidden');
+    currentCustomLineStr = null;
     welcomeInfo.classList.remove('hidden');
 });
 
 if (btnBackLine) btnBackLine.addEventListener('click', () => {
     lineInfo.classList.add('hidden');
     bottomPanel.classList.add('hidden');
+    currentCustomLineStr = null;
+
+    // Cleanup custom interval if any
+    if (window.customLineLiveInterval) {
+        clearInterval(window.customLineLiveInterval);
+        window.customLineLiveInterval = null;
+    }
+
+    // Refresh regular vehicles
+    if (isLiveVehiclesEnabled && allVehicles.length > 0) {
+        renderVehiclesOnMap(allVehicles);
+    }
+
     welcomeInfo.classList.remove('hidden');
-    if (currentRoutePolyline) map.removeLayer(currentRoutePolyline);
+    if (currentRoutePolyline) {
+        if (currentRoutePolyline.decorator) map.removeLayer(currentRoutePolyline.decorator);
+        map.removeLayer(currentRoutePolyline);
+    }
 });
 
 // Setup Category Tabs & Popup
@@ -120,6 +137,7 @@ function openLinesPopup(type) {
 let globalCurrentLine = null;
 let globalCurrentAdminId = null;
 let currentDirection = 'dus';
+let currentCustomLineStr = null;
 
 const switchDirBtn = document.getElementById('bp-switch-dir');
 if (switchDirBtn) {
@@ -136,6 +154,7 @@ async function searchLine(line, adminId = null) {
 
     globalCurrentLine = line;
     globalCurrentAdminId = adminId;
+    currentCustomLineStr = null;
 
     welcomeInfo.classList.add('hidden');
     stationInfo.classList.add('hidden');
@@ -291,6 +310,26 @@ function renderTimelineUI(result, shapeCoordinates) {
         const latlngs = shapeCoordinates.map(p => [p.lat, p.lng]);
         currentRoutePolyline = L.polyline(latlngs, {color: result.color, weight: 6, opacity: 0.8}).addTo(map);
         map.fitBounds(currentRoutePolyline.getBounds());
+
+        // Add directional arrows if polyline decorator is available
+        if (typeof L.polylineDecorator === 'function') {
+            const arrowColor = (result.color === '#f1c40f' || result.color === '#ffffff') ? '#000000' : '#ffffff';
+            const arrowDecorator = L.polylineDecorator(currentRoutePolyline, {
+                patterns: [
+                    {
+                        offset: 25,
+                        repeat: 100,
+                        symbol: L.Symbol.arrowHead({
+                            pixelSize: 10,
+                            polygon: false,
+                            pathOptions: { stroke: true, color: arrowColor, weight: 2, opacity: 1 }
+                        })
+                    }
+                ]
+            }).addTo(map);
+            // Store decorator to remove it later when line is cleared
+            currentRoutePolyline.decorator = arrowDecorator;
+        }
     }
 }
 
@@ -322,15 +361,40 @@ function renderVehiclesOnMap(dataList) {
         const color = getColorByType(v.type);
         const faIcon = getIconByType(v.type);
 
+        let specialBadgeHtml = '';
+        if (v.special_type && v.special_type !== 'unknown') {
+            specialBadgeHtml = `<div style="position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 14px; height: 14px; font-size: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid white;" title="Special model: ${v.special_type}">*</div>`;
+        }
+
+        const scoreColor = (v.comfortTier !== undefined && v.comfortTier < 40) ? '#e74c3c' : '#2ecc71';
+        let occupancyHtml = '';
+        if (v.occupancy !== undefined) {
+             occupancyHtml = `<div class="infotb-occupancy" style="bottom:-15px;">
+                 <i class="fas fa-users" style="color: #34495e; font-size:8px;"></i>
+                 <span style="font-size:9px; font-weight:bold; color:#2c3e50;">${v.occupancy}%</span>
+                 <i class="fas fa-snowflake" style="color: ${scoreColor}; font-size:8px; margin-left:2px;"></i>
+             </div>`;
+        }
+
+        let labelHtml = v.line;
+        if (v.id) {
+            labelHtml = `L: ${v.line}<br><span style="font-size:9px; color:#555;">P: ${v.id}</span>`;
+        }
+
         const icon = L.divIcon({
             className: 'custom-div-icon',
-            html: `<div class="vehicle-marker" style="background-color: ${color}; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12px;">
-                        <i class="${faIcon}" style="font-size:10px; margin-bottom:1px;"></i>
-                        <span style="line-height:1;">${v.line}</span>
+            html: `<div class="infotb-marker-container">
+                        <div class="infotb-label" style="text-align:center; line-height:1.1; padding:3px 6px;">${labelHtml}</div>
+                        <div class="infotb-circle" style="background-color: ${color};">
+                            <i class="${faIcon}" style="font-size:14px; text-shadow: 1px 1px 1px rgba(0,0,0,0.5);"></i>
+                        </div>
+                        ${specialBadgeHtml}
+                        ${occupancyHtml}
                    </div>`,
-            iconSize: [36, 36],
-            iconAnchor: [18, 18]
+            iconSize: [60, 70],
+            iconAnchor: [30, 50]
         });
+
 
         const marker = L.marker([v.lat, v.lng], { icon: icon });
 
@@ -344,6 +408,7 @@ function renderVehiclesOnMap(dataList) {
 }
 
 let allVehicles = []; // Store globally for the popup menu
+let isLiveVehiclesEnabled = true;
 
 async function loadVehicles() {
     try {
@@ -352,7 +417,18 @@ async function loadVehicles() {
 
         if (result.status === 'success') {
             allVehicles = result.data;
-            renderVehiclesOnMap(result.data);
+            if (isLiveVehiclesEnabled) {
+                if (currentCustomLineStr) {
+                    let firstWord = currentCustomLineStr.split(' ')[0];
+                    const matchRegex = new RegExp(`^${firstWord}\\b`, 'i');
+                    const matchedVehicles = result.data.filter(v => matchRegex.test(v.line) || String(v.line).toLowerCase() === String(currentCustomLineStr).toLowerCase() || String(v.line).toLowerCase() === String(firstWord).toLowerCase());
+                    renderVehiclesOnMap(matchedVehicles);
+                } else {
+                    renderVehiclesOnMap(result.data);
+                }
+            } else {
+                vehiclesLayer.clearLayers();
+            }
 
             // If popup is open, refresh its content to show updated active lines
             const popupEl = document.getElementById('lines-popup');
@@ -390,6 +466,7 @@ async function fetchStationArrivals(stationId, stationName) {
     welcomeInfo.classList.add('hidden');
     lineInfo.classList.add('hidden');
     bottomPanel.classList.add('hidden');
+    currentCustomLineStr = null;
     stationInfo.classList.remove('hidden');
     stationNameEl.textContent = stationName;
     arrivalsListEl.innerHTML = `<div class="loading">${i18n.loading}</div>`;
@@ -555,6 +632,8 @@ async function loadCustomLine(id) {
         const infoResult = await infoRes.json();
         if (infoResult.error) throw new Error(infoResult.error);
 
+        currentCustomLineStr = infoResult.name;
+
         // Fetch route
         const routeRes = await fetch(`api/custom_lines.php?action=get_routes&line_id=${id}`);
         const routeResult = await routeRes.json();
@@ -578,6 +657,42 @@ async function loadCustomLine(id) {
             bpBadge.style.backgroundColor = infoResult.color;
         }
 
+        // --- FETCH LIVE VEHICLES FOR THIS CUSTOM LINE ---
+        if (infoResult.name) {
+            let lineNameStr = infoResult.name;
+            let firstWord = lineNameStr.split(' ')[0]; // E.g. "336" or "10"
+            try {
+                const vehRes = await fetch('api/vehicles.php');
+                const vehResult = await vehRes.json();
+                if (vehResult.status === 'success') {
+                    const matchRegex = new RegExp(`^${firstWord}\\b`, 'i');
+                    const matchedVehicles = vehResult.data.filter(v => matchRegex.test(v.line) || String(v.line).toLowerCase() === String(lineNameStr).toLowerCase() || String(v.line).toLowerCase() === String(firstWord).toLowerCase());
+                    if (isLiveVehiclesEnabled) {
+                        renderVehiclesOnMap(matchedVehicles);
+                    }
+
+                    // Cleanup previous custom interval if any
+                    if (window.customLineLiveInterval) clearInterval(window.customLineLiveInterval);
+
+                    window.customLineLiveInterval = setInterval(async () => {
+                        if (!isLiveVehiclesEnabled) {
+                            vehiclesLayer.clearLayers();
+                            return;
+                        }
+                        try {
+                            const newRes = await fetch('api/vehicles.php');
+                            const newResult = await newRes.json();
+                            if (newResult.status === 'success') {
+                                const newMatched = newResult.data.filter(v => matchRegex.test(v.line) || String(v.line).toLowerCase() === String(lineNameStr).toLowerCase() || String(v.line).toLowerCase() === String(firstWord).toLowerCase());
+                                renderVehiclesOnMap(newMatched);
+                            }
+                        } catch (err) {}
+                    }, 10000);
+                }
+            } catch (err) {}
+        }
+        // ------------------------------------------------
+
         const bpDirText = document.getElementById('bp-direction-text');
         if(bpDirText) {
             bpDirText.innerHTML = infoResult.description || 'Traseu Customizat';
@@ -588,6 +703,25 @@ async function loadCustomLine(id) {
             const latlngs = routeResult.map(p => [p.latitude, p.longitude]);
             currentRoutePolyline = L.polyline(latlngs, {color: infoResult.color, weight: 6, opacity: 0.8}).addTo(map);
             map.fitBounds(currentRoutePolyline.getBounds());
+
+            // Add directional arrows if polyline decorator is available
+            if (typeof L.polylineDecorator === 'function') {
+                const arrowColor = (infoResult.color === '#f1c40f' || infoResult.color === '#ffffff') ? '#000000' : '#ffffff';
+                const arrowDecorator = L.polylineDecorator(currentRoutePolyline, {
+                    patterns: [
+                        {
+                            offset: 25,
+                            repeat: 100,
+                            symbol: L.Symbol.arrowHead({
+                                pixelSize: 10,
+                                polygon: false,
+                                pathOptions: { stroke: true, color: arrowColor, weight: 2, opacity: 1 }
+                            })
+                        }
+                    ]
+                }).addTo(map);
+                currentRoutePolyline.decorator = arrowDecorator;
+            }
         }
 
         // Draw custom markers onto map and build timeline
@@ -704,6 +838,28 @@ let userRouteTrackingWatcher = null;
 let currentCustomStations = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+    const toggleVehiclesBtn = document.getElementById('bp-toggle-vehicles');
+    if (toggleVehiclesBtn) {
+        toggleVehiclesBtn.addEventListener('click', function() {
+
+            isLiveVehiclesEnabled = !isLiveVehiclesEnabled;
+            if (isLiveVehiclesEnabled) {
+                this.style.backgroundColor = '#3498db'; // Active
+                if (currentCustomLineStr) {
+                    let firstWord = currentCustomLineStr.split(' ')[0];
+                    const matchRegex = new RegExp(`^${firstWord}\\b`, 'i');
+                    const matchedVehicles = allVehicles.filter(v => matchRegex.test(v.line) || String(v.line).toLowerCase() === String(currentCustomLineStr).toLowerCase() || String(v.line).toLowerCase() === String(firstWord).toLowerCase());
+                    renderVehiclesOnMap(matchedVehicles);
+                } else {
+                    renderVehiclesOnMap(allVehicles);
+                }
+            } else {
+                this.style.backgroundColor = '#95a5a6'; // Inactive
+                vehiclesLayer.clearLayers();
+            }
+        });
+    }
+
     const trackBtn = document.getElementById('bp-live-track');
     if (trackBtn) {
         trackBtn.addEventListener('click', function() {
