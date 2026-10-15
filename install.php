@@ -24,12 +24,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Numele bazei de date poate conține doar litere, cifre și underscore.";
     } else {
         try {
-            // Incercam intai conexiunea directa cu baza de date (pentru cPanel/Shared Hosting)
+            // Test connection and potentially create db
             try {
                 $dsn = "mysql:host=$db_host;dbname=$db_name;charset=utf8mb4";
                 $pdo = new PDO($dsn, $db_user, $db_pass);
             } catch (PDOException $e) {
-                // Daca esueaza, incercam fara dbname si incercam sa o cream noi (pentru localhost)
                 $dsn = "mysql:host=$db_host";
                 $pdo = new PDO($dsn, $db_user, $db_pass);
                 $pdo->exec("CREATE DATABASE IF NOT EXISTS `$db_name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
@@ -43,8 +42,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 CREATE TABLE IF NOT EXISTS users (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     username VARCHAR(50) NOT NULL UNIQUE,
+                    email VARCHAR(100) NOT NULL UNIQUE,
                     password VARCHAR(255) NOT NULL,
+                    role ENUM('admin', 'user') DEFAULT 'user',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ");
+
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS licenses (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT,
+                    license_key VARCHAR(100) NOT NULL UNIQUE,
+                    plan_type VARCHAR(50),
+                    status ENUM('active', 'inactive', 'revoked') DEFAULT 'active',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 )
             ");
 
@@ -55,14 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 )
             ");
 
-            // Insert default settings if they don't exist
+            // Insert default settings
             $pdo->exec("
                 INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
-                ('app_name', 'București Transport Live'),
-                ('app_logo', ''),
-                ('tpbi_api_key', ''),
-                ('theme_color', 'green'),
-                ('announcement_text', '')
+                ('app_name', '3ds Max Plugin'),
+                ('contact_email', 'support@example.com')
             ");
 
             // Check if admin user exists
@@ -71,11 +81,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->rowCount() == 0) {
                 // Inserare admin
                 $hashed_pass = password_hash($admin_pass, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-                $stmt->execute([$admin_user, $hashed_pass]);
+                $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')");
+                $stmt->execute([$admin_user, 'admin@localhost', $hashed_pass]);
             }
 
-            // Salvare fisier config folosind var_export pt a preveni RCE
+            // Salvare fisier config
             $config_content = "<?php\n";
             $config_content .= "define('DB_HOST', " . var_export($db_host, true) . ");\n";
             $config_content .= "define('DB_NAME', " . var_export($db_name, true) . ");\n";
@@ -88,96 +98,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         } catch (PDOException $e) {
             $errorMsg = $e->getMessage();
-            if (strpos($errorMsg, '1045') !== false) {
-                $error = "Eroare autentificare (1045): Utilizatorul sau parola pentru baza de date sunt greșite, SAU utilizatorul nu a fost asociat cu baza de date în cPanel (Check 'Add User to Database').";
-            } else {
-                $error = "Eroare conexiune bază de date: " . $errorMsg;
-            }
+            $error = "Eroare conexiune bază de date: " . $errorMsg;
         }
     }
 }
 ?>
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="ro" class="dark">
 <head>
     <meta charset="UTF-8">
-    <?php
-    // Get responsive mode setting
-    $is_responsive = true; // Default
-    if (isset($db)) {
-        try {
-            $resp_stmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'responsive_mode'");
-            $resp_row = $resp_stmt->fetch(PDO::FETCH_ASSOC);
-            if ($resp_row && $resp_row['setting_value'] === '0') {
-                $is_responsive = false;
-            }
-        } catch(Exception $e) { }
-    }
-    if ($is_responsive): ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php endif; ?>
-    <title>Instalare București Transport Live</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .install-container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h2 { text-align: center; color: #333; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #555; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        button:hover { background-color: #0056b3; }
-        .error { color: #dc3545; background-color: #f8d7da; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px; }
-        .success { color: #155724; background-color: #d4edda; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px; }
-        .divider { border-top: 1px solid #eee; margin: 20px 0; }
-    </style>
+    <title>Instalare Platformă</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bgMain: '#18191C',
+                        bgSec: '#222428',
+                        card: '#292C31',
+                        brandOrange: '#F59A23',
+                        brandBlue: '#3997FF',
+                        textMain: '#F5F5F5',
+                        textSec: '#A6A9AF',
+                        borderClr: '#3B3E43'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="<?= (isset($is_responsive) && $is_responsive) ? 'is-responsive' : '' ?>">
+<body class="bg-bgMain text-textMain min-h-screen flex items-center justify-center font-sans p-4">
 
-<div class="install-container">
-    <h2>Instalare Aplicație</h2>
+<div class="bg-bgSec p-8 rounded-lg shadow-2xl w-full max-w-lg border border-borderClr">
+    <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-textMain tracking-tight">System Installer</h2>
+        <p class="text-textSec mt-2">Configurarea inițială a platformei software</p>
+    </div>
 
     <?php if ($error): ?>
-        <div class="error"><?= htmlspecialchars($error) ?></div>
+        <div class="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded mb-6">
+            <?= htmlspecialchars($error) ?>
+        </div>
     <?php endif; ?>
 
     <?php if ($success): ?>
-        <div class="success">
-            <?= htmlspecialchars($success) ?><br><br>
-            <a href="admin/login.php" style="color: #155724; font-weight: bold;">Mergi la Panoul de Admin</a>
+        <div class="bg-green-500/10 border border-green-500 text-green-500 px-4 py-3 rounded mb-6 text-center">
+            <p class="mb-4"><?= htmlspecialchars($success) ?></p>
+            <a href="index.php" class="inline-block bg-brandOrange hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded transition">Mergi la Site</a>
         </div>
     <?php else: ?>
-        <form method="POST" action="">
-            <h3>Bază de date</h3>
-            <div class="form-group">
-                <label>Host Bază de date</label>
-                <input type="text" name="db_host" value="localhost" required>
-            </div>
-            <div class="form-group">
-                <label>Nume Bază de date</label>
-                <input type="text" name="db_name" value="bucuresti_transport" required>
-            </div>
-            <div class="form-group">
-                <label>Utilizator DB</label>
-                <input type="text" name="db_user" value="admin" required>
-            </div>
-            <div class="form-group">
-                <label>Parolă DB</label>
-                <input type="password" name="db_pass" value="admin123">
-            </div>
-
-            <div class="divider"></div>
-
-            <h3>Cont Administrator</h3>
-            <div class="form-group">
-                <label>Utilizator Admin</label>
-                <input type="text" name="admin_user" required>
-            </div>
-            <div class="form-group">
-                <label>Parolă Admin</label>
-                <input type="password" name="admin_pass" required>
+        <form method="POST" action="" class="space-y-6">
+            <div>
+                <h3 class="text-xl font-semibold mb-4 text-brandBlue border-b border-borderClr pb-2">Configurare Bază de Date</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-textSec mb-1 text-sm">Host</label>
+                        <input type="text" name="db_host" value="localhost" required class="w-full bg-card border border-borderClr rounded px-3 py-2 text-textMain focus:outline-none focus:border-brandOrange focus:ring-1 focus:ring-brandOrange transition">
+                    </div>
+                    <div>
+                        <label class="block text-textSec mb-1 text-sm">Nume Bază de Date</label>
+                        <input type="text" name="db_name" value="software_db" required class="w-full bg-card border border-borderClr rounded px-3 py-2 text-textMain focus:outline-none focus:border-brandOrange focus:ring-1 focus:ring-brandOrange transition">
+                    </div>
+                    <div>
+                        <label class="block text-textSec mb-1 text-sm">Utilizator DB</label>
+                        <input type="text" name="db_user" value="root" required class="w-full bg-card border border-borderClr rounded px-3 py-2 text-textMain focus:outline-none focus:border-brandOrange focus:ring-1 focus:ring-brandOrange transition">
+                    </div>
+                    <div>
+                        <label class="block text-textSec mb-1 text-sm">Parolă DB</label>
+                        <input type="password" name="db_pass" class="w-full bg-card border border-borderClr rounded px-3 py-2 text-textMain focus:outline-none focus:border-brandOrange focus:ring-1 focus:ring-brandOrange transition">
+                    </div>
+                </div>
             </div>
 
-            <button type="submit">Instalează</button>
+            <div>
+                <h3 class="text-xl font-semibold mb-4 text-brandBlue border-b border-borderClr pb-2">Cont Administrator</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-textSec mb-1 text-sm">Nume Utilizator</label>
+                        <input type="text" name="admin_user" value="admin" required class="w-full bg-card border border-borderClr rounded px-3 py-2 text-textMain focus:outline-none focus:border-brandOrange focus:ring-1 focus:ring-brandOrange transition">
+                    </div>
+                    <div>
+                        <label class="block text-textSec mb-1 text-sm">Parolă Admin</label>
+                        <input type="password" name="admin_pass" required class="w-full bg-card border border-borderClr rounded px-3 py-2 text-textMain focus:outline-none focus:border-brandOrange focus:ring-1 focus:ring-brandOrange transition">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-brandOrange hover:bg-orange-600 text-white font-bold py-3 px-4 rounded transition duration-200 mt-4 shadow-lg shadow-brandOrange/20">
+                Instalează Platforma
+            </button>
         </form>
     <?php endif; ?>
 </div>
